@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Heart } from "lucide-react";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation, useQuery, useConvexAuth } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
@@ -19,6 +19,7 @@ interface WishlistButtonProps {
 export const WishlistButton = ({ productId, className, iconClassName }: WishlistButtonProps) => {
   const router = useRouter();
   const { data: session } = authClient.useSession();
+  const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
   
   const inWishlist = useQuery(api.wishlists.check, { productId });
   const toggleWishlist = useMutation(api.wishlists.toggle);
@@ -28,7 +29,12 @@ export const WishlistButton = ({ productId, className, iconClassName }: Wishlist
     e.preventDefault();
     e.stopPropagation();
 
-    if (!session) {
+    if (isAuthLoading) {
+      toast.info("Please wait, loading authentication state...");
+      return;
+    }
+
+    if (!isAuthenticated) {
       toast.error("Please sign in to add items to your wishlist");
       router.push("/auth");
       return;

@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Eye, Gift, Truck, ShieldCheck, CreditCard, RotateCcw, Share, ShoppingCart, Zap } from "lucide-react";
 import { Rating } from "@mui/material";
 import { useRouter } from "next/navigation";
-import { useMutation } from "convex/react";
+import { useMutation, useConvexAuth } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
@@ -22,6 +22,7 @@ export const ProductDetails = ({ product }: ProductDetailsProps) => {
   const [isAdding, setIsAdding] = useState(false);
   const router = useRouter();
   const { data: session } = authClient.useSession();
+  const { isAuthenticated, isLoading } = useConvexAuth();
   const addToCart = useMutation(api.cart.addToCart);
   
   const allImages = [product?.thumbnail, ...(product?.images || [])].filter(Boolean);
@@ -130,7 +131,11 @@ export const ProductDetails = ({ product }: ProductDetailsProps) => {
                 if (isAddedToCart) {
                   router.push("/cart");
                 } else {
-                  if (!session) {
+                  if (isLoading) {
+                    toast.info("Please wait, loading authentication state...");
+                    return;
+                  }
+                  if (!isAuthenticated) {
                     toast.error("Please sign in to add items to your cart");
                     router.push("/auth");
                     return;
