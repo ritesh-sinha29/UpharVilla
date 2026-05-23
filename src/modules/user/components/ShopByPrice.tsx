@@ -9,40 +9,40 @@ const priceCategories = [
   {
     label: "Under 299",
     price: "299",
-    image: "/gift1.png",
+    image: "/gift1.svg",
   },
   {
     label: "Under 499",
     price: "499",
-    image: "/gift2.png",
+    image: "/gift3.svg",
   },
   {
     label: "Under 699",
     price: "699",
-    image: "/gift3.png",
+    image: "/gift2.svg",
   },
   {
     label: "Under 999",
     price: "999",
-    image: "/gift4.png",
+    image: "/gift4.svg",
   },
   {
     label: "Under 1599",
     price: "1599",
-    image: "/gift5.png",
+    image: "/gift5.svg",
   },
 ];
 
 const ShopByPrice = () => {
   return (
     <section className="py-12 bg-white relative ">
-      <Image
+      {/* <Image
         src="/35.png"
         alt="Accent"
         width={200}
         height={200}
         className="absolute top-0 -right-5 rounded-xl"
-      />
+      /> */}
       <div className="max-w-[1440px] mx-auto px-8">
         <div className="text-left mb-12">
           <h2 className="text-3xl font-semibold">Shop By Price</h2>
@@ -51,65 +51,64 @@ const ShopByPrice = () => {
           </p>
         </div>
 
-        <div className="flex flex-wrap lg:flex-nowrap gap-8 justify-center">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
           {priceCategories.map((category, index) => (
             <motion.div
               key={index}
-              initial={{ opacity: 0, scale: 0.9, y: 30 }}
-              whileInView={{ opacity: 1, scale: 1, y: 0 }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
               transition={{
                 duration: 0.5,
                 delay: index * 0.1,
-                type: "spring",
-                stiffness: 100,
+                ease: "easeOut",
               }}
               viewport={{ once: true }}
-              className="flex-1 min-w-[220px] group"
+              className="group cursor-pointer"
             >
-              <Link
-                href={`/search?maxPrice=${category.price}`}
-                className="relative block group"
-              >
-                <div
-                  className={`relative flex flex-col items-center justify-center p-6 rounded-2xl bg-primary/70 border-2 border-transparent transition-all duration-500 group-hover:shadow-2xl group-hover:border-white/50 group-hover:-translate-y-2`}
-                >
-                  {/* Category Image with unique shape */}
-                  <div className="relative w-48 h-48 mb-6 transition-all duration-500">
-                    <div className="w-full h-full overflow-hidden rounded-2xl transition-all duration-500">
-                      <Image
-                        src={category.image}
-                        alt={category.label}
-                        fill
-                        className="object-cover transition-all duration-500 rounded-2xl"
-                      />
-                    </div>
-                  </div>
+              <Link href={`/search?maxPrice=${category.price}`} className="block">
+                <div className="relative mb-6">
+                  {/* Randomish shaped container for image */}
+                  <motion.div
+                    className="relative aspect-[0.9/1] overflow-hidden bg-primary/10 border border-primary/30 shadow-sm transition-all duration-500 rounded-xl group-hover:shadow-xl group-hover:shadow-primary/20 group-hover:border-primary/30 group-hover:bg-primary/[0.08]"
+                    style={{
+                      borderRadius:
+                        index % 2 === 0
+                          ? "12px 40px 12px 40px"
+                          : "40px 12px 40px 12px",
+                    }}
+                    whileHover={{
+                      borderRadius:
+                        index % 2 === 0
+                          ? "40px 12px 40px 12px"
+                          : "12px 40px 12px 40px",
+                      scale: 1.05,
+                    }}
+                  >
+                    <Image
+                      src={category.image}
+                      alt={category.label}
+                      fill
+                      unoptimized
+                      className="object-cover transition-transform duration-700 scale-105"
+                    />
 
-                  {/* Price Text */}
-                  <div className="text-center relative">
-                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-500 group-hover:-top-8 w-max">
-                      <span
-                        className={`text-[10px] font-black uppercase tracking-widest text-primary px-2 py-0.5 bg-white rounded-full shadow-sm`}
-                      >
-                        BEST VALUE
-                      </span>
-                    </div>
-                    <span
-                      className={`text-xs font-bold uppercase tracking-[0.2em] text-white/70 mb-1 block`}
-                    >
-                      Under
-                    </span>
-                    <h3
-                      className={`text-3xl font-bold font-mono text-white flex items-start justify-center leading-none`}
-                    >
-                      <span className="text-xl mt-1 mr-0.5 font-bold font-mono">
-                        ₹
-                      </span>
-                      {category.price}
-                    </h3>
-                  </div>
+                    {/* Subtle purple tint on hover */}
+                    <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  </motion.div>
 
-                  {/* CTA Button removed for cleaner/shorter look as requested to reduce height */}
+                  {/* Background decorative shape */}
+                  <div className="absolute -inset-2 bg-[#c88ee8]/5 rounded-[2rem] -z-10 scale-90 opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all duration-500" />
+                </div>
+
+                <div className="text-center">
+                  <span className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground block mb-1">
+                    Under
+                  </span>
+                  <h3 className="text-2xl font-bold text-black transition-colors duration-300 group-hover:text-[#c88ee8] flex items-center justify-center">
+                    <span className="text-lg mr-0.5">₹</span>
+                    {category.price}
+                  </h3>
+                  <motion.div className="h-0.5 w-0 bg-[#c88ee8] mx-auto mt-1 transition-all duration-300 group-hover:w-12" />
                 </div>
               </Link>
             </motion.div>
