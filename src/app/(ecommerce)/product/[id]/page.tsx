@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery } from "convex/react";
 import { use, useEffect } from "react";
+import { notFound } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { CustomerReviews } from "@/modules/user/product/CustomerReviews";
 import { ProductDetails } from "@/modules/user/product/ProductDetails";
@@ -40,9 +41,7 @@ export default function ProductPage({
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>
       ) : product === null || (!product.isActive && !session) ? (
-        <div className="flex items-center justify-center min-h-[60vh] text-neutral-500">
-          Product not found
-        </div>
+        <>{notFound()}</>
       ) : (
         <>
           {/* Dynamic Product JSON-LD + Review Schema + LLM Context */}

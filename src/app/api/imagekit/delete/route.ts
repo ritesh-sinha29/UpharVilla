@@ -53,10 +53,10 @@ export async function POST(req: Request) {
       success: true,
       message: "File not found on ImageKit, skipped deletion",
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("ImageKit delete error:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to delete file" },
+      { error: "Something went wrong. Please try again." },
       { status: 500 },
     );
   }
