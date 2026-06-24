@@ -60,7 +60,7 @@ export const AnnouncementBar = () => {
         `}</style>
 
         <div className="animate-announcement flex items-center justify-center gap-1.5 md:gap-2.5 text-white font-medium text-[11px] sm:text-sm lg:text-base tracking-wide absolute whitespace-nowrap">
-          <img src="/rider.webp" alt="Rider" className="h-8 w-8 md:h-16 md:w-16 select-none" />
+          <img src="/delivery-rider.webp" alt="Rider" className="h-8 w-8 md:h-16 md:w-16 select-none" />
           <span>{text}</span>
         </div>
       </div>

@@ -5,7 +5,7 @@
 interface CompressOptions {
   /** Maximum width in pixels. Height scales proportionally. Default: 1200 */
   maxWidth?: number;
-  /** Output quality 0–1. Default: 0.8 */
+  /** Output quality 0–1. Default: 0.92 */
   quality?: number;
   /** Output MIME type. Default: "image/webp" (falls back to "image/jpeg") */
   outputType?: "image/webp" | "image/jpeg";
@@ -28,7 +28,7 @@ export async function compressImage(
 ): Promise<File> {
   const {
     maxWidth = 1200,
-    quality = 0.8,
+    quality = 0.92,
     outputType = "image/webp",
   } = options;
 
@@ -117,24 +117,24 @@ export async function compressImage(
 
 /**
  * Compress an image with preset for product thumbnails.
- * Max 600px width, quality 0.8.
+ * Max 600px width, quality 0.92.
  */
 export async function compressThumbnail(file: File): Promise<File> {
-  return compressImage(file, { maxWidth: 600, quality: 0.8 });
+  return compressImage(file, { maxWidth: 600, quality: 0.92 });
 }
 
 /**
  * Compress an image with preset for product gallery.
- * Max 1200px width, quality 0.82.
+ * Max 1200px width, quality 0.92.
  */
 export async function compressGalleryImage(file: File): Promise<File> {
-  return compressImage(file, { maxWidth: 1200, quality: 0.82 });
+  return compressImage(file, { maxWidth: 1200, quality: 0.92 });
 }
 
 /**
  * Compress an image with preset for hero banners.
- * Max 1400px width, quality 0.82.
+ * Max 1400px width, quality 0.92.
  */
 export async function compressBannerImage(file: File): Promise<File> {
-  return compressImage(file, { maxWidth: 1400, quality: 0.82 });
+  return compressImage(file, { maxWidth: 1400, quality: 0.92 });
 }

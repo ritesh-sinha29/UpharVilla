@@ -7,27 +7,27 @@ import Link from "next/link";
 const categories = [
   {
     name: "Personalised Gifts",
-    image: "/c5.webp",
+    image: "/category-personalised.webp",
   },
   {
     name: "Anniversary",
-    image: "/c2.webp",
+    image: "/category-anniversary.webp",
   },
   {
     name: "Birthday",
-    image: "/c1.webp",
+    image: "/category-birthday.webp",
   },
   {
     name: "Corporate Gifts",
-    image: "/c3.webp",
+    image: "/category-corporate.webp",
   },
   {
     name: "Custom Hampers",
-    image: "/c4.webp",
+    image: "/category-custom-hampers.webp",
   },
   {
     name: "Trending Gifts",
-    image: "/c7.webp",
+    image: "/category-trending.webp",
   },
 ];
 

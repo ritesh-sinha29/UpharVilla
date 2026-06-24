@@ -389,14 +389,14 @@ export const ProductDetails = ({ product }: ProductDetailsProps) => {
         {/* Left: Image Gallery */}
         <div className="flex flex-col-reverse md:flex-row gap-3 md:gap-4 h-auto md:h-[500px] lg:h-[560px] xl:h-[620px]">
           {/* Thumbnails */}
-          <div className="flex flex-row md:flex-col gap-2 md:gap-3 w-full md:w-20 overflow-x-auto md:overflow-y-auto hidden-scrollbar">
+          <div className="flex flex-row md:flex-col gap-2 md:gap-2.5 w-full md:w-20 lg:w-[88px] overflow-x-auto md:overflow-x-hidden md:overflow-y-auto hidden-scrollbar">
             {mediaItems.map((item, idx) => {
               const isActive = (getDisplayIndex() - 1) === idx;
               return (
                 <button
                   key={idx}
                   type="button"
-                  className={`cursor-pointer relative w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-xl overflow-hidden border-2 flex-shrink-0 transition-all ${
+                  className={`cursor-pointer relative min-w-14 min-h-14 w-16 h-16 md:w-full md:h-auto md:aspect-square rounded-xl overflow-hidden border-2 flex-shrink-0 md:flex-shrink transition-all ${
                     isActive
                       ? "border-primary"
                       : "border-transparent hover:border-neutral-300"

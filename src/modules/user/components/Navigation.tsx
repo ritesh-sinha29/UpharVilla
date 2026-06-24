@@ -56,12 +56,12 @@ const navItems: NavItem[] = [
     ],
     images: [
       {
-        src: "/c5.webp",
+        src: "/category-personalised.webp",
         alt: "Customized Prints",
         label: "Personalized Prints",
       },
       {
-        src: "/c3.webp",
+        src: "/category-corporate.webp",
         alt: "Customized Couple Gifts",
         label: "Customized Couple Gifts",
       },
@@ -95,12 +95,12 @@ const navItems: NavItem[] = [
     ],
     images: [
       {
-        src: "/n3.webp",
+        src: "/nav-corporate-welcome.webp",
         alt: "Customized Items",
         label: "Corporate Welcome Kits",
       },
       {
-        src: "/n4.webp",
+        src: "/nav-corporate-gift-kit.webp",
         alt: "Corporate Gift Kits",
         label: "Corporate Gift Kits",
       },
@@ -126,7 +126,7 @@ const navItems: NavItem[] = [
     ],
     images: [
       {
-        src: "/n6.webp",
+        src: "/nav-exclusive-bouquet.webp",
         alt: "Eclusive Bouquets",
         label: "Eclusive Bouquets",
       },
@@ -157,12 +157,12 @@ const navItems: NavItem[] = [
     ],
     images: [
       {
-        src: "/n1.webp",
+        src: "/nav-gourmet-hamper.webp",
         alt: "Gourmet Hamper",
         label: "Lux Gourmet Baskets",
       },
       {
-        src: "/n2.webp",
+        src: "/nav-signature-hamper.webp",
         alt: "Gift Hamper Set",
         label: "Signature Hampers",
       },
@@ -197,7 +197,7 @@ const navItems: NavItem[] = [
     ],
     images: [
       {
-        src: "/n5.webp",
+        src: "/nav-valentine-love.webp",
         alt: "Valentine Red Theme",
         label: "Valentine's & Love",
       },

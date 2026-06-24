@@ -9,7 +9,7 @@ const NewsletterBox = () => {
       {/* Unified Layout — same structure on all screens */}
       <div className="flex items-center w-full relative">
         <Image
-          src="/f.png"
+          src="/newsletter-icon.png"
           alt=""
           width={160}
           height={100}
@@ -36,7 +36,7 @@ const NewsletterBox = () => {
         {/* Right Image */}
         <div className="w-[45%] sm:w-1/2 relative overflow-hidden rounded-r-2xl self-stretch bg-primary/20 flex items-center justify-center min-h-[180px] sm:min-h-[200px] md:min-h-[220px] lg:min-h-[260px]">
           <Image
-            src="/footer.jpg"
+            src="/footer-background.webp"
             alt="Gifting Banner"
             fill
             sizes="(max-width: 640px) 45vw, 50vw"

@@ -240,7 +240,7 @@ const AuthPage = () => {
       <div className="hidden md:block relative md:w-[56%] lg:w-[62%] h-full overflow-hidden">
         <div className="absolute inset-0 animate-custom-zoom">
           <Image
-            src="/auth-img.jpg"
+            src="/auth-background.webp"
             alt="upharVilla Luxury"
             fill
             className="object-cover"

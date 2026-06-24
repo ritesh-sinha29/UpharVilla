@@ -9,7 +9,7 @@ const priceCategories = [
   {
     label: "Under ₹499",
     price: "499",
-    image: "/53.webp",
+    image: "/price-under-499.webp",
     tagline: "Thoughtful gifts",
     bg: "bg-gradient-to-br from-rose-50 via-pink-50 to-rose-100/50",
     border: "border-rose-200/60 hover:border-rose-300",
@@ -21,7 +21,7 @@ const priceCategories = [
   {
     label: "Under ₹699",
     price: "699",
-    image: "/54.webp",
+    image: "/price-under-699.webp",
     tagline: "Premium picks",
     bg: "bg-gradient-to-br from-violet-50 via-purple-50 to-violet-100/50",
     border: "border-violet-200/60 hover:border-violet-300",
@@ -33,7 +33,7 @@ const priceCategories = [
   {
     label: "Under ₹999",
     price: "999",
-    image: "/55.webp",
+    image: "/price-under-999.webp",
     tagline: "Curated collection",
     bg: "bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100/50",
     border: "border-amber-200/60 hover:border-amber-300",
@@ -45,7 +45,7 @@ const priceCategories = [
   {
     label: "Under ₹1599",
     price: "1599",
-    image: "/56.webp",
+    image: "/price-under-1599.webp",
     tagline: "Luxury hampers",
     bg: "bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100/50",
     border: "border-emerald-200/60 hover:border-emerald-300",
@@ -111,7 +111,7 @@ const ShopByPrice = () => {
                     alt={category.label}
                     fill
                     sizes="(max-width: 640px) 30vw, 20vw"
-                    className="object-contain object-center mix-blend-multiply scale-90"
+                    className="object-contain object-center mix-blend-multiply"
                   />
                 </div>
                 {/* Price label — compact */}
@@ -143,7 +143,7 @@ const ShopByPrice = () => {
                 {/* Image — centered */}
                 <div className="relative flex-1 min-h-[140px] md:min-h-[120px] lg:min-h-[150px] xl:min-h-[170px] w-full overflow-hidden">
                   <Image
-                    src="/price_svg.webp"
+                    src="/price-hero-banner.webp"
                     alt="Shop By Price"
                     fill
                     sizes="(max-width: 768px) 50vw, 33vw"

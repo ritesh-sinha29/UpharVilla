@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 
 const SLIDES = [
   {
-    image: "/pr1.png",
+    image: "/promo-offer-1.png",
     tag: "UPHARVILLA",
     title: "Memories That Last",
     subtitle: "Beautifully crafted photo gifts for every cherished moment.",
@@ -14,7 +14,7 @@ const SLIDES = [
     glow: "bg-purple-400/10",
   },
   {
-    image: "/pr2.png",
+    image: "/promo-offer-2.png",
     tag: "CUSTOMIZED",
     title: "Made Just for Them",
     subtitle: "Personalized gifts that speak from the heart.",
@@ -23,7 +23,7 @@ const SLIDES = [
     glow: "bg-amber-400/10",
   },
   {
-    image: "/pr3.png",
+    image: "/promo-offer-3.png",
     tag: "TRENDING",
     title: "Gift with Meaning",
     subtitle: "Thoughtful pieces designed to make every occasion unforgettable.",
@@ -32,7 +32,7 @@ const SLIDES = [
     glow: "bg-rose-400/10",
   },
   {
-    image: "/pr4.png",
+    image: "/promo-offer-4.png",
     tag: "PREMIUM",
     title: "Crafted with Love",
     subtitle: "From us to yours — gifts that truly stand out.",

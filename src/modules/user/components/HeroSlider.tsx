@@ -117,7 +117,6 @@ export const HeroSlider = () => {
                     fill
                     sizes="(max-width: 640px) 100vw, (max-width: 768px) 450px, (max-width: 1024px) 600px, (max-width: 1280px) 700px, 800px"
                     priority={index === 0}
-                    unoptimized={false}
                     className="object-cover"
                   />
                 ) : (

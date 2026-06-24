@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 const PROMO_SLIDES = [
   {
     id: "happy-couple",
-    image: "/happy couple.webp",
+    image: "/editorial-happy-couple.webp",
     altText: "A Gift As Unique As Your Love Story",
     badge: "Most Loved",
     badgeIcon: (
@@ -37,7 +37,7 @@ const PROMO_SLIDES = [
   },
   {
     id: "happy-family",
-    image: "/happy family.webp",
+    image: "/editorial-happy-family.webp",
     altText: "Celebrate The People Who Matter Most",
     badge: "Perfect For Families",
     badgeIcon: (

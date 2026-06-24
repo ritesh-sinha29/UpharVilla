@@ -6,13 +6,13 @@ import Link from "next/link";
 
 const DEFAULT_SLOTS = {
   slot1: {
-    image: "/hamper1.png",
+    image: "/editorial-hamper-gift.png",
     altText: "Shop Hampers",
     visitLink: "/products?tag=Customized Hampers",
     label: "SHOP HAMPERS",
   },
   slot2: {
-    image: "/frame1.png",
+    image: "/editorial-photo-frame.png",
     altText: "Shop Frames",
     visitLink: "/products?tag=Customized Photo Gifts",
     label: "SHOP FRAMES",
