@@ -79,8 +79,9 @@ export const WishlistButton = ({
       <Heart
         className={cn(
           "w-4 h-4 md:w-5 md:h-5 transition-transform duration-200 active:scale-75",
-          inWishlist && "fill-current text-red-500",
           iconClassName,
+          // Color always takes priority — applied last so it overrides iconClassName's text color
+          inWishlist ? "fill-current text-red-500" : "",
         )}
       />
     </button>
