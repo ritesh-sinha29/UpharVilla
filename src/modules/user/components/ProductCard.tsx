@@ -158,47 +158,47 @@ const ProductCard = ({ product, className }: ProductCardProps) => {
           )}
         </div>
 
-        {/* Text content — below image, no card border */}
-        <div className="pt-2 md:pt-3 lg:pt-4 px-0.5 flex flex-col gap-0.5 md:gap-1">
+        {/* Text content — @container makes text scale with card width */}
+        <div className="@container pt-2 px-0.5 flex flex-col gap-1">
           {/* Product name */}
-          <h3 className="text-[11px] md:text-sm lg:text-base text-gray-800 capitalize line-clamp-1 md:line-clamp-2 leading-snug font-medium">
+          <h3 className="text-[11px] @[120px]:text-xs @[160px]:text-sm @[220px]:text-base text-gray-800 capitalize truncate leading-snug font-medium" title={product.name}>
             {product.name}
           </h3>
 
           {/* Stars + review count */}
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="flex items-center gap-0.5 shrink-0">
             <Rating
               name={`rating-${product._id}`}
               defaultValue={2.5}
               precision={0.5}
               readOnly
               size="small"
-              sx={{ fontSize: "0.7rem", '@media (min-width: 768px)': { fontSize: '0.85rem' } }}
+              sx={{ fontSize: "0.7rem" }}
             />
-            <span className="text-[10px] md:text-xs text-gray-400 font-medium whitespace-nowrap">
+            <span className="text-[9px] @[140px]:text-[10px] @[200px]:text-xs text-gray-400 font-medium whitespace-nowrap">
               ({reviewCount})
             </span>
           </div>
 
           {/* Price */}
-          <div className="flex items-center justify-between mt-0">
-            <div className="flex items-baseline gap-1 md:gap-1.5 min-w-0">
-              <span className="text-xs md:text-sm lg:text-base font-bold text-gray-900 font-mono">
+          <div className="flex items-center justify-between gap-1.5 mt-0">
+            <div className="flex items-baseline gap-0.5 @[140px]:gap-1 min-w-0 overflow-hidden">
+              <span className="text-xs @[120px]:text-sm @[180px]:text-base @[240px]:text-lg font-bold text-gray-900 font-mono whitespace-nowrap">
                 ₹{product.price.toLocaleString("en-IN")}
               </span>
               {originalPrice && (
                 <>
-                  <span className="text-[10px] md:text-xs text-gray-400 line-through font-mono hidden sm:inline">
+                  <span className="text-[8px] @[140px]:text-[9px] @[180px]:text-[11px] @[240px]:text-xs text-gray-400 line-through font-mono whitespace-nowrap">
                     ₹{originalPrice.toLocaleString("en-IN")}
                   </span>
-                  <span className="text-[9px] md:text-[10px] font-bold text-[#E11D48] font-sans">
+                  <span className="text-[8px] @[140px]:text-[9px] @[180px]:text-[11px] font-bold text-[#E11D48] font-sans whitespace-nowrap">
                     {product.discount}%
                   </span>
                 </>
               )}
             </div>
             <span
-              className={`flex items-center gap-0.5 text-[9px] md:text-[11px] font-semibold px-1.5 md:px-2.5 py-0.5 md:py-1 rounded-full transition-all duration-200 cursor-pointer shrink-0 ${
+              className={`flex items-center gap-0.5 text-[9px] @[140px]:text-[10px] @[180px]:text-[11px] font-semibold px-2 @[140px]:px-2.5 @[180px]:px-3 py-0.5 @[140px]:py-1 rounded-full transition-all duration-200 cursor-pointer shrink-0 ${
                 product.stock <= 0
                   ? "bg-neutral-800 text-white"
                   : "bg-primary text-primary-foreground"
@@ -208,7 +208,7 @@ const ProductCard = ({ product, className }: ProductCardProps) => {
                   : "opacity-0 pointer-events-none"
               }`}
             >
-              <ShoppingBag className="w-2.5 h-2.5 md:w-3 md:h-3" />
+              <ShoppingBag className="w-2.5 h-2.5 @[140px]:w-3 @[140px]:h-3" />
               {product.stock <= 0 ? "Notify" : "Shop"}
             </span>
           </div>
