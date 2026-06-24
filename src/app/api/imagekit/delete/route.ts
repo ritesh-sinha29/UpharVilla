@@ -2,14 +2,21 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getImageKit } from "@/lib/ImageKit";
 
-export async function POST(req: Request) {
-  // Auth check — verify session cookie exists
-  const cookieStore = await cookies();
-  const sessionCookie =
-    cookieStore.get("better-auth.session_token") ??
-    cookieStore.get("__Secure-better-auth.session_token");
+// Better Auth cookie names — checks dot & hyphen variants + Secure prefix
+const SESSION_COOKIE_NAMES = [
+  "better-auth.session_token",
+  "better-auth-session_token",
+  "__Secure-better-auth.session_token",
+  "__Secure-better-auth-session_token",
+];
 
-  if (!sessionCookie?.value) {
+export async function POST(req: Request) {
+  const cookieStore = await cookies();
+  const hasSession = SESSION_COOKIE_NAMES.some(
+    (name) => !!cookieStore.get(name)?.value,
+  );
+
+  if (!hasSession) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -19,7 +26,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "URL is required" }, { status: 400 });
     }
 
-    // Extract the file name from the URL path
     const parts = url.split("/");
     const fileName = parts[parts.length - 1];
 
@@ -30,7 +36,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // List files matching the name
     const files = await getImageKit().listFiles({
       searchQuery: `name = "${fileName}"`,
     });

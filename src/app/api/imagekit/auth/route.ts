@@ -2,16 +2,21 @@ import { getUploadAuthParams } from "@imagekit/next/server";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
-export async function GET() {
-  // Check for Better Auth session cookie — this is a lightweight,
-  // server-side-only check that works reliably on Vercel without
-  // needing a roundtrip to the Convex backend.
-  const cookieStore = await cookies();
-  const sessionCookie =
-    cookieStore.get("better-auth.session_token") ??
-    cookieStore.get("__Secure-better-auth.session_token");
+// Better Auth cookie names — checks dot & hyphen variants + Secure prefix
+const SESSION_COOKIE_NAMES = [
+  "better-auth.session_token",
+  "better-auth-session_token",
+  "__Secure-better-auth.session_token",
+  "__Secure-better-auth-session_token",
+];
 
-  if (!sessionCookie?.value) {
+export async function GET() {
+  const cookieStore = await cookies();
+  const hasSession = SESSION_COOKIE_NAMES.some(
+    (name) => !!cookieStore.get(name)?.value,
+  );
+
+  if (!hasSession) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
