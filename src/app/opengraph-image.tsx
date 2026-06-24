@@ -11,7 +11,7 @@ export const contentType = "image/png";
 export default async function Image() {
   // Read the actual logo file and convert to base64 data URL
   const logoBuffer = await readFile(
-    join(process.cwd(), "public", "logo-original.png"),
+    join(process.cwd(), "public", "logo-og.png"),
   );
   const logoBase64 = `data:image/png;base64,${logoBuffer.toString("base64")}`;
 
