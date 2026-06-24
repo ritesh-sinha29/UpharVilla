@@ -109,16 +109,6 @@ const ProductCard = ({ product, className }: ProductCardProps) => {
             ))}
           </div>
 
-          {/* Wishlist — always visible on mobile, hover-only on desktop */}
-          <div
-            className={`absolute top-1.5 right-1.5 md:top-2.5 md:right-2.5 z-10 transition-all duration-200
-              opacity-100 translate-y-0
-              md:${isHovered ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1 pointer-events-none"}`}
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-            onTouchEnd={(e) => { e.stopPropagation(); }}
-          >
-            <WishlistButton productId={product._id} />
-          </div>
 
           {/* Badge overlays at the top-left of the image container (Flipkart/Nykaa style) */}
           {(product.stock <= 0 ||
@@ -213,6 +203,15 @@ const ProductCard = ({ product, className }: ProductCardProps) => {
           </div>
         </div>
       </Link>
+
+      {/* Wishlist heart — outside Link so mobile taps are never intercepted by navigation */}
+      <div
+        className={`absolute top-1.5 right-1.5 md:top-2.5 md:right-2.5 z-20 transition-all duration-200
+          opacity-100 translate-y-0
+          md:${isHovered ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1 pointer-events-none"}`}
+      >
+        <WishlistButton productId={product._id} />
+      </div>
     </motion.div>
   );
 };
