@@ -4,15 +4,17 @@ import { useQuery } from "convex/react";
 import useEmblaCarousel from "embla-carousel-react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  Baby,
   CakeSlice,
   CalendarHeart,
-  ChevronLeft,
   ChevronRight,
   Crown,
-  GraduationCap,
+  Flame,
+  Flower2,
+  Gem,
   Heart,
+  Home,
   PackageOpen,
+  Ribbon,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../../../../convex/_generated/api";
@@ -20,12 +22,15 @@ import ProductCard from "./ProductCard";
 
 // ─── Icon map keyed by occasion slug ─────────────────────────────────────────
 const ICON_MAP: Record<string, React.ElementType> = {
-  "fathers-day": Crown,
   birthday: CakeSlice,
   anniversary: CalendarHeart,
-  valentines: Heart,
-  "baby-shower": Baby,
-  graduation: GraduationCap,
+  wedding: Gem,
+  rakhi: Ribbon,
+  diwali: Flame,
+  housewarming: Home,
+  "fathers-day": Crown,
+  "mothers-day": Flower2,
+  "valentines-day": Heart,
 };
 
 const DEFAULT_OCCASIONS = [
