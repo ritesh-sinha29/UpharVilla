@@ -195,7 +195,7 @@ const ShopByOccasion = () => {
 
   return (
     <section className="py-2 md:py-8 lg:py-12 bg-white">
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-5 md:px-6 lg:px-8 xl:px-12">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-5 md:px-10 lg:px-16 xl:px-20">
         {/* Title */}
         <div className="flex items-center gap-2 md:block mb-3 md:mb-4 lg:mb-6 xl:mb-8">
           <div className="w-1 h-5 bg-emerald-500 rounded-full md:hidden" />
@@ -225,7 +225,7 @@ const ShopByOccasion = () => {
                   text-[13px] md:text-xs lg:text-[13px] xl:text-sm font-medium whitespace-nowrap transition-all
                   duration-200 cursor-pointer flex-none min-w-[70px] md:min-w-[60px] lg:min-w-[70px] xl:min-w-[80px]
                   ${isActive
-                    ? "bg-[#fff9ee] text-black pt-[9px] pb-4 -mb-px relative z-10 border-t-[3px] border-t-primary rounded-t-lg"
+                    ? `bg-[#fff9ee] text-black pt-[9px] pb-4 -mb-px relative z-10 border-t-[3px] border-t-primary ${idx === 0 ? "rounded-tr-lg" : "rounded-t-lg"}`
                     : "bg-transparent text-gray-500 hover:text-gray-800 hover:bg-black/5 pt-[9px] pb-3 border-t-[3px] border-t-transparent rounded-t-lg"
                   }
                 `}
@@ -262,7 +262,7 @@ const ShopByOccasion = () => {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: direction * -24 }}
             transition={{ duration: 0.22, ease: "easeOut" }}
-            className={`bg-[#fff9ee] p-3 md:p-4 lg:p-5 rounded-xl md:rounded-2xl ${activeIdx === 0 ? "rounded-tl-none" : ""
+            className={`bg-[#fff9ee] p-3 md:p-4 lg:p-5 ${activeIdx === 0 ? "rounded-xl md:rounded-2xl rounded-tl-none md:rounded-tl-none" : "rounded-xl md:rounded-2xl"
               } relative z-0`}
           >
             {activeOccasion && (
