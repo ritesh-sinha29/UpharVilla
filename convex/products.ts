@@ -229,6 +229,15 @@ export const getByTags = query({
 export const getFilteredProducts = query({
   args: {
     tags: v.optional(v.array(v.string())),
+    category: v.optional(v.string()),
+    flag: v.optional(
+      v.union(
+        v.literal("new-arrival"),
+        v.literal("trending"),
+        v.literal("most-sold"),
+        v.literal("most-purchased"),
+      ),
+    ),
     sortBy: v.optional(
       v.union(
         v.literal("price_asc"),
@@ -278,6 +287,29 @@ export const getFilteredProducts = query({
           `${p.name} ${p.description} ${p.category} ${p.subCategory || ""} ${p.tags.join(" ")}`.toLowerCase();
         return keywords.every((keyword) => textToSearch.includes(keyword));
       });
+    }
+
+    // Filter by category (e.g. "customized-gifts", "corporate-gifts")
+    if (args.category) {
+      products = products.filter((p) => p.category === args.category);
+    }
+
+    // Filter by special boolean flags (new-arrival, trending, etc.)
+    if (args.flag) {
+      switch (args.flag) {
+        case "new-arrival":
+          products = products.filter((p) => p.markNewArrival === true);
+          break;
+        case "trending":
+          products = products.filter((p) => p.markTrending === true);
+          break;
+        case "most-sold":
+          products = products.filter((p) => p.markMostSold === true);
+          break;
+        case "most-purchased":
+          products = products.filter((p) => p.markMostPurchased === true);
+          break;
+      }
     }
 
     // Filter by tags (AND logic)

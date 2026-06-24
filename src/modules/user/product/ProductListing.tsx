@@ -166,14 +166,19 @@ export default function ProductListing({
   );
 
   // Build query args for filtered products
+  const categoryParam = searchParams.get("category") || "";
+  const flagParam = searchParams.get("flag") || "";
+
   const queryArgs = useMemo(() => {
     const args: Record<string, unknown> = { sortBy };
     if (selectedTags.length > 0) args.tags = selectedTags;
     if (minPrice) args.minPrice = Number(minPrice);
     if (maxPrice) args.maxPrice = Number(maxPrice);
     if (searchTerm) args.searchTerm = searchTerm;
+    if (categoryParam) args.category = categoryParam;
+    if (flagParam) args.flag = flagParam;
     return args;
-  }, [selectedTags, sortBy, minPrice, maxPrice, searchTerm]);
+  }, [selectedTags, sortBy, minPrice, maxPrice, searchTerm, categoryParam, flagParam]);
 
   // Fetch data — use getNewArrivals when in new arrivals mode, otherwise getFilteredProducts
   const filteredProducts = useQuery(
@@ -301,11 +306,31 @@ export default function ProductListing({
 
 
 
+  // Human-readable labels for flag and category params
+  const FLAG_LABELS: Record<string, string> = {
+    "new-arrival": "New Arrivals",
+    "trending": "Trending",
+    "most-sold": "Most Sold",
+    "most-purchased": "Most Purchased",
+  };
+  const CATEGORY_LABELS: Record<string, string> = {
+    "customized-gifts": "Customized Gifts",
+    "corporate-gifts": "Corporate Gifts",
+    "hampers": "Hampers",
+    "frames-bouquet": "Frames & Bouquet",
+    "shop-by-occasion": "Shop by Occasion",
+    "new-arrivals": "New Arrivals",
+  };
+
   const pageTitle = useNewArrivals
     ? "New Arrivals"
-    : selectedTags.length > 0
-      ? selectedTags.join(" & ")
-      : "All Products";
+    : flagParam
+      ? FLAG_LABELS[flagParam] || flagParam
+      : categoryParam
+        ? CATEGORY_LABELS[categoryParam] || categoryParam
+        : selectedTags.length > 0
+          ? selectedTags.join(" & ")
+          : "All Products";
 
   return (
     <div className="min-h-[50vh] bg-white">

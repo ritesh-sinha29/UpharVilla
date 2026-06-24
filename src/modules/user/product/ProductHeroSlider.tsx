@@ -91,7 +91,7 @@ function SlideBox({
       {/* Layout wrapper */}
       <div className="relative z-10 flex items-center h-full min-h-[160px] sm:min-h-[180px] md:min-h-[200px]">
         {/* Left: Text Content */}
-        <div className="flex-1 min-w-0 px-5 sm:px-8 pt-4 pb-8 md:pt-6 md:pb-10 pr-[120px] sm:pr-[145px] md:pr-[190px] lg:pr-[230px] flex flex-col justify-start">
+        <div className="flex-1 min-w-0 px-5 sm:px-8 pt-4 pb-8 md:pt-6 md:pb-10 pr-[145px] sm:pr-[170px] md:pr-[190px] lg:pr-[230px] flex flex-col justify-start">
           <div
             className="transition-all duration-500 ease-out"
             style={{
@@ -116,7 +116,7 @@ function SlideBox({
       </div>
 
       {/* Product Image — anchored bottom-right */}
-      <div className="absolute right-0 sm:right-2 top-2 bottom-0 w-[110px] sm:w-[130px] md:w-[160px] lg:w-[200px] overflow-hidden pointer-events-none">
+      <div className="absolute right-0 sm:right-2 top-0 bottom-0 w-[140px] sm:w-[160px] md:w-[180px] lg:w-[220px] overflow-hidden pointer-events-none">
         <div
           className="relative w-full h-full transition-all duration-500 ease-out group-hover:scale-105"
           style={{
@@ -131,7 +131,7 @@ function SlideBox({
             alt={slide.title}
             fill
             className="object-contain object-bottom drop-shadow-lg"
-            sizes="(max-width: 640px) 110px, (max-width: 768px) 130px, (max-width: 1024px) 160px, 200px"
+            sizes="(max-width: 640px) 140px, (max-width: 768px) 160px, (max-width: 1024px) 180px, 220px"
             priority
           />
         </div>

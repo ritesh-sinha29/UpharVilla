@@ -6,7 +6,7 @@ import ProductCarouselSection from "./ProductCarouselSection";
 
 const CustomGift = () => {
   const allProducts = useQuery(api.products.getByCategory, {
-    category: "hampers",
+    category: "customized-gifts",
   });
 
   const products = allProducts?.slice(0, 15);
@@ -16,7 +16,7 @@ const CustomGift = () => {
       products={products}
       title="Custom Gift"
       subtitle="Add a personal touch to your gift with our customization options, including photos, text, and gift hampers."
-      viewAllLink="/products?tag=Customized Hampers"
+      viewAllLink="/products?category=customized-gifts"
       viewAllText="View All Collection"
       accentColorClass="bg-amber-500"
       accentTextClass="text-amber-600"

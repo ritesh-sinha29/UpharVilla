@@ -13,7 +13,7 @@ const NewArrival = () => {
       products={products}
       title="New Arrival"
       subtitle="Explore our latest drops and trending pieces designed to elevate your style."
-      viewAllLink="/products?tag=New Arrivals"
+      viewAllLink="/products?flag=new-arrival"
       viewAllText="View All New Arrivals"
       accentColorClass="bg-primary"
       accentTextClass="text-primary"

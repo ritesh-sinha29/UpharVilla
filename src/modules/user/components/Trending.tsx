@@ -12,7 +12,7 @@ const Trending = () => {
       products={products}
       title="Trending"
       subtitle="Discover the most loved pieces that are currently capturing everyone's attention."
-      viewAllLink="/products?tag=Trending"
+      viewAllLink="/products?flag=trending"
       viewAllText="View All Trending"
       accentColorClass="bg-[#FC2779]"
       accentTextClass="text-[#FC2779]"
