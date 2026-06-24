@@ -219,12 +219,7 @@ export default function AccessControlPage() {
             ) : (
               adminUsers.map((user) => {
                 const label = ROLE_LABELS[user.role] ?? user.role;
-                const initials = user.name
-                  .split(" ")
-                  .map((w) => w[0])
-                  .join("")
-                  .toUpperCase()
-                  .slice(0, 2);
+
                 const isCurrentUser =
                   user.userId === session?.user?.id ||
                   user.email === session?.user?.email;

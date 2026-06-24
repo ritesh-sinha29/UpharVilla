@@ -116,7 +116,7 @@ function SlideBox({
       </div>
 
       {/* Product Image — anchored bottom-right */}
-      <div className="absolute right-3 sm:right-5 bottom-2 sm:bottom-3 w-[100px] sm:w-[120px] md:w-[150px] lg:w-[180px] aspect-square overflow-hidden pointer-events-none">
+      <div className="absolute right-0 sm:right-2 top-2 bottom-0 w-[110px] sm:w-[130px] md:w-[160px] lg:w-[200px] overflow-hidden pointer-events-none">
         <div
           className="relative w-full h-full transition-all duration-500 ease-out group-hover:scale-105"
           style={{
@@ -130,8 +130,8 @@ function SlideBox({
             src={slide.image}
             alt={slide.title}
             fill
-            className="object-contain object-bottom"
-            sizes="(max-width: 640px) 100px, (max-width: 768px) 120px, (max-width: 1024px) 150px, 180px"
+            className="object-contain object-bottom drop-shadow-lg"
+            sizes="(max-width: 640px) 110px, (max-width: 768px) 130px, (max-width: 1024px) 160px, 200px"
             priority
           />
         </div>
