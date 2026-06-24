@@ -58,25 +58,31 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
       enabled: true,
       requireEmailVerification: true,
       async sendResetPassword({ user, url }) {
+        const siteUrl = process.env.SITE_URL || "https://uphar-villa.vercel.app";
+        const logoUrl = `${siteUrl}/logo.png`;
         if (process.env.RESEND_API_KEY) {
           const resend = new Resend(process.env.RESEND_API_KEY);
           await resend.emails.send({
-            from:
-              process.env.RESEND_FROM_EMAIL ||
-              "UpharVilla Support <support@upharvilla.in>",
+            from: "upharVilla Support <support@upharvilla.in>",
             to: user.email,
-            subject: "Reset your password for upharVilla",
+            subject: "Reset your password — upharVilla",
             html: `
-              <div style="font-family: sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px;">
-                <h2 style="color: #1e1b4b; margin-bottom: 16px;">Reset Your Password</h2>
-                <p style="color: #475569; line-height: 1.6;">Hello ${user.name},</p>
-                <p style="color: #475569; line-height: 1.6;">We received a request to reset your password for your upharVilla account. Click the button below to set a new password:</p>
-                <div style="margin: 32px 0;">
-                  <a href="${url}" style="display: inline-block; padding: 12px 24px; background-color: #4f46e5; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600;">Reset Password</a>
+              <div style="font-family: 'Segoe UI', sans-serif; padding: 0; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #ede9f8; border-radius: 12px; overflow: hidden;">
+                <div style="background: linear-gradient(135deg, #ad8de9, #e87fa6); padding: 28px 24px; text-align: center;">
+                  <img src="${logoUrl}" alt="upharVilla" style="height: 44px;" />
                 </div>
-                <p style="color: #64748b; font-size: 14px; line-height: 1.6;">If you didn't request this, you can safely ignore this email. The link will expire in 1 hour.</p>
-                <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 32px 0;" />
-                <p style="color: #94a3b8; font-size: 12px; text-align: center;">© 2026 upharVilla. All rights reserved.</p>
+                <div style="padding: 32px 24px;">
+                  <h2 style="color: #1a1a2e; margin: 0 0 16px; font-family: Poppins, 'Segoe UI', sans-serif;">Reset Your Password</h2>
+                  <p style="color: #4a4a6a; line-height: 1.6;">Hello ${user.name},</p>
+                  <p style="color: #4a4a6a; line-height: 1.6;">We received a request to reset your password for your upharVilla account. Click the button below to set a new password:</p>
+                  <div style="margin: 32px 0; text-align: center;">
+                    <a href="${url}" style="display: inline-block; padding: 14px 32px; background: #ad8de9; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 15px;">Reset Password</a>
+                  </div>
+                  <p style="color: #8b8ba0; font-size: 14px; line-height: 1.6;">If you didn't request this, you can safely ignore this email. The link will expire in 1 hour.</p>
+                </div>
+                <div style="background-color: #faf9ff; padding: 16px 24px; text-align: center; border-top: 1px solid #ede9f8;">
+                  <p style="color: #8b8ba0; font-size: 12px; margin: 0;">© ${new Date().getFullYear()} upharVilla · The House of Gifts</p>
+                </div>
               </div>
             `,
           });
@@ -102,37 +108,55 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
       emailOTP({
         sendVerificationOnSignUp: true,
         async sendVerificationOTP({ email, otp, type }) {
+          const siteUrl = process.env.SITE_URL || "https://uphar-villa.vercel.app";
+          const logoUrl = `${siteUrl}/logo.png`;
           if (process.env.RESEND_API_KEY) {
             const resend = new Resend(process.env.RESEND_API_KEY);
             const isReset = type === "forget-password";
 
             await resend.emails.send({
-              from:
-                process.env.RESEND_FROM_EMAIL ||
-                "UpharVilla Support <support@upharvilla.in>",
+              from: isReset
+                ? "upharVilla Support <support@upharvilla.in>"
+                : "upharVilla <hello@upharvilla.in>",
               to: email,
               subject: isReset
-                ? "Reset your password for upharVilla"
+                ? "Reset your password — upharVilla"
                 : "Your OTP for upharVilla",
               html: isReset
                 ? `
-                <div style="font-family: sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px;">
-                  <h2 style="color: #1e1b4b; margin-bottom: 16px;">Password Reset Request</h2>
-                  <p style="color: #475569; line-height: 1.6;">We received a request to reset your password for your upharVilla account.</p>
-                  <p style="color: #475569; line-height: 1.6;">Your 6-digit verification code is:</p>
-                  <div style="margin: 32px 0; text-align: center;">
-                    <span style="font-size: 32px; font-weight: 700; tracking: 4px; color: #4f46e5; padding: 12px 24px; background-color: #f5f3ff; border-radius: 8px;">${otp}</span>
+                <div style="font-family: 'Segoe UI', sans-serif; padding: 0; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #ede9f8; border-radius: 12px; overflow: hidden;">
+                  <div style="background: linear-gradient(135deg, #ad8de9, #e87fa6); padding: 28px 24px; text-align: center;">
+                    <img src="${logoUrl}" alt="upharVilla" style="height: 44px;" />
                   </div>
-                  <p style="color: #64748b; font-size: 14px; line-height: 1.6;">Enter this code on the reset page to set a new password. If you didn't request this, you can safely ignore this email.</p>
-                  <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 32px 0;" />
-                  <p style="color: #94a3b8; font-size: 12px; text-align: center;">© 2026 upharVilla. All rights reserved.</p>
+                  <div style="padding: 32px 24px;">
+                    <h2 style="color: #1a1a2e; margin: 0 0 16px; font-family: Poppins, 'Segoe UI', sans-serif;">Password Reset Request</h2>
+                    <p style="color: #4a4a6a; line-height: 1.6;">Your 6-digit verification code is:</p>
+                    <div style="margin: 24px 0; text-align: center;">
+                      <span style="font-size: 36px; font-weight: 700; letter-spacing: 6px; color: #ad8de9; padding: 16px 32px; background-color: #faf9ff; border-radius: 12px; display: inline-block; border: 1px solid #ede9f8;">${otp}</span>
+                    </div>
+                    <p style="color: #8b8ba0; font-size: 14px; line-height: 1.6;">Enter this code on the reset page. If you didn't request this, ignore this email.</p>
+                  </div>
+                  <div style="background-color: #faf9ff; padding: 16px 24px; text-align: center; border-top: 1px solid #ede9f8;">
+                    <p style="color: #8b8ba0; font-size: 12px; margin: 0;">© ${new Date().getFullYear()} upharVilla · The House of Gifts</p>
+                  </div>
                 </div>
               `
                 : `
-                <div style="font-family: sans-serif; padding: 20px;">
-                  <h2>Welcome to upharVilla!</h2>
-                  <p>Your verification code is: <strong style="font-size: 24px;">${otp}</strong></p>
-                  <p>This code will expire shortly.</p>
+                <div style="font-family: 'Segoe UI', sans-serif; padding: 0; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #ede9f8; border-radius: 12px; overflow: hidden;">
+                  <div style="background: linear-gradient(135deg, #ad8de9, #e87fa6); padding: 28px 24px; text-align: center;">
+                    <img src="${logoUrl}" alt="upharVilla" style="height: 44px;" />
+                  </div>
+                  <div style="padding: 32px 24px;">
+                    <h2 style="color: #1a1a2e; margin: 0 0 16px; font-family: Poppins, 'Segoe UI', sans-serif;">Welcome to upharVilla! 🎉</h2>
+                    <p style="color: #4a4a6a; line-height: 1.6;">Your verification code is:</p>
+                    <div style="margin: 24px 0; text-align: center;">
+                      <span style="font-size: 36px; font-weight: 700; letter-spacing: 6px; color: #ad8de9; padding: 16px 32px; background-color: #faf9ff; border-radius: 12px; display: inline-block; border: 1px solid #ede9f8;">${otp}</span>
+                    </div>
+                    <p style="color: #8b8ba0; font-size: 14px; line-height: 1.6;">This code will expire shortly. Do not share it with anyone.</p>
+                  </div>
+                  <div style="background-color: #faf9ff; padding: 16px 24px; text-align: center; border-top: 1px solid #ede9f8;">
+                    <p style="color: #8b8ba0; font-size: 12px; margin: 0;">© ${new Date().getFullYear()} upharVilla · The House of Gifts</p>
+                  </div>
                 </div>
               `,
             });

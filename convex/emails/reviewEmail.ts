@@ -130,7 +130,7 @@ export const sendReviewRequests = internalAction({
           to: [{ email: order.email, name: order.name }],
           subject: `⭐ How was your upharVilla gift, ${firstName}?`,
           htmlContent: emailWrapper(body),
-          sender: { email: "support@upharvilla.in", name: "upharVilla" },
+          sender: { email: "hello@upharvilla.in", name: "upharVilla" },
           tags: ["review-request"],
         });
       }

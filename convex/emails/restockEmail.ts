@@ -103,7 +103,7 @@ export const notifyUsersOfRestock = internalAction({
             to: [{ email: n.email }],
             subject: `Back in stock: ${args.productName} is available! — upharVilla`,
             htmlContent: emailWrapper(body),
-            sender: { email: "support@upharvilla.in", name: "upharVilla" },
+            sender: { email: "info@upharvilla.in", name: "upharVilla Store" },
             replyTo: { email: "support@upharvilla.in", name: "upharVilla" },
             tags: ["product-restocked"],
           });

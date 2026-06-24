@@ -77,7 +77,7 @@ export const sendEnquiryAutoReply = internalAction({
         to: [{ email: args.email, name: args.name }],
         subject: `We got your message, ${firstName}! — upharVilla`,
         htmlContent: emailWrapper(body),
-        sender: { email: "support@upharvilla.in", name: "upharVilla Support" },
+        sender: { email: "contact@upharvilla.in", name: "upharVilla" },
         replyTo: { email: "support@upharvilla.in", name: "upharVilla Support" },
         tags: ["enquiry-autoreply"],
       });

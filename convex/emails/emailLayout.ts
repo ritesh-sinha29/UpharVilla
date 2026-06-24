@@ -6,8 +6,11 @@
 
 import { env } from "../env";
 
-const BASE_URL = env.SITE_URL;
+const BASE_URL = env.SITE_URL || "https://uphar-villa.vercel.app";
+// logo.png = transparent bg (for gradient headers)
+// logo-og.png = white bg square (for light sections / social)
 const LOGO_URL = `${BASE_URL}/logo.png`;
+const LOGO_OG_URL = `${BASE_URL}/logo-og.png`;
 
 // Brand tokens — exact values from globals.css
 export const B = {
@@ -33,10 +36,10 @@ export const B = {
 export function emailHeader(tagline: string): string {
   return `
   <tr>
-    <td style="background:linear-gradient(135deg,${B.primary},${B.primaryDark});padding:32px 24px 28px;text-align:center;">
+    <td style="background:linear-gradient(135deg,${B.primary},${B.pink});padding:32px 24px 28px;text-align:center;">
       <img src="${LOGO_URL}" alt="upharVilla" width="160" height="auto"
            style="display:block;margin:0 auto 12px;max-width:160px;height:auto;" />
-      <p style="margin:0;font-size:13px;color:rgba(255,255,255,0.88);font-family:Poppins,Arial,sans-serif;letter-spacing:0.3px;">${tagline}</p>
+      <p style="margin:0;font-size:13px;color:rgba(255,255,255,0.92);font-family:Poppins,Arial,sans-serif;letter-spacing:0.3px;">${tagline}</p>
     </td>
   </tr>`;
 }

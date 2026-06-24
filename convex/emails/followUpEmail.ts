@@ -178,7 +178,7 @@ export const sendCartFollowUps = internalAction({
           to: [{ email: user.email, name: user.name }],
           subject: `🛒 ${firstName}, your cart is waiting — upharVilla`,
           htmlContent: emailWrapper(body),
-          sender: { email: "support@upharvilla.in", name: "upharVilla" },
+          sender: { email: "hello@upharvilla.in", name: "upharVilla" },
           tags: ["cart-followup"],
         });
       }

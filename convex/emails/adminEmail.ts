@@ -180,7 +180,7 @@ export const notifyAdminNewEnquiry = internalAction({
         to: [{ email: ADMIN_EMAIL, name: "upharVilla Admin" }],
         subject: `📩 New Enquiry from ${args.name}`,
         htmlContent: emailWrapper(body),
-        sender: { email: "support@upharvilla.in", name: "upharVilla Support" },
+        sender: { email: "admin@upharvilla.in", name: "upharVilla Admin" },
         replyTo: { email: args.email, name: args.name },
         tags: ["admin-enquiry"],
       });

@@ -115,7 +115,7 @@ export const sendThankYouEmails = internalAction({
           to: [{ email: order.email, name: order.name }],
           subject: `Order Delivered: #${shortId}`,
           htmlContent: emailWrapper(body),
-          sender: { email: "support@upharvilla.in", name: "upharVilla" },
+          sender: { email: "hello@upharvilla.in", name: "upharVilla" },
           tags: ["thank-you"],
         });
       }
