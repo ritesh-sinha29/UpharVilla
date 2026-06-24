@@ -134,11 +134,12 @@ export const reserveStock = mutation({
 
     const now = Date.now();
 
-    // 2. Release any stale reservations from this user
+    // 2. Release ALL existing "reserved" reservations for this user —
+    // including already-expired ones, so they don't pollute future getActiveReservations queries.
     const existingReservations = await ctx.db
       .query("reservations")
       .withIndex("by_user_active", (q) =>
-        q.eq("userId", userId).eq("status", "reserved").gt("expiresAt", now),
+        q.eq("userId", userId).eq("status", "reserved"),
       )
       .collect();
 
@@ -216,10 +217,12 @@ export const getActiveReservations = query({
     const userId = identity.subject as Id<"user">;
     const now = Date.now();
 
+    // Only fetch reservations that haven't expired yet.
+    // The index supports range queries on expiresAt after equality on userId+status.
     const valid = await ctx.db
       .query("reservations")
       .withIndex("by_user_active", (q) =>
-        q.eq("userId", userId).eq("status", "reserved"),
+        q.eq("userId", userId).eq("status", "reserved").gt("expiresAt", now),
       )
       .collect();
     if (valid.length === 0) return null;

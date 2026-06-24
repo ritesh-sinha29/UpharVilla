@@ -136,6 +136,9 @@ export default defineSchema({
       v.literal("completed"),
       v.literal("released"),
     ),
+    // Legacy field — kept optional for backward compatibility with existing production documents.
+    // New reservations do NOT use this; payment tracking is handled by checkoutSessions table.
+    razorpayOrderId: v.optional(v.string()),
   })
     .index("by_user_active", ["userId", "status", "expiresAt"])
     .index("by_product_active", ["productId", "status", "expiresAt"])
