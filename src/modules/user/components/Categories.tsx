@@ -72,7 +72,7 @@ export const Categories = () => {
                 <div className="relative mb-3 md:mb-6">
                   {/* Randomish shaped container for image */}
                   <motion.div
-                    className="relative aspect-[1/1.2] overflow-hidden bg-primary/10 border border-primary/30 shadow-sm transition-all duration-500 rounded-xl group-hover:shadow-xl group-hover:shadow-primary/20 group-hover:border-primary/30 group-hover:bg-primary/[0.08]"
+                    className="relative aspect-square overflow-hidden bg-primary/10 border border-primary/30 shadow-sm transition-all duration-500 rounded-xl group-hover:shadow-xl group-hover:shadow-primary/20 group-hover:border-primary/30 group-hover:bg-primary/[0.08]"
                     style={{
                       borderRadius:
                         index % 2 === 0
@@ -87,13 +87,15 @@ export const Categories = () => {
                       scale: 1.05,
                     }}
                   >
-                    <Image
-                      src={category.image}
-                      alt={category.name}
-                      fill
-                      sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 20vw"
-                      className="object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
+                    <div className="absolute inset-2 sm:inset-3 md:inset-4">
+                      <Image
+                        src={category.image}
+                        alt={category.name}
+                        fill
+                        sizes="(max-width: 640px) 30vw, (max-width: 1024px) 25vw, 15vw"
+                        className="object-contain transition-transform duration-700 group-hover:scale-110"
+                      />
+                    </div>
 
                     {/* Subtle purple tint on hover */}
                     <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />

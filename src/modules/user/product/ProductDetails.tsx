@@ -8,6 +8,8 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  LogIn,
+  MessageCircle,
   RotateCcw,
   Share2,
   ShieldCheck,
@@ -15,6 +17,7 @@ import {
   ShoppingCart,
   Tag,
   Truck,
+  X,
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -42,10 +45,12 @@ export const ProductDetails = ({ product }: ProductDetailsProps) => {
 
   // Notify Me states
   const { data: session } = authClient.useSession();
-  const [notifyEmail, setNotifyEmail] = useState("");
   const [isSubmittingNotification, setIsSubmittingNotification] =
     useState(false);
   const [notificationSuccess, setNotificationSuccess] = useState(false);
+  const [whatsappNumber, setWhatsappNumber] = useState("");
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [fallbackEmail, setFallbackEmail] = useState("");
 
   const router = useRouter();
   const { isAuthenticated, isLoading } = useConvexAuth();
@@ -65,12 +70,7 @@ export const ProductDetails = ({ product }: ProductDetailsProps) => {
     userId: session?.user?.id,
   });
 
-  // Pre-fill email when session is loaded
-  useEffect(() => {
-    if (session?.user?.email) {
-      setNotifyEmail(session.user.email);
-    }
-  }, [session]);
+  const userEmail = session?.user?.email || "";
 
   const allImages = [product?.thumbnail, ...(product?.images || [])]
     .filter(Boolean)
@@ -605,6 +605,40 @@ export const ProductDetails = ({ product }: ProductDetailsProps) => {
           </div>
 
           {/* Action Buttons */}
+          {/* Login Prompt Modal */}
+          {showLoginPrompt && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+              <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-300 relative">
+                <button
+                  type="button"
+                  onClick={() => setShowLoginPrompt(false)}
+                  className="absolute top-3 right-3 text-neutral-400 hover:text-neutral-600 cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+                <div className="flex flex-col items-center gap-3 text-center">
+                  <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+                    <LogIn className="w-7 h-7 text-primary" />
+                  </div>
+                  <h3 className="text-lg font-bold text-neutral-800">Login Required</h3>
+                  <p className="text-sm text-neutral-500">
+                    Please log in to get notified when this product is back in stock.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowLoginPrompt(false);
+                      router.push("/auth");
+                    }}
+                    className="mt-2 w-full bg-primary text-primary-foreground font-bold text-sm py-3 rounded-xl hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer uppercase tracking-wider"
+                  >
+                    Login / Sign Up
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {product?.stock <= 0 ? (
             <div className="bg-neutral-50/50 border border-neutral-100 rounded-2xl p-5 flex flex-col gap-4 mt-2 animate-in fade-in duration-300">
               <div className="flex flex-col gap-1">
@@ -613,70 +647,97 @@ export const ProductDetails = ({ product }: ProductDetailsProps) => {
                   Out of Stock Notification
                 </h3>
                 <p className="text-xs text-neutral-500 leading-relaxed">
-                  This product is currently out of stock. Leave your email
-                  address and we will notify you automatically when it becomes
-                  available again.
+                  This product is currently out of stock. Get notified when it's back!
                 </p>
               </div>
 
               {notificationSuccess ? (
                 <div className="bg-emerald-50 border border-emerald-100 text-emerald-800 text-xs font-semibold rounded-xl p-3 flex items-center gap-2 animate-in fade-in duration-300">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  We'll email you at{" "}
-                  <strong className="font-bold">{notifyEmail}</strong> when back
+                  We'll notify you at{" "}
+                  <strong className="font-bold">{userEmail || fallbackEmail}</strong> when back
                   in stock.
                 </div>
               ) : (
-                <form
-                  onSubmit={async (e) => {
-                    e.preventDefault();
-                    const email = notifyEmail.trim();
-                    if (!email || !/\S+@\S+\.\S+/.test(email)) {
-                      toast.error("Please enter a valid email address.");
-                      return;
-                    }
-                    try {
-                      setIsSubmittingNotification(true);
-                      const res = await requestNotification({
-                        productId: product._id,
-                        email,
-                      });
-                      setNotificationSuccess(true);
-                      if (res.alreadyExists) {
-                        toast.info(
-                          "You've already requested a notification for this product!",
-                        );
-                      } else {
-                        toast.success(
-                          "Notification request registered successfully!",
-                        );
-                      }
-                    } catch (err: any) {
-                      toast.error(
-                        err?.message || "Failed to register request.",
-                      );
-                    } finally {
-                      setIsSubmittingNotification(false);
-                    }
-                  }}
-                  className="flex flex-col sm:flex-row gap-3 w-full"
-                >
-                  <input
-                    type="email"
-                    placeholder="Enter your email address"
-                    value={notifyEmail}
-                    onChange={(e) => setNotifyEmail(e.target.value)}
-                    required
-                    className="flex-1 border border-neutral-200 rounded-xl px-4 py-3 text-xs outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all bg-white"
-                  />
+                <div className="flex flex-col gap-3">
+                  {/* Email input only shown when logged in but no email in profile */}
+                  {session?.user && !userEmail && (
+                    <input
+                      type="email"
+                      placeholder="Enter your email address"
+                      value={fallbackEmail}
+                      onChange={(e) => setFallbackEmail(e.target.value)}
+                      className="border border-neutral-200 rounded-xl px-4 py-3 text-xs outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all bg-white"
+                    />
+                  )}
+
+                  {/* Email Notify Button */}
                   <button
-                    type="submit"
-                    disabled={isSubmittingNotification || !notifyEmail}
-                    className="bg-primary text-primary-foreground font-bold tracking-wider text-xs px-6 py-3.5 rounded-xl hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shrink-0 uppercase"
+                    type="button"
+                    disabled={isSubmittingNotification || (session?.user && !userEmail && !fallbackEmail)}
+                    onClick={async () => {
+                      // Not logged in — show login popup
+                      if (!session?.user) {
+                        setShowLoginPrompt(true);
+                        return;
+                      }
+                      const emailToUse = userEmail || fallbackEmail.trim();
+                      if (!emailToUse || !/\S+@\S+\.\S+/.test(emailToUse)) {
+                        toast.error("Please enter a valid email address.");
+                        return;
+                      }
+                      // Submit notification
+                      try {
+                        setIsSubmittingNotification(true);
+                        const res = await requestNotification({
+                          productId: product._id,
+                          email: emailToUse,
+                        });
+                        setNotificationSuccess(true);
+                        if (res.alreadyExists) {
+                          toast.info("You've already requested a notification for this product!");
+                        } else {
+                          toast.success("You'll be notified via email when back in stock!");
+                        }
+                      } catch (err: any) {
+                        toast.error(err?.message || "Failed to register request.");
+                      } finally {
+                        setIsSubmittingNotification(false);
+                      }
+                    }}
+                    className="flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold tracking-wider text-xs px-6 py-3.5 rounded-xl hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer uppercase w-full"
                   >
-                    {isSubmittingNotification ? "Submitting..." : "Notify Me"}
+                    <Bell className="w-4 h-4" />
+                    {isSubmittingNotification ? "Submitting..." : "Notify Me via Email"}
                   </button>
-                </form>
+
+                  {/* WhatsApp Notify */}
+                  <div className="flex gap-2">
+                    <input
+                      type="tel"
+                      placeholder="WhatsApp number (e.g. 9876543210)"
+                      value={whatsappNumber}
+                      onChange={(e) => setWhatsappNumber(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                      className="flex-1 border border-neutral-200 rounded-xl px-4 py-3 text-xs outline-none focus:border-green-500 focus:ring-1 focus:ring-green-200 transition-all bg-white"
+                    />
+                    <button
+                      type="button"
+                      disabled={whatsappNumber.length !== 10}
+                      onClick={() => {
+                        if (!session?.user) {
+                          setShowLoginPrompt(true);
+                          return;
+                        }
+                        toast.success(`We'll notify you on WhatsApp at ${whatsappNumber} when back in stock!`);
+                        setWhatsappNumber("");
+                      }}
+                      className="flex items-center gap-1.5 bg-green-500 text-white font-bold tracking-wider text-xs px-5 py-3.5 rounded-xl hover:bg-green-600 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shrink-0 uppercase"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      WhatsApp
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
           ) : (

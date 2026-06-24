@@ -15,6 +15,61 @@ const CATEGORY_VALIDATOR = v.union(
   v.literal("new-arrivals"),
 );
 
+const ALL_CATEGORIES = [
+  "customized-gifts",
+  "corporate-gifts",
+  "hampers",
+  "frames-bouquet",
+  "shop-by-occasion",
+  "new-arrivals",
+] as const;
+
+/** Shared relevance scoring — DRY helper used by search() and getFilteredProducts(). */
+function scoreProductRelevance(
+  product: { name: string; tags: string[]; subCategory?: string; category: string; description: string },
+  term: string,
+): number {
+  let score = 0;
+  const nameLower = product.name.toLowerCase();
+
+  if (nameLower === term) score += 100;
+  else if (nameLower.startsWith(term)) score += 80;
+  else if (new RegExp(`\\b${term}\\b`, "i").test(nameLower)) score += 60;
+  else if (nameLower.includes(term)) score += 40;
+
+  if (product.tags.some((t) => t.toLowerCase() === term)) score += 30;
+  else if (product.tags.some((t) => t.toLowerCase().includes(term))) score += 15;
+
+  if (product.subCategory?.toLowerCase().includes(term)) score += 10;
+  if (product.category.toLowerCase().includes(term)) score += 5;
+  if (product.description.toLowerCase().includes(term)) score += 1;
+
+  return score;
+}
+
+/** Fetch active products matching category search term, parallelized. */
+async function fetchMatchingCategoryProducts(
+  ctx: any,
+  term: string,
+) {
+  const matchedCategories = ALL_CATEGORIES.filter(
+    (cat) => cat.includes(term) || cat.replace("-", " ").includes(term),
+  );
+  if (matchedCategories.length === 0) return [];
+
+  const results = await Promise.all(
+    matchedCategories.map((cat) =>
+      ctx.db
+        .query("products")
+        .withIndex("by_category_active", (q: any) =>
+          q.eq("category", cat).eq("isActive", true),
+        )
+        .take(50),
+    ),
+  );
+  return results.flat();
+}
+
 // ──────────────────────────────────────────────
 // QUERIES
 // ──────────────────────────────────────────────
@@ -93,104 +148,30 @@ export const search = query({
     const term = args.searchTerm.toLowerCase().trim();
     if (!term) return [];
 
-    // 1. Search by name using Search Index (up to 50 results)
+    // 1. Search by name using Search Index (up to 30 results)
     const nameMatches = await ctx.db
       .query("products")
       .withSearchIndex("search_name", (q) => q.search("name", term))
-      .take(50);
+      .take(30);
 
-    // Filter by active if required
     const products = args.includeInactive
       ? nameMatches
       : nameMatches.filter((p) => p.isActive);
 
-    // 2. If term matches any known categories, fetch those using by_category_active index
-    const categories = [
-      "customized-gifts",
-      "corporate-gifts",
-      "hampers",
-      "frames-bouquet",
-      "shop-by-occasion",
-      "new-arrivals",
-    ];
-    const matchedCategories = categories.filter(
-      (cat) => cat.includes(term) || cat.replace("-", " ").includes(term)
-    );
-
-    if (matchedCategories.length > 0) {
-      const categoryProducts = [];
-      for (const cat of matchedCategories) {
-        const catResults = await ctx.db
-          .query("products")
-          .withIndex("by_category_active", (q) =>
-            q.eq("category", cat as any).eq("isActive", true)
-          )
-          .collect();
-        categoryProducts.push(...catResults);
-      }
-
-      // Merge and deduplicate
-      const productIds = new Set(products.map((p) => p._id));
-      for (const p of categoryProducts) {
-        if (!productIds.has(p._id)) {
-          products.push(p);
-          productIds.add(p._id);
-        }
+    // 2. Fetch matching category products (parallelized)
+    const categoryProducts = await fetchMatchingCategoryProducts(ctx, term);
+    const productIds = new Set(products.map((p) => p._id));
+    for (const p of categoryProducts) {
+      if (!productIds.has(p._id)) {
+        products.push(p);
+        productIds.add(p._id);
       }
     }
 
-    const keywords = term.split(/\s+/).filter(Boolean);
-
-    // Score products based on relevance to the search term
-    const scored = products.map((p) => {
-      let score = 0;
-      const nameLower = p.name.toLowerCase();
-      const termLower = term.toLowerCase();
-
-      // 1. Exact match in name
-      if (nameLower === termLower) {
-        score += 100;
-      }
-      // 2. Name starts with the term
-      else if (nameLower.startsWith(termLower)) {
-        score += 80;
-      }
-      // 3. Name contains the term as a full word boundary
-      else if (new RegExp(`\\b${termLower}\\b`, "i").test(nameLower)) {
-        score += 60;
-      }
-      // 4. Name contains the term at all
-      else if (nameLower.includes(termLower)) {
-        score += 40;
-      }
-
-      // 5. Tags match the term
-      if (p.tags.some((t) => t.toLowerCase() === termLower)) {
-        score += 30;
-      } else if (p.tags.some((t) => t.toLowerCase().includes(termLower))) {
-        score += 15;
-      }
-
-      // 6. Subcategory matches the term
-      if (p.subCategory && p.subCategory.toLowerCase().includes(termLower)) {
-        score += 10;
-      }
-
-      // 7. Category matches the term
-      if (p.category.toLowerCase().includes(termLower)) {
-        score += 5;
-      }
-
-      // 8. Description contains the term
-      if (p.description.toLowerCase().includes(termLower)) {
-        score += 1;
-      }
-
-      return { product: p, score };
-    });
-
-    // Sort by score descending
-    scored.sort((a, b) => b.score - a.score);
+    // 3. Score and sort using shared helper
+    const scored = products
+      .map((p) => ({ product: p, score: scoreProductRelevance(p, term) }))
+      .sort((a, b) => b.score - a.score);
 
     return scored.map((s) => s.product).slice(0, 10);
   },
@@ -214,7 +195,7 @@ export const getByCategory = query({
     return await ctx.db
       .query("products")
       .withIndex("by_category_active", (q) => q.eq("category", args.category).eq("isActive", true))
-      .collect();
+      .take(100);
   },
 });
 
@@ -265,51 +246,27 @@ export const getFilteredProducts = query({
     let products;
     if (args.searchTerm) {
       const term = args.searchTerm.toLowerCase().trim();
-      // Use search index for name (highly targeted)
       const nameMatches = await ctx.db
         .query("products")
         .withSearchIndex("search_name", (q) => q.search("name", term))
-        .collect();
+        .take(50);
       products = nameMatches.filter((p) => p.isActive);
 
-      // Fetch matching category products
-      const categories = [
-        "customized-gifts",
-        "corporate-gifts",
-        "hampers",
-        "frames-bouquet",
-        "shop-by-occasion",
-        "new-arrivals",
-      ];
-      const matchedCategories = categories.filter(
-        (cat) => cat.includes(term) || cat.replace("-", " ").includes(term)
-      );
-      if (matchedCategories.length > 0) {
-        const categoryProducts = [];
-        for (const cat of matchedCategories) {
-          const catResults = await ctx.db
-            .query("products")
-            .withIndex("by_category_active", (q) =>
-              q.eq("category", cat as any).eq("isActive", true)
-            )
-            .collect();
-          categoryProducts.push(...catResults);
-        }
-        const productIds = new Set(products.map((p) => p._id));
-        for (const p of categoryProducts) {
-          if (!productIds.has(p._id)) {
-            products.push(p);
-            productIds.add(p._id);
-          }
+      // Fetch matching category products (parallelized)
+      const categoryProducts = await fetchMatchingCategoryProducts(ctx, term);
+      const productIds = new Set(products.map((p) => p._id));
+      for (const p of categoryProducts) {
+        if (!productIds.has(p._id)) {
+          products.push(p);
+          productIds.add(p._id);
         }
       }
     } else {
-      // No search term: query using by_active_launched_at index (very fast and uses index)
       products = await ctx.db
         .query("products")
         .withIndex("by_active_launched_at", (q) => q.eq("isActive", true))
         .order("desc")
-        .collect();
+        .take(200);
     }
 
     // Filter by search term in memory if it was search-indexed, but now we split by keywords
@@ -356,55 +313,9 @@ export const getFilteredProducts = query({
           products.sort((a, b) => b._creationTime - a._creationTime);
           break;
         }
-        const scored = products.map((p) => {
-          let score = 0;
-          const nameLower = p.name.toLowerCase();
-          const termLower = term.toLowerCase();
-
-          // 1. Exact match in name
-          if (nameLower === termLower) {
-            score += 100;
-          }
-          // 2. Name starts with the term
-          else if (nameLower.startsWith(termLower)) {
-            score += 80;
-          }
-          // 3. Name contains the term as a full word boundary
-          else if (new RegExp(`\\b${termLower}\\b`, "i").test(nameLower)) {
-            score += 60;
-          }
-          // 4. Name contains the term at all
-          else if (nameLower.includes(termLower)) {
-            score += 40;
-          }
-
-          // 5. Tags match the term
-          if (p.tags.some((t) => t.toLowerCase() === termLower)) {
-            score += 30;
-          } else if (p.tags.some((t) => t.toLowerCase().includes(termLower))) {
-            score += 15;
-          }
-
-          // 6. Subcategory matches the term
-          if (p.subCategory && p.subCategory.toLowerCase().includes(termLower)) {
-            score += 10;
-          }
-
-          // 7. Category matches the term
-          if (p.category.toLowerCase().includes(termLower)) {
-            score += 5;
-          }
-
-          // 8. Description contains the term
-          if (p.description.toLowerCase().includes(termLower)) {
-            score += 1;
-          }
-
-          return { product: p, score };
-        });
-
-        // Sort by score descending
-        scored.sort((a, b) => b.score - a.score);
+        const scored = products
+          .map((p) => ({ product: p, score: scoreProductRelevance(p, term) }))
+          .sort((a, b) => b.score - a.score);
         products = scored.map((s) => s.product);
         break;
       }
@@ -424,7 +335,7 @@ export const getNewArrivals = query({
     const markedNewArrivals = await ctx.db
       .query("products")
       .withIndex("by_new_arrival_active", (q) => q.eq("markNewArrival", true).eq("isActive", true))
-      .collect();
+      .take(50);
 
     // In strict mode (used by /new-arrivals page), only return explicitly marked products
     if (args.strict) {
@@ -437,7 +348,7 @@ export const getNewArrivals = query({
     const recentArrivals = await ctx.db
       .query("products")
       .withIndex("by_active_launched_at", (q) => q.eq("isActive", true).gte("launchedAt", thirtyDaysAgo))
-      .collect();
+      .take(50);
 
     // Combine and deduplicate
     const combined = [...markedNewArrivals, ...recentArrivals];
@@ -459,7 +370,7 @@ export const getTrending = query({
     const products = await ctx.db
       .query("products")
       .withIndex("by_trending_active", (q) => q.eq("markTrending", true).eq("isActive", true))
-      .collect();
+      .take(50);
 
     // Sort by creation time desc to show latest trending products first
     products.sort((a, b) => b._creationTime - a._creationTime);
@@ -474,7 +385,7 @@ export const getMostPurchased = query({
     const products = await ctx.db
       .query("products")
       .withIndex("by_most_purchased_active", (q) => q.eq("markMostPurchased", true).eq("isActive", true))
-      .collect();
+      .take(50);
 
     // Sort by creation time desc to show latest first
     products.sort((a, b) => b._creationTime - a._creationTime);
@@ -489,7 +400,7 @@ export const getMostSold = query({
     const products = await ctx.db
       .query("products")
       .withIndex("by_most_sold_active", (q) => q.eq("markMostSold", true).eq("isActive", true))
-      .collect();
+      .take(50);
 
     // Sort by creation time desc to show latest first
     products.sort((a, b) => b._creationTime - a._creationTime);

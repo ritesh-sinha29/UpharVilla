@@ -15,7 +15,7 @@ export const list = query({
       .query("recentlyViewed")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .order("desc")
-      .collect();
+      .take(15);
 
     // Resolve product references and filter out deleted/inactive ones
     const populated = await Promise.all(

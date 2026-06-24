@@ -2,14 +2,13 @@
 
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 
 const priceCategories = [
   {
     label: "Under ₹499",
     price: "499",
-    image: "/price-under-499.webp",
+    image: "/price-under-499.svg",
     tagline: "Thoughtful gifts",
     bg: "bg-gradient-to-br from-rose-50 via-pink-50 to-rose-100/50",
     border: "border-rose-200/60 hover:border-rose-300",
@@ -21,7 +20,7 @@ const priceCategories = [
   {
     label: "Under ₹699",
     price: "699",
-    image: "/price-under-699.webp",
+    image: "/price-under-699.svg",
     tagline: "Premium picks",
     bg: "bg-gradient-to-br from-violet-50 via-purple-50 to-violet-100/50",
     border: "border-violet-200/60 hover:border-violet-300",
@@ -33,7 +32,7 @@ const priceCategories = [
   {
     label: "Under ₹999",
     price: "999",
-    image: "/price-under-999.webp",
+    image: "/price-under-999.svg",
     tagline: "Curated collection",
     bg: "bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100/50",
     border: "border-amber-200/60 hover:border-amber-300",
@@ -45,7 +44,7 @@ const priceCategories = [
   {
     label: "Under ₹1599",
     price: "1599",
-    image: "/price-under-1599.webp",
+    image: "/price-under-1599.svg",
     tagline: "Luxury hampers",
     bg: "bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100/50",
     border: "border-emerald-200/60 hover:border-emerald-300",
@@ -104,14 +103,12 @@ const ShopByPrice = () => {
                       : "22px 10px 22px 10px",
                 }}
               >
-                {/* Gift image — compact landscape, centered */}
-                <div className="relative w-full aspect-[5/4] overflow-hidden">
-                  <Image
+                {/* Gift image — compact, centered */}
+                <div className="relative w-full aspect-[5/4] overflow-hidden flex items-center justify-center p-3">
+                  <img
                     src={category.image}
                     alt={category.label}
-                    fill
-                    sizes="(max-width: 640px) 30vw, 20vw"
-                    className="object-contain object-center mix-blend-multiply"
+                    className="w-[65%] h-auto object-contain mix-blend-multiply"
                   />
                 </div>
                 {/* Price label — compact */}
@@ -141,13 +138,11 @@ const ShopByPrice = () => {
                 transition={{ duration: 0.4 }}
               >
                 {/* Image — centered */}
-                <div className="relative flex-1 min-h-[140px] md:min-h-[120px] lg:min-h-[150px] xl:min-h-[170px] w-full overflow-hidden">
-                  <Image
-                    src="/price-hero-banner.webp"
+                <div className="relative flex-1 min-h-[140px] md:min-h-[120px] lg:min-h-[150px] xl:min-h-[170px] w-full overflow-hidden flex items-center justify-center p-4">
+                  <img
+                    src="/price-hero-banner.svg"
                     alt="Shop By Price"
-                    fill
-                    sizes="(max-width: 768px) 50vw, 33vw"
-                    className="object-contain object-center scale-110 transition-transform duration-700 group-hover:scale-118"
+                    className="w-[80%] h-auto object-contain transition-transform duration-700 group-hover:scale-110"
                   />
                 </div>
 
@@ -225,14 +220,12 @@ const ShopByPrice = () => {
                       scale: 1.03,
                     }}
                   >
-                    {/* Gift image — centered, no cropping, responsive padding */}
-                    <div className="relative w-full aspect-[3/2] overflow-hidden">
-                      <Image
+                    {/* Gift image — centered, crisp SVG */}
+                    <div className="relative w-full aspect-[3/2] overflow-hidden flex items-center justify-center p-4 md:p-5 lg:p-6">
+                      <img
                         src={category.image}
                         alt={category.label}
-                        fill
-                        sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 25vw"
-                        className="object-contain object-center mix-blend-multiply transition-transform duration-500 group-hover:scale-110"
+                        className="w-[60%] h-auto object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-110"
                       />
                     </div>
 
