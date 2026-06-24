@@ -165,13 +165,13 @@ const ShopByPrice = () => {
                 <div className="absolute bottom-[-1px] right-[-1px] w-[48px] lg:w-[56px] xl:w-[64px] h-[48px] lg:h-[56px] xl:h-[64px] bg-white rounded-tl-[1.2rem] lg:rounded-tl-[1.5rem] pointer-events-none">
                   <div
                     className="absolute bottom-0 w-3 h-3 bg-white"
-                    style={{ right: "47px" }}
+                    style={{ right: "100%" }}
                   >
                     <div className="w-full h-full bg-[#fbf0dd] rounded-br-[12px]" />
                   </div>
                   <div
                     className="absolute right-0 w-3 h-3 bg-white"
-                    style={{ bottom: "47px" }}
+                    style={{ bottom: "100%" }}
                   >
                     <div className="w-full h-full bg-[#fbf0dd] rounded-br-[12px]" />
                   </div>
