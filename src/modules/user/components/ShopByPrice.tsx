@@ -57,10 +57,10 @@ const priceCategories = [
 
 const ShopByPrice = () => {
   return (
-    <section className="py-2 sm:py-4 md:py-6 lg:py-8 bg-white relative overflow-hidden">
+    <section className="py-2 sm:py-4 md:py-6 lg:py-8 px-5 sm:px-6 md:px-10 lg:px-16 xl:px-20 bg-white relative overflow-hidden">
       {/* Decorative background removed for clean white */}
 
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-5 md:px-6 lg:px-8 xl:px-12 relative z-10">
+      <div className="max-w-[1200px] mx-auto relative z-10">
         {/* ── Header ── */}
         <div className="flex items-center justify-between md:block">
           <div className="flex items-center gap-2 md:block">
@@ -128,9 +128,9 @@ const ShopByPrice = () => {
         </div>
 
         {/* ── Desktop: Featured card + 2x2 grid ── */}
-        <div className="hidden md:flex flex-row gap-3 md:gap-3 lg:gap-4 items-stretch mt-4 md:mt-5">
+        <div className="hidden md:flex flex-row gap-3 lg:gap-4 items-stretch mt-4 md:mt-5 max-h-[380px]">
           {/* Left Featured Card */}
-          <div className="w-[42%] flex">
+          <div className="w-1/2 flex">
             <Link href="/products" className="group block w-full">
               <motion.div
                 className="relative w-full h-full overflow-hidden bg-[#fbf0dd] shadow-sm rounded-[1.5rem] lg:rounded-[2rem] rounded-br-none p-3 md:p-3 lg:p-4 pb-8 md:pb-8 lg:pb-10 flex flex-col transition-all duration-500 group-hover:shadow-2xl group-hover:shadow-primary/15 cursor-pointer"
@@ -142,7 +142,7 @@ const ShopByPrice = () => {
                   <img
                     src="/price-hero-banner.svg"
                     alt="Shop By Price"
-                    className="w-[80%] h-auto object-contain transition-transform duration-700 group-hover:scale-110"
+                    className="w-[65%] h-auto max-h-[200px] object-contain transition-transform duration-700 group-hover:scale-110"
                   />
                 </div>
 
@@ -185,8 +185,8 @@ const ShopByPrice = () => {
             </Link>
           </div>
 
-          {/* Right Price Grid — 2x2, responsive */}
-          <div className="w-[58%] grid grid-cols-2 gap-2.5 md:gap-2.5 lg:gap-3">
+          {/* Right Price Grid — 2x2, stretches to match hero height */}
+          <div className="w-1/2 grid grid-cols-2 auto-rows-fr gap-2.5 md:gap-2.5 lg:gap-3">
             {priceCategories.map((category, index) => (
               <motion.div
                 key={category.price}
@@ -198,14 +198,14 @@ const ShopByPrice = () => {
                   ease: "easeOut",
                 }}
                 viewport={{ once: true }}
-                className="group cursor-pointer"
+                className="group cursor-pointer h-full"
               >
                 <Link
                   href={`/products?maxPrice=${category.price}`}
-                  className="block"
+                  className="block h-full"
                 >
                   <motion.div
-                    className={`relative overflow-hidden ${category.bg} border ${category.border} shadow-sm transition-all duration-500 ${category.shadow} group-hover:shadow-xl`}
+                    className={`relative overflow-hidden h-full flex flex-col ${category.bg} border ${category.border} shadow-sm transition-all duration-500 ${category.shadow} group-hover:shadow-xl`}
                     style={{
                       borderRadius:
                         index % 2 === 0
@@ -221,7 +221,7 @@ const ShopByPrice = () => {
                     }}
                   >
                     {/* Gift image — centered, crisp SVG */}
-                    <div className="relative w-full aspect-[3/2] overflow-hidden flex items-center justify-center p-4 md:p-5 lg:p-6">
+                    <div className="relative w-full flex-1 overflow-hidden flex items-center justify-center p-2 md:p-3 lg:p-3">
                       <img
                         src={category.image}
                         alt={category.label}
@@ -239,7 +239,7 @@ const ShopByPrice = () => {
                     </div>
 
                     {/* Price label — centered, responsive text */}
-                    <div className="px-2 md:px-2.5 pb-1.5 md:pb-2 -mt-1 text-center">
+                    <div className="px-2 md:px-2.5 pb-1 md:pb-1.5 -mt-0.5 text-center">
                       <p
                         className={`text-xs md:text-sm lg:text-base font-black ${category.text} leading-none tracking-tight`}
                       >
