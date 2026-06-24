@@ -1,6 +1,7 @@
 "use client";
 
 import { Rating } from "@mui/material";
+import { productDetailUrl, thumbnailUrl } from "@/lib/imagekit-url";
 import { useConvex, useConvexAuth, useMutation, useQuery } from "convex/react";
 import {
   Bell,
@@ -71,9 +72,9 @@ export const ProductDetails = ({ product }: ProductDetailsProps) => {
     }
   }, [session]);
 
-  const allImages = [product?.thumbnail, ...(product?.images || [])].filter(
-    Boolean,
-  );
+  const allImages = [product?.thumbnail, ...(product?.images || [])]
+    .filter(Boolean)
+    .map((src: string) => productDetailUrl(src));
   if (allImages.length === 0) {
     allImages.push(
       "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1999&auto=format&fit=crop",
@@ -85,7 +86,8 @@ export const ProductDetails = ({ product }: ProductDetailsProps) => {
   const addedUrls = new Set<string>();
 
   if (product?.thumbnail) {
-    mediaItems.push({ type: "image", url: product.thumbnail });
+    const optimized = productDetailUrl(product.thumbnail);
+    mediaItems.push({ type: "image", url: optimized });
     addedUrls.add(product.thumbnail);
   }
 
@@ -97,7 +99,7 @@ export const ProductDetails = ({ product }: ProductDetailsProps) => {
   if (product?.images) {
     product.images.forEach((img: string) => {
       if (!addedUrls.has(img)) {
-        mediaItems.push({ type: "image", url: img });
+        mediaItems.push({ type: "image", url: productDetailUrl(img) });
         addedUrls.add(img);
       }
     });

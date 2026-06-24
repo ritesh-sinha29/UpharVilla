@@ -105,8 +105,8 @@ export default function AboutPage() {
                 alt="upharVilla brand"
                 width={400}
                 height={500}
+                sizes="(max-width: 768px) 80vw, 400px"
                 className="w-full h-full object-contain p-12"
-                unoptimized
               />
             </div>
             {/* Floating stat card */}

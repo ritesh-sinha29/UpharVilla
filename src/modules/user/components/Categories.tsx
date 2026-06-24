@@ -7,27 +7,27 @@ import Link from "next/link";
 const categories = [
   {
     name: "Personalised Gifts",
-    image: "/c5.svg",
+    image: "/c5.webp",
   },
   {
     name: "Anniversary",
-    image: "/c2.svg",
+    image: "/c2.webp",
   },
   {
     name: "Birthday",
-    image: "/c1.svg",
+    image: "/c1.webp",
   },
   {
     name: "Corporate Gifts",
-    image: "/c3.svg",
+    image: "/c3.webp",
   },
   {
     name: "Custom Hampers",
-    image: "/c4.svg",
+    image: "/c4.webp",
   },
   {
     name: "Trending Gifts",
-    image: "/c7.svg",
+    image: "/c7.webp",
   },
 ];
 
@@ -91,7 +91,7 @@ export const Categories = () => {
                       src={category.image}
                       alt={category.name}
                       fill
-                      unoptimized
+                      sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 20vw"
                       className="object-cover transition-transform duration-700 group-hover:scale-110"
                     />
 

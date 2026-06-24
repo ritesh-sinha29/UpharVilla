@@ -1,6 +1,7 @@
 "use client";
 
 import { upload } from "@imagekit/next";
+import { compressGalleryImage } from "@/lib/image-compress";
 import { useMutation, useQuery } from "convex/react";
 import { Edit2, Image as ImageIcon, Loader2, UploadCloud } from "lucide-react";
 import { useRef, useState } from "react";
@@ -50,8 +51,9 @@ export function EditorialGridManager() {
 
         if (slotFile) {
           const authParams = await authenticator();
+          const compressedFile = await compressGalleryImage(slotFile);
           const uploadResponse = await upload({
-            file: slotFile,
+            file: compressedFile,
             fileName: `editorial_slot_${isEditingSlot}_${Date.now()}`,
             tags: ["editorial", `slot${isEditingSlot}`],
             useUniqueFileName: true,

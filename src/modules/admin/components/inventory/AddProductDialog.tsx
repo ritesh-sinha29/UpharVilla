@@ -8,6 +8,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { upload } from "@imagekit/next";
+import { compressThumbnail } from "@/lib/image-compress";
 import { useMutation } from "convex/react";
 import type React from "react";
 import { useCallback, useRef, useState } from "react";
@@ -291,8 +292,9 @@ export function AddProductDialog() {
           (async () => {
             try {
               const authParams = await authenticator();
+              const compressedFile = await compressThumbnail(currentThumbnailFile);
               const uploadResponse = await upload({
-                file: currentThumbnailFile,
+                file: compressedFile,
                 fileName: `thumb_${Date.now()}`,
                 folder: "/products/thumbnails",
                 ...authParams,

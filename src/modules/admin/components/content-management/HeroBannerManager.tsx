@@ -1,6 +1,7 @@
 "use client";
 
 import { upload } from "@imagekit/next";
+import { compressBannerImage } from "@/lib/image-compress";
 import { useMutation, useQuery } from "convex/react";
 import { ImageIcon, Loader2, Plus, Trash2, UploadCloud } from "lucide-react";
 import { useRef, useState } from "react";
@@ -48,9 +49,10 @@ export function HeroBannerManager() {
       setIsUploading(true);
       try {
         const authParams = await authenticator();
+        const compressedFile = await compressBannerImage(selectedFile);
 
         const uploadResponse = await upload({
-          file: selectedFile,
+          file: compressedFile,
           fileName: `hero_banner_${Date.now()}`,
           tags: ["banner", "hero"],
           useUniqueFileName: true,

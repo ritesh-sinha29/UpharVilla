@@ -1,6 +1,7 @@
 "use client";
 
 import { upload } from "@imagekit/next";
+import { compressThumbnail, compressGalleryImage } from "@/lib/image-compress";
 import { useMutation, useQuery } from "convex/react";
 import {
   ImagePlus,
@@ -198,8 +199,9 @@ export const ProductEditForm = forwardRef<
       setIsThumbnailUploading(true);
       try {
         const authParams = await authenticator();
+        const compressedFile = await compressThumbnail(file);
         const uploadResponse = await upload({
-          file,
+          file: compressedFile,
           fileName: `product_thumbnail_${Date.now()}`,
           folder: "/products/thumbnails",
           ...authParams,
@@ -234,8 +236,9 @@ export const ProductEditForm = forwardRef<
       setIsGalleryUploading(true);
       try {
         const authParams = await authenticator();
+        const compressedFile = await compressGalleryImage(file);
         const uploadResponse = await upload({
-          file,
+          file: compressedFile,
           fileName: `product_gallery_${Date.now()}`,
           folder: "/products/gallery",
           ...authParams,

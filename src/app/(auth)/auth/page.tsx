@@ -303,8 +303,7 @@ const AuthPage = () => {
                 alt="upharVilla Logo"
                 width={993}
                 height={294}
-                quality={100}
-                unoptimized
+                sizes="185px"
                 className="w-[170px] sm:w-[185px] h-auto object-contain"
                 priority
               />

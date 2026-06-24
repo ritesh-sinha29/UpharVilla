@@ -7,6 +7,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { thumbnailUrl } from "@/lib/imagekit-url";
 import WishlistButton from "./WishlistButton";
 
 interface ProductCardProps {
@@ -21,7 +22,10 @@ const ProductCard = ({ product, className }: ProductCardProps) => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const images = useMemo(
-    () => [product.thumbnail, ...(product.images || [])].filter(Boolean),
+    () =>
+      [product.thumbnail, ...(product.images || [])]
+        .filter(Boolean)
+        .map((src: string) => thumbnailUrl(src)),
     [product.thumbnail, product.images],
   );
 

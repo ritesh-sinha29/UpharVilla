@@ -19,8 +19,7 @@ export default function CheckoutLayout({
               alt="upharVilla"
               width={993}
               height={294}
-              quality={100}
-              unoptimized
+              sizes="130px"
               className="w-[120px] sm:w-[130px] h-auto object-contain"
               priority
             />

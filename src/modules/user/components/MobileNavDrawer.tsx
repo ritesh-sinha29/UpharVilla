@@ -181,8 +181,7 @@ export default function MobileNavDrawer() {
                 alt="upharVilla"
                 width={993}
                 height={294}
-                quality={100}
-                unoptimized
+                sizes="100px"
                 className="h-7 w-auto object-contain"
               />
             </SheetTitle>

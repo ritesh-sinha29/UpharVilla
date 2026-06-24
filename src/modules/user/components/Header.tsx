@@ -40,8 +40,7 @@ export const Header = () => {
               alt="logo"
               width={993}
               height={294}
-              quality={100}
-              unoptimized
+              sizes="150px"
               className="w-[100px] md:w-[130px] lg:w-[150px] h-auto object-contain"
             />
           </Link>

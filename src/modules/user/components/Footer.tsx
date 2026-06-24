@@ -67,8 +67,7 @@ const Footer = () => {
               alt="upharVilla"
               width={993}
               height={294}
-              quality={100}
-              unoptimized
+              sizes="150px"
               className="w-[120px] md:w-[150px] h-auto object-contain"
             />
             <p className="text-muted-foreground text-xs md:text-sm lg:text-base leading-relaxed max-w-xs font-medium">

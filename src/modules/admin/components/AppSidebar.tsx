@@ -74,8 +74,7 @@ export function AppSidebar() {
               alt="upharVilla Logo"
               width={993}
               height={294}
-              quality={100}
-              unoptimized
+              sizes="150px"
               className="w-auto h-auto max-h-10 object-contain"
               priority
             />

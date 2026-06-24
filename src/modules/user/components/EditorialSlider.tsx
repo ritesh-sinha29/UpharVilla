@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 const PROMO_SLIDES = [
   {
     id: "happy-couple",
-    image: "/happy couple.svg",
+    image: "/happy couple.webp",
     altText: "A Gift As Unique As Your Love Story",
     badge: "Most Loved",
     badgeIcon: (
@@ -37,7 +37,7 @@ const PROMO_SLIDES = [
   },
   {
     id: "happy-family",
-    image: "/happy family.svg",
+    image: "/happy family.webp",
     altText: "Celebrate The People Who Matter Most",
     badge: "Perfect For Families",
     badgeIcon: (
@@ -159,7 +159,7 @@ export const EditorialSlider = () => {
                         alt={slide.altText}
                         fill
                         priority={index === 0}
-                        unoptimized
+                        sizes="(max-width: 768px) 40vw, 30vw"
                         className="object-cover"
                       />
                     </div>
@@ -264,7 +264,7 @@ export const EditorialSlider = () => {
                           src={slide.image}
                           alt={slide.altText}
                           fill
-                          unoptimized
+                          sizes="(max-width: 768px) 80vw, 40vw"
                           className="object-cover transition-transform duration-1000 group-hover/card:scale-110"
                         />
                       </div>
