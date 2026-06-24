@@ -4,17 +4,36 @@ import { useQuery } from "convex/react";
 import useEmblaCarousel from "embla-carousel-react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  Baby,
+  BookOpen,
   CakeSlice,
   CalendarHeart,
   ChevronRight,
+  Church,
   Crown,
   Flame,
   Flower2,
   Gem,
+  Gift,
+  GraduationCap,
+  HandHeart,
   Heart,
+  HeartHandshake,
   Home,
+  Lamp,
+  MessageCircleHeart,
+  Moon,
   PackageOpen,
+  PartyPopper,
   Ribbon,
+  Smile,
+  Snowflake,
+  Sparkles,
+  Star,
+  Sun,
+  ThumbsUp,
+  Trophy,
+  Users,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../../../../convex/_generated/api";
@@ -22,15 +41,43 @@ import ProductCard from "./ProductCard";
 
 // ─── Icon map keyed by occasion slug ─────────────────────────────────────────
 const ICON_MAP: Record<string, React.ElementType> = {
+  // Milestones
   birthday: CakeSlice,
   anniversary: CalendarHeart,
   wedding: Gem,
+  engagement: Church,
+  graduation: GraduationCap,
+  retirement: Trophy,
+  "baby-shower": Baby,
+  // Love & Family
+  "valentines-day": Heart,
+  "mothers-day": Flower2,
+  "fathers-day": Crown,
+  "womens-day": Sparkles,
+  "karwa-chauth": Moon,
+  "bhai-dooj": Users,
+  "friendship-day": HeartHandshake,
+  "childrens-day": Smile,
+  "teachers-day": BookOpen,
+  // Festive & Events
   rakhi: Ribbon,
   diwali: Flame,
+  holi: PartyPopper,
+  christmas: Snowflake,
+  "new-year": Star,
+  eid: Moon,
+  navratri: Lamp,
+  onam: Sun,
+  pongal: Sun,
+  lohri: Flame,
+  "ganesh-chaturthi": Sparkles,
   housewarming: Home,
-  "fathers-day": Crown,
-  "mothers-day": Flower2,
-  "valentines-day": Heart,
+  // Sentiments
+  "thank-you": HandHeart,
+  congratulations: Gift,
+  "get-well-soon": MessageCircleHeart,
+  sorry: MessageCircleHeart,
+  "just-because": ThumbsUp,
 };
 
 const DEFAULT_OCCASIONS = [

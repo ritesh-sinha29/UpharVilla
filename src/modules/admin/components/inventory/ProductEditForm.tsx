@@ -72,19 +72,7 @@ const TAG_PRESETS: Record<string, string[]> = {
     "Artificial Bouquet",
     "Frame + Bouquet Combo",
   ],
-  "Shop by Occasion": [
-    "Birthday",
-    "Anniversary",
-    "Wedding",
-    "Engagement",
-    "Valentine's Day",
-    "Mother's Day",
-    "Father's Day",
-    "Baby Shower & Newborn",
-    "Raksha Bandhan",
-    "Graduation & Achievement",
-    "Festivals & Celebrations",
-  ],
+  "Shop by Occasion": [] as string[], // ← populated dynamically from active occasions DB
 };
 
 const CATEGORIES = [
@@ -129,6 +117,9 @@ export const ProductEditForm = forwardRef<
   ProductEditFormProps
 >(({ product, onSaveSuccess, onCancel }, ref) => {
   const updateProduct = useMutation(api.products.update);
+
+  // ── Dynamic occasion subcategories from DB ──
+  const activeOccasions = useQuery(api.occasions.getOccasions);
 
   const [editName, setEditName] = useState(product.name);
   const [editDescription, setEditDescription] = useState(
@@ -601,11 +592,18 @@ export const ProductEditForm = forwardRef<
           <SelectContent>
             {editCategory &&
               CATEGORY_TO_PRESET_KEY[editCategory] &&
-              TAG_PRESETS[CATEGORY_TO_PRESET_KEY[editCategory]].map((sub) => (
-                <SelectItem key={sub} value={sub}>
-                  {sub}
-                </SelectItem>
-              ))}
+              (editCategory === "shop-by-occasion" && activeOccasions
+                ? activeOccasions.map((occ) => (
+                    <SelectItem key={occ.slug} value={occ.label}>
+                      {occ.label}
+                    </SelectItem>
+                  ))
+                : TAG_PRESETS[CATEGORY_TO_PRESET_KEY[editCategory]].map((sub) => (
+                    <SelectItem key={sub} value={sub}>
+                      {sub}
+                    </SelectItem>
+                  ))
+              )}
           </SelectContent>
         </Select>
       </div>

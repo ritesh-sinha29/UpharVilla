@@ -9,7 +9,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react";
 import { upload } from "@imagekit/next";
 import { compressThumbnail } from "@/lib/image-compress";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import type React from "react";
 import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -79,19 +79,7 @@ const TAG_PRESETS: Record<string, string[]> = {
     "Artificial Bouquet",
     "Frame + Bouquet Combo",
   ],
-  "Shop by Occasion": [
-    "Birthday",
-    "Anniversary",
-    "Wedding",
-    "Engagement",
-    "Valentine's Day",
-    "Mother's Day",
-    "Father's Day",
-    "Baby Shower & Newborn",
-    "Raksha Bandhan",
-    "Graduation & Achievement",
-    "Festivals & Celebrations",
-  ],
+  "Shop by Occasion": [] as string[], // ← populated dynamically from active occasions DB
   "New Arrivals": [
     "Viral & Bestselling Gifts",
     "Instagram-Worthy Gifts",
@@ -161,6 +149,9 @@ export function AddProductDialog() {
 
   const createProduct = useMutation(api.products.create);
   const updateProduct = useMutation(api.products.update);
+
+  // ── Dynamic occasion subcategories from DB ──
+  const activeOccasions = useQuery(api.occasions.getOccasions);
 
   const authenticator = async () => {
     const response = await fetch("/api/imagekit/auth");
@@ -542,11 +533,18 @@ export function AddProductDialog() {
               <SelectContent>
                 {category &&
                   CATEGORY_TO_PRESET_KEY[category] &&
-                  TAG_PRESETS[CATEGORY_TO_PRESET_KEY[category]].map((sub) => (
-                    <SelectItem key={sub} value={sub}>
-                      {sub}
-                    </SelectItem>
-                  ))}
+                  (category === "shop-by-occasion" && activeOccasions
+                    ? activeOccasions.map((occ) => (
+                        <SelectItem key={occ.slug} value={occ.label}>
+                          {occ.label}
+                        </SelectItem>
+                      ))
+                    : TAG_PRESETS[CATEGORY_TO_PRESET_KEY[category]].map((sub) => (
+                        <SelectItem key={sub} value={sub}>
+                          {sub}
+                        </SelectItem>
+                      ))
+                  )}
               </SelectContent>
             </Select>
           </div>

@@ -214,23 +214,46 @@ const navItems: NavItem[] = [
   },
 ];
 
-const DEFAULT_NAVBAR_OCCASIONS: {
-  heading: string;
-  label: string;
-  link?: string;
-}[] = [
-  { heading: "Milestones", label: "Birthday" },
-  { heading: "Milestones", label: "Anniversary" },
-  { heading: "Milestones", label: "Wedding" },
-  { heading: "Milestones", label: "Engagement" },
-  { heading: "Love & Family", label: "Valentine's Day" },
-  { heading: "Love & Family", label: "Mother's Day" },
-  { heading: "Love & Family", label: "Father's Day" },
-  { heading: "Love & Family", label: "Baby Shower & Newborn" },
-  { heading: "Festive & Events", label: "Raksha Bandhan" },
-  { heading: "Festive & Events", label: "Graduation & Achievement" },
-  { heading: "Festive & Events", label: "Festivals & Celebrations" },
-];
+// ─── Auto-categorize occasion slugs into navbar heading groups ───────────────
+const SLUG_TO_HEADING: Record<string, string> = {
+  // Milestones
+  birthday: "Milestones",
+  anniversary: "Milestones",
+  wedding: "Milestones",
+  engagement: "Milestones",
+  graduation: "Milestones",
+  retirement: "Milestones",
+  "baby-shower": "Milestones",
+  // Love & Family
+  "valentines-day": "Love & Family",
+  "mothers-day": "Love & Family",
+  "fathers-day": "Love & Family",
+  "womens-day": "Love & Family",
+  "karwa-chauth": "Love & Family",
+  "bhai-dooj": "Love & Family",
+  "friendship-day": "Love & Family",
+  "childrens-day": "Love & Family",
+  "teachers-day": "Love & Family",
+  // Festive & Events
+  rakhi: "Festive & Events",
+  diwali: "Festive & Events",
+  holi: "Festive & Events",
+  christmas: "Festive & Events",
+  "new-year": "Festive & Events",
+  eid: "Festive & Events",
+  navratri: "Festive & Events",
+  onam: "Festive & Events",
+  pongal: "Festive & Events",
+  lohri: "Festive & Events",
+  "ganesh-chaturthi": "Festive & Events",
+  housewarming: "Festive & Events",
+  // Sentiments
+  "thank-you": "Sentiments",
+  congratulations: "Sentiments",
+  "get-well-soon": "Sentiments",
+  sorry: "Sentiments",
+  "just-because": "Sentiments",
+};
 
 export const Navigation = () => {
   // Controlled open state — set to "" to instantly close all menus
@@ -238,23 +261,24 @@ export const Navigation = () => {
 
   const closeMenu = () => setOpenItem("");
 
-  const dbNavbarOccasions = useQuery(api.occasions.getNavbarOccasions);
-  const navbarOccasionsData =
-    dbNavbarOccasions && dbNavbarOccasions.length > 0
-      ? dbNavbarOccasions
-      : DEFAULT_NAVBAR_OCCASIONS;
+  // ── Pull from homepage occasion tabs (single source of truth) ──
+  const dbOccasions = useQuery(api.occasions.getOccasions);
 
   const occasionCategories = (() => {
-    const headings = ["Milestones", "Love & Family", "Festive & Events"];
-    return headings.map((heading) => {
-      const links = navbarOccasionsData
-        .filter((item) => item.heading === heading)
-        .map((item) => ({
-          label: item.label,
-          link: item.link || `/products?tag=${encodeURIComponent(item.label)}`,
-        }));
-      return { heading, links };
-    });
+    const occasions = dbOccasions && dbOccasions.length > 0 ? dbOccasions : [];
+    const headings = ["Milestones", "Love & Family", "Festive & Events", "Sentiments"];
+
+    return headings
+      .map((heading) => {
+        const links = occasions
+          .filter((o) => (SLUG_TO_HEADING[o.slug] || "Festive & Events") === heading)
+          .map((o) => ({
+            label: o.label,
+            link: o.link || `/products?tag=${encodeURIComponent(o.slug)}`,
+          }));
+        return { heading, links };
+      })
+      .filter((cat) => cat.links.length > 0);
   })();
 
   // Mobile-specific state
