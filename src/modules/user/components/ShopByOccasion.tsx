@@ -185,7 +185,7 @@ function OccasionProducts({
       {/* View All */}
       <div className="flex justify-center mt-5 md:mt-6">
         <a
-          href={link || `/search?tag=${tag}`}
+          href={link || `/products?tag=${tag}`}
           className="inline-flex items-center gap-2 text-sm font-medium text-gray-900 hover:text-gray-800 border border-gray-200 rounded-full px-6 py-2 hover:border-gray-400 transition-all duration-200 cursor-pointer"
         >
           View All {occasionLabel} Gifts

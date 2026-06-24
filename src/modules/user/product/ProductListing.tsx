@@ -283,8 +283,14 @@ export default function ProductListing({
       const targetPage = Math.max(1, Math.min(page, totalPages));
       const params = new URLSearchParams(window.location.search);
       params.set("page", String(targetPage));
-      router.push(`${basePath}?${params.toString()}`);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      router.push(`${basePath}?${params.toString()}`, { scroll: false });
+      // Scroll to the product grid, not the top of the page
+      const gridEl = document.getElementById("product-grid");
+      if (gridEl) {
+        const offset = 120; // account for sticky header
+        const top = gridEl.getBoundingClientRect().top + window.scrollY - offset;
+        window.scrollTo({ top, behavior: "smooth" });
+      }
     },
     [totalPages, router, basePath],
   );
@@ -545,7 +551,7 @@ export default function ProductListing({
             </div>
           ) : productList.length > 0 ? (
             <>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 md:gap-6 lg:gap-7">
+              <div id="product-grid" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 md:gap-6 lg:gap-7">
                 {paginatedProducts.map((product) => (
                   <ProductCard key={product._id} product={product} />
                 ))}
