@@ -4,6 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import {
   CircleUser,
   Plus,
+  ShieldCheck,
   Trash2,
 } from "lucide-react";
 import { useState } from "react";
@@ -93,13 +94,16 @@ export default function AccessControlPage() {
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-neutral-800 font-serif">
-            Access Control
-          </h1>
-          <p className="text-neutral-400 text-sm mt-1">
-            Manage who can access the admin panel and their permissions.
-          </p>
+        <div className="flex items-start gap-2">
+          <ShieldCheck className="w-5 h-5 text-primary mt-1 shrink-0" />
+          <div>
+            <h1 className="text-lg sm:text-xl font-bold text-neutral-800 font-serif">
+              Access Control
+            </h1>
+            <p className="text-xs text-muted-foreground mt-0.5 hidden sm:block">
+              Manage who can access the admin panel and their permissions.
+            </p>
+          </div>
         </div>
 
         {canManageAccess && (

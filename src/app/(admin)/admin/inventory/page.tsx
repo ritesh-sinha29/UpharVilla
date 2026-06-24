@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation } from "convex/react";
-import { List, Table2, Trash2 } from "lucide-react";
+import { List, Package, Table2, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
@@ -71,13 +71,16 @@ const InventoryPage = () => {
     <div className="space-y-4">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight text-neutral-800 font-serif">
-            Inventory
-          </h1>
-          <p className="text-xs text-muted-foreground mt-0.5 hidden sm:block">
-            Manage your product catalog, active listings, and stock levels.
-          </p>
+        <div className="flex items-start gap-2">
+          <Package className="w-5 h-5 text-primary mt-1 shrink-0" />
+          <div>
+            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-neutral-800 font-serif">
+              Inventory
+            </h1>
+            <p className="text-xs text-muted-foreground mt-0.5 hidden sm:block">
+              Manage your product catalog, active listings, and stock levels.
+            </p>
+          </div>
         </div>
         <AddProductDialog />
       </div>

@@ -1,14 +1,16 @@
 import { internal } from "../_generated/api";
 import { internalAction, internalQuery } from "../_generated/server";
+import { env } from "../env";
 import {
   B,
   ctaButton,
   emailFooter,
   emailHeader,
   emailWrapper,
+  productCard,
 } from "./emailLayout";
 
-const BASE_URL = process.env.SITE_URL || "https://upharvilla.in";
+const BASE_URL = env.SITE_URL;
 
 export const _getOrdersForReview = internalQuery({
   args: {},
@@ -38,6 +40,12 @@ export const _getOrdersForReview = internalQuery({
           email: user.email,
           name: user.name || "there",
           orderId: order._id,
+          items: order.items.map((i, idx) => ({
+            name: i.name,
+            productId: i.productId as string,
+            thumbnail: i.thumbnail || "",
+            itemId: `${order._id}-${i.productId}-${idx}`,
+          })),
         });
     }
     return results;
@@ -56,43 +64,39 @@ export const sendReviewRequests = internalAction({
       const firstName = order.name.split(" ")[0];
       const shortId = order.orderId.slice(-8).toUpperCase();
 
-      const stars = `
-        <table cellpadding="0" cellspacing="0" style="margin:20px auto;">
-          <tr>
-            ${["⭐", "⭐", "⭐", "⭐", "⭐"]
-              .map(
-                (star, i) => `
-              <td style="padding:0 4px;">
-                <a href="${BASE_URL}/review?order=${shortId}&rating=${i + 1}"
-                   style="font-size:32px;text-decoration:none;">${star}</a>
-              </td>`,
-              )
-              .join("")}
-          </tr>
-        </table>`;
+      // Product cards with "Rate Product" CTA buttons
+      const reviewCards = order.items
+        .map((item) => {
+          const ratingUrl = `${BASE_URL}/my-orders?openReview=${item.itemId}`;
+          return productCard({
+            name: item.name,
+            thumbnail: item.thumbnail,
+            link: ratingUrl,
+            ctaLabel: "Rate Product",
+          });
+        })
+        .join("");
 
       const body = `
         ${emailHeader("How was your gift? ⭐")}
-        <tr><td style="padding:36px 40px 0;text-align:center;">
+        <tr><td style="padding:28px 24px 0;text-align:center;">
 
           <p style="margin:0 0 10px;font-size:20px;font-weight:700;color:${B.textDark};font-family:Poppins,Arial,sans-serif;">
             Enjoying your order, ${firstName}?
           </p>
-          <p style="margin:0 0 8px;font-size:14px;color:${B.textMid};line-height:1.7;font-family:Poppins,Arial,sans-serif;max-width:420px;margin-left:auto;margin-right:auto;">
+          <p style="margin:0 0 20px;font-size:14px;color:${B.textMid};line-height:1.7;font-family:Poppins,Arial,sans-serif;max-width:420px;margin-left:auto;margin-right:auto;">
             Your order <strong style="color:${B.primary};">#${shortId}</strong> was delivered a couple of days ago.
             We'd love to know how it went!
           </p>
+        </td></tr>
 
-          <!-- Stars -->
-          ${stars}
+        <tr><td style="padding:0 24px;">
+          <!-- Product cards with review buttons -->
+          ${reviewCards}
 
-          <p style="margin:8px 0 24px;font-size:13px;color:${B.textLight};font-family:Poppins,Arial,sans-serif;">
-            Tap a star to rate your experience
-          </p>
-
-          <!-- Review card -->
-          <table cellpadding="0" cellspacing="0" width="100%" style="background:linear-gradient(135deg,#f7f4fe,#fce7f0);border:1px solid ${B.border};border-radius:12px;margin-bottom:24px;">
-            <tr><td style="padding:18px 22px;text-align:center;">
+          <!-- Encouragement card -->
+          <table cellpadding="0" cellspacing="0" width="100%" style="background:linear-gradient(135deg,#f7f4fe,#fce7f0);border:1px solid ${B.border};border-radius:12px;margin:12px 0 20px;">
+            <tr><td style="padding:16px 20px;text-align:center;">
               <p style="margin:0;font-size:13px;color:${B.textMid};font-family:Poppins,Arial,sans-serif;line-height:1.7;">
                 Your feedback helps other shoppers discover the perfect gift 💜<br/>
                 It only takes <strong>30 seconds!</strong>
@@ -100,7 +104,7 @@ export const sendReviewRequests = internalAction({
             </td></tr>
           </table>
 
-          ${ctaButton("Write a Review →", `${BASE_URL}/review?order=${shortId}`)}
+          ${ctaButton("Write a Review →", `${BASE_URL}/my-orders`)}
         </td></tr>
 
         <tr><td style="height:32px;"></td></tr>
@@ -117,16 +121,16 @@ export const sendReviewRequests = internalAction({
           params: JSON.stringify({
             firstName,
             orderId: shortId,
-            reviewUrl: `${BASE_URL}/review?order=${shortId}`,
+            reviewUrl: `${BASE_URL}/my-orders`,
           }),
           tags: ["review-request"],
         });
       } else {
         await ctx.runMutation(internal.emails.queue.enqueue, {
           to: [{ email: order.email, name: order.name }],
-          subject: `⭐ How was your UpharVilla gift, ${firstName}?`,
+          subject: `⭐ How was your upharVilla gift, ${firstName}?`,
           htmlContent: emailWrapper(body),
-          sender: { email: "support@upharvilla.in", name: "UpharVilla" },
+          sender: { email: "support@upharvilla.in", name: "upharVilla" },
           tags: ["review-request"],
         });
       }

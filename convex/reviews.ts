@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import { paginationOptsValidator } from "convex/server";
 import type { Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 
@@ -82,5 +83,79 @@ export const listProductReviews = query({
       .withIndex("by_product", (q) => q.eq("productId", args.productId))
       .order("desc")
       .collect();
+  },
+});
+
+// Admin: paginated reviews with product enrichment (N+1 fixed)
+export const listReviewsPaginated = query({
+  args: { paginationOpts: paginationOptsValidator },
+  handler: async (ctx, args) => {
+    const result = await ctx.db
+      .query("reviews")
+      .order("desc")
+      .paginate(args.paginationOpts);
+
+    // Deduplicate product lookups — batch using Set
+    const productIds = new Set(result.page.map((r) => r.productId));
+    const productMap = new Map<string, { name: string; slug: string; thumbnail?: string }>();
+    for (const pid of productIds) {
+      const product = await ctx.db.get(pid);
+      productMap.set(pid, {
+        name: product?.name ?? "Deleted Product",
+        slug: product?.slug ?? "",
+        thumbnail: product?.thumbnail ?? undefined,
+      });
+    }
+
+    const enrichedPage = result.page.map((review) => {
+      const product = productMap.get(review.productId)!;
+      return {
+        ...review,
+        productName: product.name,
+        productSlug: product.slug,
+        productThumbnail: product.thumbnail,
+      };
+    });
+
+    return {
+      ...result,
+      page: enrichedPage,
+    };
+  },
+});
+
+// Legacy: capped list for dashboard stats (max 500)
+export const listAllReviews = query({
+  args: {},
+  handler: async (ctx) => {
+    const reviews = await ctx.db.query("reviews").order("desc").take(500);
+    // Deduplicate product lookups
+    const productIds = new Set(reviews.map((r) => r.productId));
+    const productMap = new Map<string, { name: string; slug: string; thumbnail?: string }>();
+    for (const pid of productIds) {
+      const product = await ctx.db.get(pid);
+      productMap.set(pid, {
+        name: product?.name ?? "Deleted Product",
+        slug: product?.slug ?? "",
+        thumbnail: product?.thumbnail ?? undefined,
+      });
+    }
+    return reviews.map((review) => {
+      const product = productMap.get(review.productId)!;
+      return {
+        ...review,
+        productName: product.name,
+        productSlug: product.slug,
+        productThumbnail: product.thumbnail,
+      };
+    });
+  },
+});
+
+// Admin: delete a review
+export const deleteReview = mutation({
+  args: { id: v.id("reviews") },
+  handler: async (ctx, args) => {
+    await ctx.db.delete(args.id);
   },
 });

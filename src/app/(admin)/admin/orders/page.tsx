@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQuery } from "convex/react";
+import { ShoppingBag } from "lucide-react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   RupeeIcon,
@@ -18,6 +19,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import type React from "react";
 import { useMemo, useState } from "react";
+import { useDebounce } from "@/hooks/use-debounce";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -108,6 +110,8 @@ export default function AdminOrdersPage() {
     };
   }, [activeOrders]);
 
+  const debouncedSearch = useDebounce(searchTerm, 300);
+
   if (liveOrders === undefined) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 animate-in fade-in duration-300">
@@ -118,7 +122,7 @@ export default function AdminOrdersPage() {
   }
 
   // Filter orders
-  const term = searchTerm.toLowerCase().trim();
+  const term = debouncedSearch.toLowerCase().trim();
   let filteredOrders = activeOrders.filter((order) => {
     if (!term) {
       return statusFilter === "all" || order.orderStatus === statusFilter;
@@ -272,26 +276,29 @@ export default function AdminOrdersPage() {
     <div className="space-y-4 px-1 sm:px-4 pb-6">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight text-neutral-800 font-serif">
-            Orders
-          </h1>
-          <p className="text-xs text-muted-foreground mt-0.5 hidden sm:block">
-            Track, update, and manage all customer purchases and fulfillment
-            status.
-          </p>
+        <div className="flex items-start gap-2">
+          <ShoppingBag className="w-5 h-5 text-primary mt-1 shrink-0" />
+          <div>
+            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-neutral-800 font-serif">
+              Orders
+            </h1>
+            <p className="text-xs text-muted-foreground mt-0.5 hidden sm:block">
+              Track, update, and manage all customer purchases and fulfillment
+              status.
+            </p>
+          </div>
         </div>
       </div>
 
       {/* Analytics Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 mt-2 animate-in fade-in duration-300">
         {/* Revenue Card */}
-        <div className="bg-white p-3 sm:p-4 rounded-2xl border border-neutral-100 shadow-xs hover:shadow-md transition-all duration-300 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+        <div className="bg-white p-3 sm:p-4 rounded-2xl border border-neutral-200 shadow-xs hover:shadow-md transition-all duration-300 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-neutral-100 text-primary flex items-center justify-center shrink-0">
             <HugeiconsIcon icon={RupeeIcon} size={18} />
           </div>
           <div className="min-w-0">
-            <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
+            <p className="text-[10px] font-bold text-primary/60 uppercase tracking-wider">
               Total Revenue
             </p>
             <p className="text-sm font-extrabold text-neutral-800 font-mono mt-0.5">
@@ -301,12 +308,12 @@ export default function AdminOrdersPage() {
         </div>
 
         {/* Total Orders Card */}
-        <div className="bg-white p-3 sm:p-4 rounded-2xl border border-neutral-100 shadow-xs hover:shadow-md transition-all duration-300 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#ad8de9]/10 text-primary flex items-center justify-center shrink-0">
+        <div className="bg-white p-3 sm:p-4 rounded-2xl border border-neutral-200 shadow-xs hover:shadow-md transition-all duration-300 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-neutral-100 text-primary flex items-center justify-center shrink-0">
             <HugeiconsIcon icon={ShoppingBag01Icon} size={18} />
           </div>
           <div className="min-w-0">
-            <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
+            <p className="text-[10px] font-bold text-primary/60 uppercase tracking-wider">
               Total Orders
             </p>
             <p className="text-sm font-extrabold text-neutral-800 font-mono mt-0.5">
@@ -316,12 +323,12 @@ export default function AdminOrdersPage() {
         </div>
 
         {/* Pending Card */}
-        <div className="bg-white p-3 sm:p-4 rounded-2xl border border-neutral-100 shadow-xs hover:shadow-md transition-all duration-300 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+        <div className="bg-white p-3 sm:p-4 rounded-2xl border border-neutral-200 shadow-xs hover:shadow-md transition-all duration-300 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-neutral-100 text-primary flex items-center justify-center shrink-0">
             <HugeiconsIcon icon={Clock01Icon} size={18} />
           </div>
           <div className="min-w-0">
-            <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
+            <p className="text-[10px] font-bold text-primary/60 uppercase tracking-wider">
               Pending Fulfillment
             </p>
             <p className="text-sm font-extrabold text-neutral-800 font-mono mt-0.5">
@@ -331,12 +338,12 @@ export default function AdminOrdersPage() {
         </div>
 
         {/* Completed Card */}
-        <div className="bg-white p-3 sm:p-4 rounded-2xl border border-neutral-100 shadow-xs hover:shadow-md transition-all duration-300 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center shrink-0">
+        <div className="bg-white p-3 sm:p-4 rounded-2xl border border-neutral-200 shadow-xs hover:shadow-md transition-all duration-300 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-neutral-100 text-primary flex items-center justify-center shrink-0">
             <HugeiconsIcon icon={CheckmarkCircle01Icon} size={18} />
           </div>
           <div className="min-w-0">
-            <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
+            <p className="text-[10px] font-bold text-primary/60 uppercase tracking-wider">
               Delivered Orders
             </p>
             <p className="text-sm font-extrabold text-neutral-800 font-mono mt-0.5">

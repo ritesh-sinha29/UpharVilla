@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import { internalAction } from "../_generated/server";
+import { env } from "../env";
 import {
   B,
   ctaButton,
@@ -10,7 +11,7 @@ import {
   infoRow,
 } from "./emailLayout";
 
-const BASE_URL = process.env.SITE_URL || "https://upharvilla.in";
+const BASE_URL = env.SITE_URL;
 
 export const sendOrderConfirmation = internalAction({
   args: {
@@ -62,7 +63,7 @@ export const sendOrderConfirmation = internalAction({
     const body = `
       ${emailHeader("Order Confirmation")}
 
-      <tr><td style="padding:32px 40px 0;text-align:left;">
+      <tr><td style="padding:28px 24px 0;text-align:left;">
         <!-- Success badge -->
         <table cellpadding="0" cellspacing="0" width="100%" style="background:#faf9ff;border:1px solid ${B.border};border-radius:12px;margin-bottom:24px;">
           <tr><td style="padding:16px 20px;">
@@ -139,7 +140,7 @@ export const sendOrderConfirmation = internalAction({
         to: [{ email: args.customerEmail, name: args.customerName }],
         subject: `Order Confirmed: #${shortId}`,
         htmlContent: emailWrapper(body),
-        sender: { email: "orders@upharvilla.in", name: "UpharVilla Orders" },
+        sender: { email: "orders@upharvilla.in", name: "upharVilla Orders" },
         tags: ["order-confirmation"],
       });
     }
@@ -168,7 +169,6 @@ export const sendOrderStatusEmail = internalAction({
   },
   handler: async (ctx, args) => {
     const shortId = args.orderId.slice(-8).toUpperCase();
-    const BASE_URL = process.env.SITE_URL || "https://upharvilla.in";
 
     let subject = "";
     let tagline = "";
@@ -222,7 +222,7 @@ export const sendOrderStatusEmail = internalAction({
             </td>
           </tr>
           <tr>
-            <td colspan="2" style="padding:0 20px 16px;">
+            <td colspan="2" style="padding:0 24px 16px;">
               <table cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;">
                 ${rateRows}
               </table>
@@ -234,7 +234,7 @@ export const sendOrderStatusEmail = internalAction({
 
     const body = `
       ${emailHeader(tagline)}
-      <tr><td style="padding:32px 40px 0;text-align:left;">
+      <tr><td style="padding:28px 24px 0;text-align:left;">
         <table cellpadding="0" cellspacing="0" width="100%" style="background:#f7f4fe;border:1px solid ${B.border};border-radius:12px;margin-bottom:24px;border-collapse:collapse;">
           <tr><td style="padding:16px 20px;text-align:left;">
             <p style="margin:0;font-size:14px;color:${B.textDark};line-height:1.6;font-family:Poppins,Arial,sans-serif;">
@@ -291,7 +291,7 @@ export const sendOrderStatusEmail = internalAction({
         to: [{ email: args.customerEmail, name: args.customerName }],
         subject,
         htmlContent: emailWrapper(body),
-        sender: { email: "orders@upharvilla.in", name: "UpharVilla Orders" },
+        sender: { email: "orders@upharvilla.in", name: "upharVilla Orders" },
         tags: [`order-status-${args.status}`],
       });
     }

@@ -1,11 +1,15 @@
 "use client";
+import * as React from "react";
 import {
   LayoutDashboard,
+  MessageSquare,
   Package,
   Package2,
   ShieldCheck,
   ShoppingBag,
+  Star,
   Ticket,
+  Users,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -21,6 +25,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 
 const adminRoutes = [
@@ -45,6 +50,21 @@ const adminRoutes = [
     icon: Package2,
   },
   {
+    title: "Enquiries",
+    url: "/admin/enquiries",
+    icon: MessageSquare,
+  },
+  {
+    title: "Customers",
+    url: "/admin/customers",
+    icon: Users,
+  },
+  {
+    title: "Reviews",
+    url: "/admin/reviews",
+    icon: Star,
+  },
+  {
     title: "Coupons & Offers",
     url: "/admin/coupons",
     icon: Ticket,
@@ -53,6 +73,14 @@ const adminRoutes = [
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const { isMobile, setOpenMobile } = useSidebar();
+
+  // Auto-close sidebar on mobile when route changes
+  React.useEffect(() => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  }, [pathname, isMobile, setOpenMobile]);
 
   return (
     <Sidebar collapsible="icon">

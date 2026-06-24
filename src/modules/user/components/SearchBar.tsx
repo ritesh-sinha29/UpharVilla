@@ -151,15 +151,15 @@ export const SearchBar = ({ onClose }: { onClose?: () => void }) => {
             className="w-full h-full bg-transparent border-none outline-none text-xs md:text-xs lg:text-sm xl:text-base text-neutral-800 pr-4 pl-0 py-0 focus:ring-0 focus:outline-none"
           />
           {!query && !isFocused && (
-            <div className="absolute left-0 pointer-events-none text-xs md:text-xs lg:text-sm xl:text-base text-gray-400 font-normal opacity-70">
+            <div className="absolute left-0 right-10 pointer-events-none text-[11px] sm:text-xs md:text-xs lg:text-sm xl:text-base text-gray-400 font-normal opacity-70 overflow-hidden whitespace-nowrap">
               <Typewriter
                 options={{
                   strings: [
-                    "Search for Personalized Gifts...",
-                    "Search for Corporate Hampers...",
-                    "Search for Customized Jewelry...",
-                    "Search for Birthday Surprises...",
-                    "Search for Anniversary Gifts...",
+                    "Search Personalized Gifts...",
+                    "Search Corporate Hampers...",
+                    "Search Customized Jewelry...",
+                    "Search Birthday Surprises...",
+                    "Search Anniversary Gifts...",
                   ],
                   autoStart: true,
                   loop: true,

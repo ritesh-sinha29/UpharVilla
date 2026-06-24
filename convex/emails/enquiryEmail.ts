@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import { internalAction } from "../_generated/server";
+import { env } from "../env";
 import {
   B,
   ctaButton,
@@ -9,7 +10,7 @@ import {
   emailWrapper,
 } from "./emailLayout";
 
-const BASE_URL = process.env.SITE_URL || "https://upharvilla.in";
+const BASE_URL = env.SITE_URL;
 
 export const sendEnquiryAutoReply = internalAction({
   args: { name: v.string(), email: v.string() },
@@ -18,7 +19,7 @@ export const sendEnquiryAutoReply = internalAction({
 
     const body = `
       ${emailHeader("We got your message! 💌")}
-      <tr><td style="padding:36px 40px 0;text-align:center;">
+      <tr><td style="padding:28px 24px 0;text-align:center;">
 
         <!-- Avatar icon -->
         <div style="width:64px;height:64px;background:${B.pinkLight};border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:28px;line-height:64px;">
@@ -33,7 +34,7 @@ export const sendEnquiryAutoReply = internalAction({
         </p>
       </td></tr>
 
-      <tr><td style="padding:0 40px;">
+      <tr><td style="padding:0 24px;">
         <!-- Promise card -->
         <table cellpadding="0" cellspacing="0" width="100%" style="background:linear-gradient(135deg,#f7f4fe,#fce7f0);border:1px solid ${B.border};border-radius:14px;margin-bottom:24px;">
           <tr>
@@ -62,7 +63,7 @@ export const sendEnquiryAutoReply = internalAction({
     if (templateId && !isNaN(templateId)) {
       await ctx.runMutation(internal.emails.queue.enqueue, {
         to: [{ email: args.email, name: args.name }],
-        replyTo: { email: "support@upharvilla.in", name: "UpharVilla Support" },
+        replyTo: { email: "support@upharvilla.in", name: "upharVilla Support" },
         templateId,
         params: JSON.stringify({
           name: args.name,
@@ -74,10 +75,10 @@ export const sendEnquiryAutoReply = internalAction({
     } else {
       await ctx.runMutation(internal.emails.queue.enqueue, {
         to: [{ email: args.email, name: args.name }],
-        subject: `We got your message, ${firstName}! — UpharVilla`,
+        subject: `We got your message, ${firstName}! — upharVilla`,
         htmlContent: emailWrapper(body),
-        sender: { email: "support@upharvilla.in", name: "UpharVilla Support" },
-        replyTo: { email: "support@upharvilla.in", name: "UpharVilla Support" },
+        sender: { email: "support@upharvilla.in", name: "upharVilla Support" },
+        replyTo: { email: "support@upharvilla.in", name: "upharVilla Support" },
         tags: ["enquiry-autoreply"],
       });
     }

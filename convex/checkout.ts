@@ -626,6 +626,7 @@ export const completeCheckout = mutation({
             name: i.name,
             price: i.price,
             quantity: i.quantity,
+            thumbnail: i.thumbnail,
           })),
           totalAmount: finalAmount,
           address: formattedAddress,

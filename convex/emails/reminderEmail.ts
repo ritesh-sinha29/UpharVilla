@@ -1,5 +1,6 @@
 import { internal } from "../_generated/api";
 import { internalAction, internalQuery } from "../_generated/server";
+import { env } from "../env";
 import {
   B,
   ctaButton,
@@ -7,9 +8,10 @@ import {
   emailHeader,
   emailWrapper,
   infoRow,
+  productGrid,
 } from "./emailLayout";
 
-const BASE_URL = process.env.SITE_URL || "https://upharvilla.in";
+const BASE_URL = env.SITE_URL;
 
 export const _getOrdersPendingReminder = internalQuery({
   args: {},
@@ -40,6 +42,10 @@ export const _getOrdersPendingReminder = internalQuery({
           name: user.name || "there",
           orderId: order._id,
           createdAt: order.createdAt,
+          items: order.items.map((i) => ({
+            name: i.name,
+            thumbnail: i.thumbnail || "",
+          })),
         });
     }
     return results;
@@ -58,6 +64,14 @@ export const sendOrderReminders = internalAction({
       const firstName = order.name.split(" ")[0];
       const shortId = order.orderId.slice(-8).toUpperCase();
 
+      // Product thumbnail grid
+      const itemGrid = productGrid(
+        order.items.map((i) => ({
+          name: i.name,
+          thumbnail: i.thumbnail,
+        })),
+      );
+
       const steps = [
         { icon: "✅", label: "Order Placed", done: true },
         { icon: "📦", label: "Being Packed", done: true },
@@ -68,8 +82,8 @@ export const sendOrderReminders = internalAction({
       const stepRow = steps
         .map(
           (s) => `
-          <td style="text-align:center;padding:0 8px;width:25%;">
-            <div style="font-size:22px;margin-bottom:6px;">${s.icon}</div>
+          <td style="text-align:center;padding:0 6px;width:25%;">
+            <div style="font-size:20px;margin-bottom:6px;">${s.icon}</div>
             <div style="width:100%;height:3px;background:${s.done ? B.primary : B.border};border-radius:4px;margin-bottom:6px;"></div>
             <p style="margin:0;font-size:11px;font-weight:${s.done ? "600" : "400"};color:${s.done ? B.primary : B.textLight};font-family:Poppins,Arial,sans-serif;">${s.label}</p>
           </td>`,
@@ -78,22 +92,25 @@ export const sendOrderReminders = internalAction({
 
       const body = `
         ${emailHeader("Your order is being prepared 📦")}
-        <tr><td style="padding:32px 40px 0;text-align:center;">
+        <tr><td style="padding:28px 24px 0;text-align:center;">
           <p style="margin:0 0 6px;font-size:20px;font-weight:700;color:${B.textDark};font-family:Poppins,Arial,sans-serif;">
             Great news, ${firstName}!
           </p>
-          <p style="margin:0 0 28px;font-size:14px;color:${B.textMid};line-height:1.7;font-family:Poppins,Arial,sans-serif;">
+          <p style="margin:0 0 24px;font-size:14px;color:${B.textMid};line-height:1.7;font-family:Poppins,Arial,sans-serif;">
             Your order <strong style="color:${B.primary};">#${shortId}</strong> is being carefully packed by our team.
           </p>
 
           <!-- Progress tracker -->
-          <table cellpadding="0" cellspacing="0" width="100%" style="margin-bottom:28px;">
+          <table cellpadding="0" cellspacing="0" width="100%" style="margin-bottom:24px;">
             <tr>${stepRow}</tr>
           </table>
 
+          <!-- Product thumbnails -->
+          ${itemGrid}
+
           <!-- Info -->
-          <table cellpadding="0" cellspacing="0" width="100%" style="background:#f7f4fe;border-radius:10px;margin-bottom:24px;">
-            <tr><td style="padding:16px 20px;">
+          <table cellpadding="0" cellspacing="0" width="100%" style="background:#f7f4fe;border-radius:10px;margin-bottom:20px;">
+            <tr><td style="padding:14px 18px;">
               <table cellpadding="0" cellspacing="0" width="100%">
                 ${infoRow("Order ID", `#${shortId}`)}
                 ${infoRow("Expected Dispatch", "1–2 business days")}
@@ -101,7 +118,7 @@ export const sendOrderReminders = internalAction({
             </td></tr>
           </table>
 
-          ${ctaButton("View My Order →", BASE_URL)}
+          ${ctaButton("View My Order →", `${BASE_URL}/my-orders`)}
         </td></tr>
 
         <tr><td style="height:32px;"></td></tr>
@@ -124,9 +141,9 @@ export const sendOrderReminders = internalAction({
       } else {
         await ctx.runMutation(internal.emails.queue.enqueue, {
           to: [{ email: order.email, name: order.name }],
-          subject: `📦 Your order #${shortId} is being packed — UpharVilla`,
+          subject: `📦 Your order #${shortId} is being packed — upharVilla`,
           htmlContent: emailWrapper(body),
-          sender: { email: "orders@upharvilla.in", name: "UpharVilla Orders" },
+          sender: { email: "orders@upharvilla.in", name: "upharVilla Orders" },
           tags: ["order-reminder"],
         });
       }

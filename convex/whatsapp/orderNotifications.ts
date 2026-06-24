@@ -5,9 +5,10 @@ import {
   internalAction,
   internalQuery,
 } from "../_generated/server";
+import { env } from "../env";
 import type { WhatsAppTemplateComponent } from "./whatsappClient";
 
-const BASE_URL = process.env.SITE_URL || "https://upharvilla.in";
+const BASE_URL = env.SITE_URL;
 
 // ── Helper: Build body component parameters ──────────────────────────────────
 function bodyParams(

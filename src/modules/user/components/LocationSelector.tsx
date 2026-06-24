@@ -1,7 +1,6 @@
 "use client";
 
 import { ChevronDown, Loader2, Locate, MapPin, X } from "lucide-react";
-import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -187,13 +186,38 @@ export const LocationSelector = () => {
         className="flex items-start mt-1 gap-3 px-2 py-1.5 cursor-pointer hover:bg-neutral-50 rounded-xl transition-all duration-200 outline-none text-left animate-in fade-in duration-300"
       >
         <div className="relative h-6 w-8 overflow-hidden rounded-sm border border-neutral-100 shadow-sm shrink-0">
-          <Image
-            src="/india.png"
-            alt="India"
-            fill
-            sizes="32px"
-            className="object-cover"
-          />
+          <svg
+            viewBox="0 0 900 600"
+            className="absolute inset-0 w-full h-full"
+            aria-label="India"
+            role="img"
+          >
+            {/* Saffron */}
+            <rect width="900" height="200" fill="#FF9933" />
+            {/* White */}
+            <rect y="200" width="900" height="200" fill="#FFFFFF" />
+            {/* Green */}
+            <rect y="400" width="900" height="200" fill="#138808" />
+            {/* Ashoka Chakra */}
+            <circle cx="450" cy="300" r="60" fill="none" stroke="#000080" strokeWidth="6" />
+            {/* 24 spokes */}
+            {Array.from({ length: 24 }).map((_, i) => {
+              const angle = (i * 15 * Math.PI) / 180;
+              const x2 = 450 + 55 * Math.sin(angle);
+              const y2 = 300 - 55 * Math.cos(angle);
+              return (
+                <line
+                  key={i}
+                  x1="450"
+                  y1="300"
+                  x2={x2}
+                  y2={y2}
+                  stroke="#000080"
+                  strokeWidth="3"
+                />
+              );
+            })}
+          </svg>
         </div>
         <div className="flex flex-col">
           <span className="text-sm lg:text-base font-bold whitespace-nowrap text-gray-800">

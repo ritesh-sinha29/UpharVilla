@@ -13,7 +13,8 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useDebounce } from "@/hooks/use-debounce";
 import { toast } from "sonner";
 import { api } from "../../../../../convex/_generated/api";
 import type { Id } from "../../../../../convex/_generated/dataModel";
@@ -88,11 +89,18 @@ export default function CouponsPage() {
   const totalRedemptions =
     coupons?.reduce((sum, c) => sum + c.currentUsageCount, 0) ?? 0;
 
-  const filteredCoupons = coupons?.filter(
-    (c) =>
-      c.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.description.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  const debouncedQuery = useDebounce(searchQuery, 300);
+
+  const filteredCoupons = useMemo(() => {
+    if (!coupons) return undefined;
+    if (!debouncedQuery.trim()) return coupons;
+    const q = debouncedQuery.toLowerCase();
+    return coupons.filter(
+      (c) =>
+        c.code.toLowerCase().includes(q) ||
+        c.description.toLowerCase().includes(q),
+    );
+  }, [coupons, debouncedQuery]);
 
   const openCreate = () => {
     setEditingId(null);
@@ -240,67 +248,81 @@ export default function CouponsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-neutral-800 flex items-center gap-2">
-            <Ticket className="w-6 h-6 text-primary" />
-            Coupons & Offers
-          </h1>
-          <p className="text-sm text-neutral-500 mt-1">
-            Create and manage discount coupons for your store.
-          </p>
+    <div className="space-y-4 px-1 sm:px-4 pb-6">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+        <div className="flex items-start gap-2">
+          <Ticket className="w-5 h-5 text-primary mt-1 shrink-0" />
+          <div>
+            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-neutral-800 font-serif">
+              Coupons & Offers
+            </h1>
+            <p className="text-xs text-muted-foreground mt-0.5 hidden sm:block">
+              Create and manage discount coupons for your store.
+            </p>
+          </div>
         </div>
         <button
           type="button"
           onClick={openCreate}
-          className="cursor-pointer flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:opacity-90 transition-all shadow-sm"
+          className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-semibold text-xs hover:opacity-90 transition-all"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-3.5 h-3.5" />
           Create Coupon
         </button>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-white border border-neutral-100 rounded-xl p-4">
-          <p className="text-2xl font-bold text-neutral-800">
+      {/* Analytics Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 animate-in fade-in duration-300">
+        <div className="bg-white p-3 sm:p-4 rounded-2xl border border-neutral-200 shadow-xs hover:shadow-md transition-all duration-300">
+          <p className="text-[10px] font-bold text-primary/60 uppercase tracking-wider">
+            Total Coupons
+          </p>
+          <p className="text-sm font-extrabold text-neutral-800 font-mono mt-0.5">
             {coupons.length}
           </p>
-          <p className="text-xs text-neutral-500 mt-0.5">Total Coupons</p>
         </div>
-        <div className="bg-white border border-neutral-100 rounded-xl p-4">
-          <p className="text-2xl font-bold text-emerald-600">
+        <div className="bg-white p-3 sm:p-4 rounded-2xl border border-neutral-200 shadow-xs hover:shadow-md transition-all duration-300">
+          <p className="text-[10px] font-bold text-primary/60 uppercase tracking-wider">
+            Active
+          </p>
+          <p className="text-sm font-extrabold text-neutral-800 font-mono mt-0.5">
             {activeCoupons}
           </p>
-          <p className="text-xs text-neutral-500 mt-0.5">Active</p>
         </div>
-        <div className="bg-white border border-neutral-100 rounded-xl p-4">
-          <p className="text-2xl font-bold text-rose-500">{expiredCoupons}</p>
-          <p className="text-xs text-neutral-500 mt-0.5">Expired</p>
+        <div className="bg-white p-3 sm:p-4 rounded-2xl border border-neutral-200 shadow-xs hover:shadow-md transition-all duration-300">
+          <p className="text-[10px] font-bold text-primary/60 uppercase tracking-wider">
+            Expired
+          </p>
+          <p className="text-sm font-extrabold text-neutral-800 font-mono mt-0.5">
+            {expiredCoupons}
+          </p>
         </div>
-        <div className="bg-white border border-neutral-100 rounded-xl p-4">
-          <p className="text-2xl font-bold text-primary">{totalRedemptions}</p>
-          <p className="text-xs text-neutral-500 mt-0.5">Total Redemptions</p>
+        <div className="bg-white p-3 sm:p-4 rounded-2xl border border-neutral-200 shadow-xs hover:shadow-md transition-all duration-300">
+          <p className="text-[10px] font-bold text-primary/60 uppercase tracking-wider">
+            Redemptions
+          </p>
+          <p className="text-sm font-extrabold text-neutral-800 font-mono mt-0.5">
+            {totalRedemptions}
+          </p>
         </div>
       </div>
 
       {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+      <div className="relative flex items-center">
+        <Search className="absolute left-2.5 w-3 h-3 text-neutral-400" />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search by code or description..."
-          className="w-full pl-10 pr-4 py-3 border border-neutral-200 rounded-xl text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all bg-white"
+          className="w-full pl-8 bg-neutral-50/50 border border-neutral-200/70 h-8 text-xs rounded-lg outline-none focus:border-[#ad8de9] focus:ring-1 focus:ring-[#ad8de9]/20 transition-all placeholder:text-neutral-400"
         />
       </div>
 
       {/* Table */}
       {filteredCoupons && filteredCoupons.length > 0 ? (
-        <div className="bg-white border border-neutral-100 rounded-xl overflow-hidden">
+        <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>

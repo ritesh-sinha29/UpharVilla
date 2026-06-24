@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import { paginationOptsValidator } from "convex/server";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
@@ -714,5 +715,120 @@ export const getById = query({
       address,
       reviews,
     };
+  },
+});
+
+// ═══════════════════════════════════════════════════
+// ADMIN: Customer Management
+// ═══════════════════════════════════════════════════
+
+// Paginated customer list for admin UI — 25 per page
+// Order aggregation computed from paid orders index (not full scan)
+export const listCustomersPaginated = query({
+  args: { paginationOpts: paginationOptsValidator },
+  handler: async (ctx, args) => {
+    const result = await ctx.db
+      .query("user")
+      .order("desc")
+      .paginate(args.paginationOpts);
+
+    // Build order map from paid orders only (indexed query)
+    const paidOrders = await ctx.db
+      .query("orders")
+      .withIndex("by_payment_status_created", (q) =>
+        q.eq("paymentStatus", "paid"),
+      )
+      .collect();
+
+    const userOrderMap = new Map<
+      string,
+      { orderCount: number; totalSpend: number; lastOrderAt: number }
+    >();
+    for (const order of paidOrders) {
+      const existing = userOrderMap.get(order.userId) ?? {
+        orderCount: 0,
+        totalSpend: 0,
+        lastOrderAt: 0,
+      };
+      existing.orderCount += 1;
+      existing.totalSpend += order.totalAmount;
+      if (order.createdAt > existing.lastOrderAt) {
+        existing.lastOrderAt = order.createdAt;
+      }
+      userOrderMap.set(order.userId, existing);
+    }
+
+    const enrichedPage = result.page.map((user) => {
+      const orderData = userOrderMap.get(user._id) ?? {
+        orderCount: 0,
+        totalSpend: 0,
+        lastOrderAt: 0,
+      };
+      return {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        image: user.image ?? null,
+        createdAt: user.createdAt,
+        orderCount: orderData.orderCount,
+        totalSpend: orderData.totalSpend,
+        lastOrderAt: orderData.lastOrderAt,
+      };
+    });
+
+    return {
+      ...result,
+      page: enrichedPage,
+    };
+  },
+});
+
+// Legacy: capped version for any non-paginated consumers
+export const listCustomers = query({
+  args: {},
+  handler: async (ctx) => {
+    const users = await ctx.db.query("user").order("desc").take(500);
+    const paidOrders = await ctx.db
+      .query("orders")
+      .withIndex("by_payment_status_created", (q) =>
+        q.eq("paymentStatus", "paid"),
+      )
+      .collect();
+
+    const userOrderMap = new Map<
+      string,
+      { orderCount: number; totalSpend: number; lastOrderAt: number }
+    >();
+    for (const order of paidOrders) {
+      const existing = userOrderMap.get(order.userId) ?? {
+        orderCount: 0,
+        totalSpend: 0,
+        lastOrderAt: 0,
+      };
+      existing.orderCount += 1;
+      existing.totalSpend += order.totalAmount;
+      if (order.createdAt > existing.lastOrderAt) {
+        existing.lastOrderAt = order.createdAt;
+      }
+      userOrderMap.set(order.userId, existing);
+    }
+
+    return users.map((user) => {
+      const orderData = userOrderMap.get(user._id) ?? {
+        orderCount: 0,
+        totalSpend: 0,
+        lastOrderAt: 0,
+      };
+      return {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        image: user.image ?? null,
+        createdAt: user.createdAt,
+        orderCount: orderData.orderCount,
+        totalSpend: orderData.totalSpend,
+        lastOrderAt: orderData.lastOrderAt,
+      };
+    });
   },
 });

@@ -95,7 +95,7 @@ export const OrdersSearchBar: React.FC<OrdersSearchBarProps> = ({
 
           {/* Typewriter Placeholder */}
           {!searchInput && !isFocused && (
-            <div className="absolute left-10 pointer-events-none text-sm text-neutral-400 font-normal opacity-70">
+            <div className="absolute left-10 right-10 pointer-events-none text-[11px] sm:text-xs md:text-sm text-neutral-400 font-normal opacity-70 overflow-hidden whitespace-nowrap">
               <Typewriter
                 options={{
                   strings: [

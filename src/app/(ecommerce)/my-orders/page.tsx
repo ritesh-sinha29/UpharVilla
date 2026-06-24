@@ -1,7 +1,15 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { ChevronRight, Loader2, ShoppingBag } from "lucide-react";
+import {
+  Calendar,
+  ChevronRight,
+  Hash,
+  Loader2,
+  Package,
+  ShoppingBag,
+  X,
+} from "lucide-react";
 import Link from "next/link";
 import type React from "react";
 import { useEffect, useMemo, useState } from "react";
@@ -9,44 +17,86 @@ import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 import { OrderItemCard } from "@/modules/user/components/my-orders/OrderItemCard";
 import { OrdersSearchBar } from "@/modules/user/components/my-orders/OrdersSearchBar";
-import { OrdersSidebar } from "@/modules/user/components/my-orders/OrdersSidebar";
 import { api } from "../../../../convex/_generated/api";
+
+/* ─── helpers ─── */
+
+const STATUS_ORDER: Record<string, number> = {
+  placed: 0,
+  shipped: 1,
+  out_for_delivery: 2,
+  delivered: 3,
+  cancelled: 4,
+};
+
+const STATUS_BADGE: Record<
+  string,
+  { label: string; dot: string; text: string; bg: string }
+> = {
+  placed: {
+    label: "Processing",
+    dot: "bg-[#ad8de9]",
+    text: "text-[#ad8de9]",
+    bg: "bg-[#ad8de9]/8",
+  },
+  shipped: {
+    label: "Shipped",
+    dot: "bg-amber-500",
+    text: "text-amber-600",
+    bg: "bg-amber-50",
+  },
+  out_for_delivery: {
+    label: "Out for Delivery",
+    dot: "bg-amber-500",
+    text: "text-amber-600",
+    bg: "bg-amber-50",
+  },
+  delivered: {
+    label: "Delivered",
+    dot: "bg-emerald-500",
+    text: "text-emerald-600",
+    bg: "bg-emerald-50",
+  },
+  cancelled: {
+    label: "Cancelled",
+    dot: "bg-red-500",
+    text: "text-red-600",
+    bg: "bg-red-50",
+  },
+};
+
+const formatOrderDate = (ts: number) =>
+  new Date(ts).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 
 export default function UserOrdersPage() {
   const { data: session, isPending } = authClient.useSession();
   const orders = useQuery(api.orders.listUserOrders);
 
-  const displayOrders = useMemo(() => {
-    return orders || [];
-  }, [orders]);
+  const displayOrders = useMemo(() => orders || [], [orders]);
 
-  // Search state
+  /* ── search state ── */
   const [searchInput, setSearchInput] = useState("");
   const [activeSearch, setActiveSearch] = useState("");
 
-  // Debounce search input to update activeSearch after 300ms
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setActiveSearch(searchInput);
-    }, 300);
-
-    return () => {
-      clearTimeout(timer);
-    };
+    const timer = setTimeout(() => setActiveSearch(searchInput), 300);
+    return () => clearTimeout(timer);
   }, [searchInput]);
 
-  // Filter states
+  /* ── filter state ── */
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [selectedTimes, setSelectedTimes] = useState<string[]>([]);
 
-  // Expanded card state
+  /* ── expand state ── */
   const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
-
-  const toggleExpand = (cardId: string) => {
+  const toggleExpand = (cardId: string) =>
     setExpandedCardId((prev) => (prev === cardId ? null : cardId));
-  };
 
-  // Flatten orders into individual item display lines (Flipkart style)
+  /* ── flatten for search-bar suggestions + item filtering ── */
   const allOrderItems = useMemo(() => {
     if (!displayOrders) return [];
     return displayOrders.flatMap((order) => {
@@ -74,15 +124,13 @@ export default function UserOrdersPage() {
     });
   }, [displayOrders]);
 
-  // Check for openReview query parameter on mount or when allOrderItems change
+  /* ── open-review query param ── */
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const openReviewId = params.get("openReview");
       if (openReviewId) {
         setExpandedCardId(openReviewId);
-
-        // Wait for rendering to complete before scrolling
         setTimeout(() => {
           const element = document.getElementById(
             `order-item-card-${openReviewId}`,
@@ -95,32 +143,31 @@ export default function UserOrdersPage() {
     }
   }, []);
 
-  // Apply filters and search
-  const filteredOrderItems = useMemo(() => {
+  /* ── item-level filtering (search + sidebar filters) ── */
+  const filteredItemIds = useMemo(() => {
     const term = activeSearch.toLowerCase().trim();
 
-    let result = allOrderItems.filter((item) => {
-      // 1. Search Filter (by item name or order ID)
+    const result = allOrderItems.filter((item) => {
+      // 1. Search
       if (term) {
         const matchesName = item.item.name.toLowerCase().includes(term);
         const matchesId = item.orderId.toLowerCase().includes(term);
         if (!matchesName && !matchesId) return false;
       }
 
-      // 2. Order Status Filter
+      // 2. Status
       if (selectedStatuses.length > 0) {
         const matchesStatus = selectedStatuses.some((status) => {
-          if (status === "on_the_way") {
+          if (status === "on_the_way")
             return (
               item.orderStatus === "placed" || item.orderStatus === "shipped"
             );
-          }
           return item.orderStatus === status;
         });
         if (!matchesStatus) return false;
       }
 
-      // 3. Order Time Filter
+      // 3. Time
       if (selectedTimes.length > 0) {
         const orderDate = new Date(item.createdAt);
         const orderYear = orderDate.getFullYear().toString();
@@ -128,18 +175,10 @@ export default function UserOrdersPage() {
         const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
 
         const matchesTime = selectedTimes.some((time) => {
-          if (time === "last_30_days") {
-            return item.createdAt >= thirtyDaysAgo;
-          }
-          if (time === "2026") {
-            return orderYear === "2026";
-          }
-          if (time === "2025") {
-            return orderYear === "2025";
-          }
-          if (time === "older") {
-            return parseInt(orderYear, 10) < 2025;
-          }
+          if (time === "last_30_days") return item.createdAt >= thirtyDaysAgo;
+          if (time === "2026") return orderYear === "2026";
+          if (time === "2025") return orderYear === "2025";
+          if (time === "older") return parseInt(orderYear, 10) < 2025;
           return false;
         });
         if (!matchesTime) return false;
@@ -148,58 +187,74 @@ export default function UserOrdersPage() {
       return true;
     });
 
-    if (term) {
-      result = [...result].sort((a, b) => {
-        const getScore = (item: typeof a) => {
-          let score = 0;
-          const nameLower = item.item.name.toLowerCase();
-          const orderIdLower = item.orderId.toLowerCase();
-
-          // 1. Exact match on item name
-          if (nameLower === term) {
-            score += 100;
-          }
-          // 2. Item name starts with term
-          else if (nameLower.startsWith(term)) {
-            score += 80;
-          }
-          // 3. Item name contains term
-          else if (nameLower.includes(term)) {
-            score += 60;
-          }
-
-          // 4. Exact match on order ID
-          if (orderIdLower === term) {
-            score += 50;
-          }
-          // 5. Order ID contains term
-          else if (orderIdLower.includes(term)) {
-            score += 40;
-          }
-
-          return score;
-        };
-
-        return getScore(b) - getScore(a);
-      });
-    }
-
-    return result;
+    return new Set(result.map((r) => r.itemId));
   }, [allOrderItems, activeSearch, selectedStatuses, selectedTimes]);
 
-  const handleStatusFilterChange = (status: string) => {
+  /* ── build order-grouped data (only orders with matching items) ── */
+  const groupedOrders = useMemo(() => {
+    return displayOrders
+      .map((order) => {
+        const orderReviews = (order as any).reviews || [];
+        const items = order.items
+          .map((item, idx) => {
+            const itemId = `${order._id}-${item.productId}-${idx}`;
+            const itemReview = orderReviews.find(
+              (r: any) => r.itemId === itemId,
+            );
+            return {
+              orderId: order._id as any,
+              itemId,
+              item: item as any,
+              orderItems: order.items as any,
+              totalAmount: order.totalAmount,
+              createdAt: order.createdAt,
+              orderStatus: order.orderStatus as any,
+              paymentStatus: order.paymentStatus as any,
+              razorpayOrderId: order.razorpayOrderId,
+              address: order.address as any,
+              shippedAt: (order as any).shippedAt,
+              outForDeliveryAt: (order as any).outForDeliveryAt,
+              deliveredAt: (order as any).deliveredAt,
+              review: itemReview || null,
+            };
+          })
+          .filter((it) => filteredItemIds.has(it.itemId));
+
+        if (items.length === 0) return null;
+
+        return {
+          orderId: order._id as string,
+          createdAt: order.createdAt,
+          totalAmount: order.totalAmount,
+          orderStatus: order.orderStatus as string,
+          paymentStatus: order.paymentStatus as string,
+          itemCount: order.items.length,
+          items,
+        };
+      })
+      .filter(Boolean) as {
+      orderId: string;
+      createdAt: number;
+      totalAmount: number;
+      orderStatus: string;
+      paymentStatus: string;
+      itemCount: number;
+      items: any[];
+    }[];
+  }, [displayOrders, filteredItemIds]);
+
+  /* ── handlers ── */
+  const handleStatusFilterChange = (status: string) =>
     setSelectedStatuses((prev) =>
       prev.includes(status)
         ? prev.filter((s) => s !== status)
         : [...prev, status],
     );
-  };
 
-  const handleTimeFilterChange = (time: string) => {
+  const handleTimeFilterChange = (time: string) =>
     setSelectedTimes((prev) =>
       prev.includes(time) ? prev.filter((t) => t !== time) : [...prev, time],
     );
-  };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -218,6 +273,7 @@ export default function UserOrdersPage() {
     selectedTimes.length > 0 ||
     activeSearch !== "";
 
+  /* ── loading ── */
   if (isPending || orders === undefined) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[65vh]">
@@ -226,6 +282,7 @@ export default function UserOrdersPage() {
     );
   }
 
+  /* ── unauthenticated ── */
   if (!session) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-8 text-center min-h-[65vh] space-y-6">
@@ -254,6 +311,7 @@ export default function UserOrdersPage() {
     );
   }
 
+  /* ── main ── */
   return (
     <div className="flex-1 bg-[#faf9ff] min-h-screen py-10 font-sans">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -263,7 +321,10 @@ export default function UserOrdersPage() {
             Home
           </Link>
           <ChevronRight size={10} className="text-neutral-400" />
-          <Link href="/account" className="hover:text-primary transition-colors">
+          <Link
+            href="/account"
+            className="hover:text-primary transition-colors"
+          >
             My Account
           </Link>
           <ChevronRight size={10} className="text-neutral-400" />
@@ -285,47 +346,103 @@ export default function UserOrdersPage() {
           )}
         </div>
 
-        {/* Layout Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-stretch">
-          {/* Left Sidebar Filters */}
-          <div className="lg:col-span-1 flex flex-col">
-            <OrdersSidebar
-              selectedStatuses={selectedStatuses}
-              onStatusChange={handleStatusFilterChange}
-              selectedTimes={selectedTimes}
-              onTimeChange={handleTimeFilterChange}
-              onClear={clearFilters}
-              hasFilters={hasFilters}
-            />
+        {/* Inline Filters + Search */}
+        <div className="flex flex-col gap-4">
+          {/* ── Filter Pills ── */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Status pills */}
+            {[
+              { value: "on_the_way", label: "On the way" },
+              { value: "delivered", label: "Delivered" },
+              { value: "cancelled", label: "Cancelled" },
+              { value: "returned", label: "Returned" },
+            ].map((status) => {
+              const isActive = selectedStatuses.includes(status.value);
+              return (
+                <button
+                  key={status.value}
+                  type="button"
+                  onClick={() => handleStatusFilterChange(status.value)}
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 cursor-pointer select-none ${
+                    isActive
+                      ? "bg-primary text-white border-primary shadow-sm"
+                      : "bg-white text-neutral-600 border-neutral-200 hover:border-primary/40 hover:text-primary"
+                  }`}
+                >
+                  {status.label}
+                  {isActive && <X size={12} className="ml-0.5" />}
+                </button>
+              );
+            })}
+
+            {/* Divider */}
+            <div className="w-px h-5 bg-neutral-200 mx-1 hidden sm:block" />
+
+            {/* Time pills */}
+            {[
+              { value: "last_30_days", label: "Last 30 days" },
+              { value: "2026", label: "2026" },
+              { value: "2025", label: "2025" },
+              { value: "older", label: "Older" },
+            ].map((time) => {
+              const isActive = selectedTimes.includes(time.value);
+              return (
+                <button
+                  key={time.value}
+                  type="button"
+                  onClick={() => handleTimeFilterChange(time.value)}
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 cursor-pointer select-none ${
+                    isActive
+                      ? "bg-primary text-white border-primary shadow-sm"
+                      : "bg-white text-neutral-600 border-neutral-200 hover:border-primary/40 hover:text-primary"
+                  }`}
+                >
+                  {time.label}
+                  {isActive && <X size={12} className="ml-0.5" />}
+                </button>
+              );
+            })}
+
+            {/* Clear all */}
+            {hasFilters && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="text-[11px] font-bold text-primary hover:underline ml-2 cursor-pointer transition-colors"
+              >
+                Clear all
+              </button>
+            )}
           </div>
 
-          {/* Right Main Content */}
-          <div className="lg:col-span-3 flex flex-col gap-4">
-            {/* Search Orders Bar */}
-            <OrdersSearchBar
-              searchInput={searchInput}
-              onSearchInputChange={setSearchInput}
-              onSearchSubmit={handleSearchSubmit}
-              allOrderItems={allOrderItems}
-              onSelectSuggestion={(itemId) => {
-                const item = allOrderItems.find((x) => x.itemId === itemId);
-                if (item) {
-                  setSearchInput(item.item.name);
-                  setActiveSearch(item.item.name);
-                }
-                
-                setExpandedCardId(itemId);
-                setTimeout(() => {
-                  const el = document.getElementById(`order-item-card-${itemId}`);
-                  if (el) {
-                    el.scrollIntoView({ behavior: "smooth", block: "center" });
-                  }
-                }, 200);
-              }}
-            />
+          {/* ── Search Bar ── */}
+          <OrdersSearchBar
+            searchInput={searchInput}
+            onSearchInputChange={setSearchInput}
+            onSearchSubmit={handleSearchSubmit}
+            allOrderItems={allOrderItems}
+            onSelectSuggestion={(itemId) => {
+              const item = allOrderItems.find((x) => x.itemId === itemId);
+              if (item) {
+                setSearchInput(item.item.name);
+                setActiveSearch(item.item.name);
+              }
 
-            {/* Items List */}
+              setExpandedCardId(itemId);
+              setTimeout(() => {
+                const el = document.getElementById(
+                  `order-item-card-${itemId}`,
+                );
+                if (el) {
+                  el.scrollIntoView({ behavior: "smooth", block: "center" });
+                }
+              }, 200);
+            }}
+          />
+
+            {/* Orders List — grouped by order */}
             {allOrderItems.length === 0 ? (
+              /* No orders at all */
               <div className="flex-1 flex flex-col items-center justify-center py-20 text-center space-y-6 bg-white rounded-2xl border border-neutral-100 p-6 shadow-sm">
                 <div className="p-4 bg-[#ad8de9]/10 rounded-full">
                   <ShoppingBag className="w-12 h-12 text-primary" />
@@ -335,7 +452,7 @@ export default function UserOrdersPage() {
                     No Orders Found
                   </h2>
                   <p className="text-muted-foreground text-sm max-w-sm mx-auto">
-                    You haven't placed any orders yet. Start exploring our
+                    You haven&apos;t placed any orders yet. Start exploring our
                     beautiful collections!
                   </p>
                 </div>
@@ -345,7 +462,8 @@ export default function UserOrdersPage() {
                   </Button>
                 </Link>
               </div>
-            ) : filteredOrderItems.length === 0 ? (
+            ) : groupedOrders.length === 0 ? (
+              /* No results after filtering */
               <div className="flex-1 flex flex-col items-center justify-center py-20 text-center space-y-6 bg-white rounded-2xl border border-neutral-100 p-6 shadow-sm">
                 <div className="p-4 bg-[#ad8de9]/10 rounded-full">
                   <ShoppingBag className="w-12 h-12 text-primary" />
@@ -367,18 +485,77 @@ export default function UserOrdersPage() {
                 </Button>
               </div>
             ) : (
-              <div className="space-y-3">
-                {filteredOrderItems.map((displayItem) => (
-                  <OrderItemCard
-                    key={displayItem.itemId}
-                    displayItem={displayItem}
-                    isExpanded={expandedCardId === displayItem.itemId}
-                    onToggleExpand={() => toggleExpand(displayItem.itemId)}
-                  />
-                ))}
+              /* Grouped order cards */
+              <div className="space-y-5">
+                {groupedOrders.map((order) => {
+                  const badge = STATUS_BADGE[order.orderStatus] ??
+                    STATUS_BADGE.placed;
+                  return (
+                    <section
+                      key={order.orderId}
+                      className="bg-white rounded-2xl border border-neutral-100 shadow-sm overflow-hidden"
+                    >
+                      {/* ── Order Header ── */}
+                      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 px-5 py-3.5 bg-neutral-50/60 border-b border-neutral-100">
+                        {/* Left: date + id */}
+                        <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5">
+                          <div className="flex items-center gap-1.5 text-xs text-neutral-500">
+                            <Calendar size={13} className="text-neutral-400" />
+                            <span className="font-medium">
+                              {formatOrderDate(order.createdAt)}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs text-neutral-400">
+                            <Hash size={12} className="text-neutral-300" />
+                            <span className="font-mono text-[11px] uppercase tracking-tight">
+                              {order.orderId.slice(-8).toUpperCase()}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs text-neutral-400">
+                            <Package size={12} className="text-neutral-300" />
+                            <span className="font-medium">
+                              {order.itemCount}{" "}
+                              {order.itemCount === 1 ? "item" : "items"}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Right: total + status */}
+                        <div className="flex items-center gap-4">
+                          <span className="text-sm font-bold text-neutral-800 font-mono">
+                            ₹{order.totalAmount.toLocaleString("en-IN")}
+                          </span>
+                          <span
+                            className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full ${badge.bg} ${badge.text}`}
+                          >
+                            <span
+                              className={`w-1.5 h-1.5 rounded-full ${badge.dot}`}
+                            />
+                            {badge.label}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* ── Item Cards ── */}
+                      <div className="divide-y divide-neutral-100">
+                        {order.items.map((displayItem: any) => (
+                          <OrderItemCard
+                            key={displayItem.itemId}
+                            displayItem={displayItem}
+                            isExpanded={
+                              expandedCardId === displayItem.itemId
+                            }
+                            onToggleExpand={() =>
+                              toggleExpand(displayItem.itemId)
+                            }
+                          />
+                        ))}
+                      </div>
+                    </section>
+                  );
+                })}
               </div>
             )}
-          </div>
         </div>
       </div>
     </div>

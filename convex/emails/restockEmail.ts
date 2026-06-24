@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import { internalAction } from "../_generated/server";
+import { env } from "../env";
 import {
   B,
   ctaButton,
@@ -9,7 +10,7 @@ import {
   emailWrapper,
 } from "./emailLayout";
 
-const BASE_URL = process.env.SITE_URL || "https://upharvilla.in";
+const BASE_URL = env.SITE_URL;
 
 export const notifyUsersOfRestock = internalAction({
   args: {
@@ -31,7 +32,7 @@ export const notifyUsersOfRestock = internalAction({
     const emailPromises = args.notifications.map(async (n) => {
       const body = `
         ${emailHeader("Back in Stock! 🎉")}
-        <tr><td style="padding:36px 40px 0;text-align:center;">
+        <tr><td style="padding:28px 24px 0;text-align:center;">
           <!-- Celebration Icon -->
           <div style="width:64px;height:64px;background:${B.pinkLight};border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:28px;line-height:64px;">
             🎁
@@ -45,7 +46,7 @@ export const notifyUsersOfRestock = internalAction({
           </p>
         </td></tr>
 
-        <tr><td style="padding:0 40px;">
+        <tr><td style="padding:0 24px;">
           <!-- Product card wrapper -->
           <table cellpadding="0" cellspacing="0" width="100%" style="background:#ffffff;border:1px solid ${B.border};border-radius:14px;margin-bottom:24px;">
             <tr>
@@ -87,7 +88,7 @@ export const notifyUsersOfRestock = internalAction({
         if (templateId && !isNaN(templateId)) {
           await ctx.runMutation(internal.emails.queue.enqueue, {
             to: [{ email: n.email }],
-            replyTo: { email: "support@upharvilla.in", name: "UpharVilla" },
+            replyTo: { email: "support@upharvilla.in", name: "upharVilla" },
             templateId,
             params: JSON.stringify({
               productName: args.productName,
@@ -100,10 +101,10 @@ export const notifyUsersOfRestock = internalAction({
         } else {
           await ctx.runMutation(internal.emails.queue.enqueue, {
             to: [{ email: n.email }],
-            subject: `Back in stock: ${args.productName} is available! — UpharVilla`,
+            subject: `Back in stock: ${args.productName} is available! — upharVilla`,
             htmlContent: emailWrapper(body),
-            sender: { email: "support@upharvilla.in", name: "UpharVilla" },
-            replyTo: { email: "support@upharvilla.in", name: "UpharVilla" },
+            sender: { email: "support@upharvilla.in", name: "upharVilla" },
+            replyTo: { email: "support@upharvilla.in", name: "upharVilla" },
             tags: ["product-restocked"],
           });
         }

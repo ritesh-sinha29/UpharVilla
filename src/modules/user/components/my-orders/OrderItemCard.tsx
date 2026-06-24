@@ -286,7 +286,7 @@ export const OrderItemCard: React.FC<OrderItemCardProps> = ({
   return (
     <div
       id={`order-item-card-${displayItem.itemId}`}
-      className="border border-neutral-100 rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300"
+      className="overflow-hidden bg-white transition-all duration-300"
     >
       {/* Main Card Header */}
       {/* biome-ignore lint/a11y/useKeyWithClickEvents: Accordion header */}

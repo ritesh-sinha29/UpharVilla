@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import { paginationOptsValidator } from "convex/server";
 import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
 import { incrementCounter } from "./counterUtils";
@@ -57,9 +58,28 @@ export const submit = mutation({
   },
 });
 
+// Paginated list for admin UI — 20 per page
+export const listPaginated = query({
+  args: { paginationOpts: paginationOptsValidator },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("enquiries")
+      .order("desc")
+      .paginate(args.paginationOpts);
+  },
+});
+
+// Legacy: capped list for dashboard stats (max 1000 docs)
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("enquiries").order("desc").collect();
+    return await ctx.db.query("enquiries").order("desc").take(1000);
+  },
+});
+
+export const deleteEnquiry = mutation({
+  args: { id: v.id("enquiries") },
+  handler: async (ctx, args) => {
+    await ctx.db.delete(args.id);
   },
 });
