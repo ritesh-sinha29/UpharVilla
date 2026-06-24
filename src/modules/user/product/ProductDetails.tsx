@@ -25,6 +25,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import { api } from "../../../../convex/_generated/api";
+import WishlistButton from "../components/WishlistButton";
 
 interface ProductDetailsProps {
   product: any; // We'll pass the convex product here
@@ -553,17 +554,26 @@ export const ProductDetails = ({ product }: ProductDetailsProps) => {
                 {product?.name || "Product Name"}
               </h1>
             </div>
-            <button
-              type="button"
-              onClick={handleShare}
-              className="cursor-pointer flex items-center justify-center p-1.5 sm:p-2 md:px-3 md:py-1.5 border border-neutral-200 rounded-full md:rounded-lg text-neutral-600 hover:bg-neutral-50 hover:text-neutral-800 transition-all shrink-0 mt-0.5 sm:mt-1"
-              title="Share Product"
-            >
-              <span className="hidden md:inline mr-1.5 text-xs lg:text-sm font-medium">
-                Share
-              </span>
-              <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-3.5 md:h-3.5" />
-            </button>
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 mt-0.5 sm:mt-1">
+              {/* Wishlist Heart */}
+              <WishlistButton
+                productId={product._id}
+                className="p-1.5 sm:p-2 border border-neutral-200 rounded-full hover:bg-neutral-50 transition-all"
+                iconClassName="w-3.5 h-3.5 sm:w-4 sm:h-4"
+              />
+              {/* Share */}
+              <button
+                type="button"
+                onClick={handleShare}
+                className="cursor-pointer flex items-center justify-center p-1.5 sm:p-2 md:px-3 md:py-1.5 border border-neutral-200 rounded-full md:rounded-lg text-neutral-600 hover:bg-neutral-50 hover:text-neutral-800 transition-all"
+                title="Share Product"
+              >
+                <span className="hidden md:inline mr-1.5 text-xs lg:text-sm font-medium">
+                  Share
+                </span>
+                <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-3.5 md:h-3.5" />
+              </button>
+            </div>
           </div>
 
           {/* Ratings & Bought Count unified box */}

@@ -109,14 +109,13 @@ const ProductCard = ({ product, className }: ProductCardProps) => {
             ))}
           </div>
 
-          {/* Wishlist — top-right corner, appears on hover (Flipkart/Nykaa style) */}
+          {/* Wishlist — always visible on mobile, hover-only on desktop */}
           <div
-            className={`absolute top-1.5 right-1.5 md:top-2.5 md:right-2.5 z-10 transition-all duration-200 opacity-100 translate-y-0 md:${
-              isHovered
-                ? "opacity-100 translate-y-0"
-                : "opacity-0 -translate-y-1 pointer-events-none"
-            }`}
-            onClick={(e) => e.preventDefault()}
+            className={`absolute top-1.5 right-1.5 md:top-2.5 md:right-2.5 z-10 transition-all duration-200
+              opacity-100 translate-y-0
+              md:${isHovered ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1 pointer-events-none"}`}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            onTouchEnd={(e) => { e.stopPropagation(); }}
           >
             <WishlistButton productId={product._id} />
           </div>
