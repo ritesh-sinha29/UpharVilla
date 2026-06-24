@@ -73,28 +73,23 @@ export const _getReservationsWithProducts = internalQuery({
   },
 });
 
-// ── Internal: Bind Razorpay order ID to all active reservations ───────────
-// Prevents cross-user replay: completeCheckout checks this binding.
-export const _bindOrderToReservations = internalMutation({
-  args: { userId: v.string(), razorpayOrderId: v.string() },
+// ── Internal: Create Checkout Session ──────────────────────────────────────
+// Tracks Razorpay orders independently of reservations.
+// Security: verifies user ownership and expected amount in completeCheckout.
+export const _createCheckoutSession = internalMutation({
+  args: {
+    userId: v.string(),
+    razorpayOrderId: v.string(),
+    expectedAmountPaise: v.number(),
+  },
   handler: async (ctx, args) => {
-    const now = Date.now();
-    const uid = args.userId as Id<"user">;
-
-    const valid = await ctx.db
-      .query("reservations")
-      .withIndex("by_user_active", (q) =>
-        q.eq("userId", uid).eq("status", "reserved"),
-      )
-      .collect();
-
-    if (valid.length === 0) {
-      throw new Error("No active reservations to bind Razorpay order to");
-    }
-
-    for (const res of valid) {
-      await ctx.db.patch(res._id, { razorpayOrderId: args.razorpayOrderId });
-    }
+    await ctx.db.insert("checkoutSessions", {
+      userId: args.userId,
+      razorpayOrderId: args.razorpayOrderId,
+      expectedAmountPaise: args.expectedAmountPaise,
+      status: "pending",
+      createdAt: Date.now(),
+    });
   },
 });
 
@@ -327,10 +322,12 @@ export const createRazorpayOrder = action({
 
     const order = await response.json();
 
-    // ── Bind this Razorpay order ID to the user's reservations ─────────────
-    await ctx.runMutation(internal.checkout._bindOrderToReservations, {
+    // ── Store checkout session for payment verification ────────────────────
+    const amountPaise = Math.round(finalAmountRupees * 100);
+    await ctx.runMutation(internal.checkout._createCheckoutSession, {
       userId,
       razorpayOrderId: order.id,
+      expectedAmountPaise: amountPaise,
     });
 
     return {
@@ -456,15 +453,25 @@ export const completeCheckout = mutation({
       );
     }
 
-    // ── Cross-user replay protection ───────────────────────────────────────
-    // Every reservation must be bound to the exact razorpayOrderId submitted.
-    // This prevents: attacker takes a valid (orderId, paymentId, sig) from
-    // another person's session and submits it with their own cart.
-    const allBound = validReservations.every(
-      (r) => r.razorpayOrderId === args.razorpayOrderId,
-    );
-    if (!allBound) {
-      throw new Error("Payment order does not match this checkout session.");
+    // ── Checkout Session Verification ─────────────────────────────────────
+    // Verify the Razorpay order was created by our server for this user,
+    // and that the expected amount matches the recalculated cart total.
+    const checkoutSession = await ctx.db
+      .query("checkoutSessions")
+      .withIndex("by_razorpay_order", (q) =>
+        q.eq("razorpayOrderId", args.razorpayOrderId),
+      )
+      .first();
+
+    if (!checkoutSession) {
+      throw new Error("Invalid checkout session. Please try again.");
+    }
+    if (checkoutSession.userId !== userId) {
+      throw new Error("This payment does not belong to your account.");
+    }
+    if (checkoutSession.status === "completed") {
+      // Session already completed — idempotency guard should have caught this above
+      throw new Error("This checkout session has already been completed.");
     }
 
     // ── Address ownership check ────────────────────────────────────────────
@@ -562,6 +569,16 @@ export const completeCheckout = mutation({
 
     const finalAmount = Math.max(0, totalPrice - couponDiscount) + PLATFORM_FEE;
 
+    // ── Amount verification (prevents cart-swap fraud) ──────────────────────
+    // Ensures the amount paid matches what was calculated when the Razorpay
+    // order was created. Blocks: pay ₹100 → swap cart to ₹5000 → complete.
+    const recalculatedPaise = Math.round(finalAmount * 100);
+    if (recalculatedPaise !== checkoutSession.expectedAmountPaise) {
+      throw new Error(
+        "Your cart has changed since payment was initiated. Please checkout again.",
+      );
+    }
+
     // ── Create order record ────────────────────────────────────────────────
     const orderId = await ctx.db.insert("orders", {
       userId,
@@ -576,6 +593,9 @@ export const completeCheckout = mutation({
     });
 
     await incrementCounter(ctx, "orders");
+
+    // ── Mark checkout session as completed ──────────────────────────────────
+    await ctx.db.patch(checkoutSession._id, { status: "completed" });
 
     // ── Clear only the checked-out items from the cart ─────────────────────────
     for (const res of validReservations) {

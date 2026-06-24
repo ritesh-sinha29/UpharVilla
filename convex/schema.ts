@@ -136,12 +136,26 @@ export default defineSchema({
       v.literal("completed"),
       v.literal("released"),
     ),
-    // Bound during createRazorpayOrder to prevent cross-user replay attacks
-    razorpayOrderId: v.optional(v.string()),
   })
     .index("by_user_active", ["userId", "status", "expiresAt"])
     .index("by_product_active", ["productId", "status", "expiresAt"])
     .index("by_expires_at", ["expiresAt"]),
+
+  // -----------------------------------
+  // Checkout Sessions — tracks Razorpay orders independently of reservations
+  // Replaces the fragile reservation-binding approach for payment verification.
+  checkoutSessions: defineTable({
+    userId: v.string(),
+    razorpayOrderId: v.string(),
+    expectedAmountPaise: v.number(), // server-computed total in paise
+    status: v.union(
+      v.literal("pending"),    // order created, awaiting payment
+      v.literal("completed"),  // payment verified, order placed
+    ),
+    createdAt: v.number(),
+  })
+    .index("by_razorpay_order", ["razorpayOrderId"])
+    .index("by_user_status", ["userId", "status"]),
 
   // -----------------------------------
   // Orders table
