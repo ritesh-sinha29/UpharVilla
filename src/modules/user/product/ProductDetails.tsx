@@ -384,19 +384,19 @@ export const ProductDetails = ({ product }: ProductDetailsProps) => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 pt-6 pb-12">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 xl:gap-16">
+    <div className="max-w-7xl mx-auto px-3 sm:px-5 md:px-6 lg:px-8 xl:px-12 pt-3 sm:pt-4 md:pt-6 pb-6 sm:pb-8 md:pb-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8 lg:gap-12 xl:gap-16">
         {/* Left: Image Gallery */}
-        <div className="flex flex-col-reverse md:flex-row gap-3 md:gap-4 h-auto md:h-[500px] lg:h-[560px] xl:h-[620px]">
+        <div className="flex flex-col-reverse md:flex-row gap-2 sm:gap-3 md:gap-4 h-auto md:h-[500px] lg:h-[560px] xl:h-[620px]">
           {/* Thumbnails */}
-          <div className="flex flex-row md:flex-col gap-2 md:gap-2.5 w-full md:w-20 lg:w-[88px] overflow-x-auto md:overflow-x-hidden md:overflow-y-auto hidden-scrollbar">
+          <div className="flex flex-row md:flex-col gap-1.5 sm:gap-2 md:gap-2.5 w-full md:w-20 lg:w-[88px] overflow-x-auto md:overflow-x-hidden md:overflow-y-auto hidden-scrollbar">
             {mediaItems.map((item, idx) => {
               const isActive = (getDisplayIndex() - 1) === idx;
               return (
                 <button
                   key={idx}
                   type="button"
-                  className={`cursor-pointer relative min-w-14 min-h-14 w-16 h-16 md:w-full md:h-auto md:aspect-square rounded-xl overflow-hidden border-2 flex-shrink-0 md:flex-shrink transition-all ${
+                  className={`cursor-pointer relative min-w-12 min-h-12 w-14 h-14 sm:min-w-14 sm:min-h-14 sm:w-16 sm:h-16 md:w-full md:h-auto md:aspect-square rounded-lg sm:rounded-xl overflow-hidden border-2 flex-shrink-0 md:flex-shrink transition-all ${
                     isActive
                       ? "border-primary"
                       : "border-transparent hover:border-neutral-300"
@@ -435,7 +435,7 @@ export const ProductDetails = ({ product }: ProductDetailsProps) => {
           </div>
 
           {/* Main Image/Video */}
-          <div className="relative flex-1 rounded-2xl overflow-hidden bg-white aspect-[4/3] max-h-[320px] sm:max-h-[400px] md:max-h-none md:aspect-auto">
+          <div className="relative flex-1 rounded-xl sm:rounded-2xl overflow-hidden bg-white aspect-[4/3] max-h-[280px] sm:max-h-[380px] md:max-h-none md:aspect-auto">
             {/* Sliding strip */}
             <div
               className={`flex h-full ${transitionEnabled ? "transition-transform duration-300 ease-in-out" : "transition-none"}`}
@@ -508,85 +508,85 @@ export const ProductDetails = ({ product }: ProductDetailsProps) => {
         </div>
 
         {/* Right: Product Info */}
-        <div className="flex flex-col gap-5 md:gap-6">
+        <div className="flex flex-col gap-3 sm:gap-4 md:gap-5 lg:gap-6">
           {/* Title & Share */}
-          <div className="flex justify-between items-start gap-4">
-            <div className="flex flex-col gap-2">
+          <div className="flex justify-between items-start gap-2 sm:gap-3 md:gap-4">
+            <div className="flex flex-col gap-1 sm:gap-1.5 md:gap-2">
               <div className="flex flex-wrap gap-1.5 items-center">
                 {product?.markMostSold && (
-                  <span className="bg-[#E2AF3E]/10 text-[#E2AF3E] text-[10px] font-sans font-bold tracking-wider px-2.5 py-0.5 rounded-full border border-[#E2AF3E]/20 uppercase">
+                  <span className="bg-[#E2AF3E]/10 text-[#E2AF3E] text-[9px] sm:text-[10px] font-sans font-bold tracking-wider px-2 sm:px-2.5 py-0.5 rounded-full border border-[#E2AF3E]/20 uppercase">
                     Most Sold
                   </span>
                 )}
                 {product?.markTrending && (
-                  <span className="bg-[#FC2779]/10 text-[#FC2779] text-[10px] font-sans font-bold tracking-wider px-2.5 py-0.5 rounded-full border border-[#FC2779]/20 uppercase">
+                  <span className="bg-[#FC2779]/10 text-[#FC2779] text-[9px] sm:text-[10px] font-sans font-bold tracking-wider px-2 sm:px-2.5 py-0.5 rounded-full border border-[#FC2779]/20 uppercase">
                     Trending
                   </span>
                 )}
                 {product?.markNewArrival && (
-                  <span className="bg-[#0D9488]/10 text-[#0D9488] text-[10px] font-sans font-bold tracking-wider px-2.5 py-0.5 rounded-full border border-[#0D9488]/20 uppercase">
+                  <span className="bg-[#0D9488]/10 text-[#0D9488] text-[9px] sm:text-[10px] font-sans font-bold tracking-wider px-2 sm:px-2.5 py-0.5 rounded-full border border-[#0D9488]/20 uppercase">
                     New Arrival
                   </span>
                 )}
               </div>
-              <h1 className="text-2xl md:text-3xl lg:text-4xl font-semibold text-neutral-800 capitalize leading-tight">
+              <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-semibold text-neutral-800 capitalize leading-tight">
                 {product?.name || "Product Name"}
               </h1>
             </div>
             <button
               type="button"
               onClick={handleShare}
-              className="cursor-pointer flex items-center justify-center p-2 md:px-3 md:py-1.5 border border-neutral-200 rounded-full md:rounded-lg text-neutral-600 hover:bg-neutral-50 hover:text-neutral-800 transition-all shrink-0 mt-1"
+              className="cursor-pointer flex items-center justify-center p-1.5 sm:p-2 md:px-3 md:py-1.5 border border-neutral-200 rounded-full md:rounded-lg text-neutral-600 hover:bg-neutral-50 hover:text-neutral-800 transition-all shrink-0 mt-0.5 sm:mt-1"
               title="Share Product"
             >
-              <span className="hidden md:inline mr-1.5 text-sm font-medium">
+              <span className="hidden md:inline mr-1.5 text-xs lg:text-sm font-medium">
                 Share
               </span>
-              <Share2 className="w-4 h-4 md:w-3.5 md:h-3.5" />
+              <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-3.5 md:h-3.5" />
             </button>
           </div>
 
           {/* Ratings & Bought Count unified box */}
-          <div className="flex flex-col gap-2 bg-neutral-50 p-3.5 rounded-xl border border-neutral-100/50">
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-              <div className="flex items-center gap-1.5">
+          <div className="flex flex-col gap-1.5 sm:gap-2 bg-neutral-50 p-2.5 sm:p-3 md:p-3.5 rounded-lg sm:rounded-xl border border-neutral-100/50">
+            <div className="flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-1.5 sm:gap-y-2">
+              <div className="flex items-center gap-1 sm:gap-1.5">
                 <Rating
                   name="read-only"
                   value={ratingValue}
                   precision={0.5}
                   readOnly
                   size="small"
-                  sx={{ color: "#000" }}
+                  sx={{ color: "#000", fontSize: { xs: '0.9rem', sm: '1rem' } }}
                 />
-                <span className="text-xs font-semibold text-neutral-800">
+                <span className="text-[11px] sm:text-xs font-semibold text-neutral-800">
                   {ratingValue}
                 </span>
-                <span className="text-xs text-neutral-500">
+                <span className="text-[11px] sm:text-xs text-neutral-500">
                   ({reviewCount} reviews)
                 </span>
               </div>
               <div className="h-3 w-px bg-neutral-200 hidden sm:block" />
-              <div className="flex items-center gap-1.5 text-xs text-emerald-700 font-medium">
-                <ShoppingBag className="w-3.5 h-3.5 shrink-0" />
+              <div className="flex items-center gap-1 sm:gap-1.5 text-[11px] sm:text-xs text-emerald-700 font-medium">
+                <ShoppingBag className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
                 <span>{boughtCount} bought recently</span>
               </div>
             </div>
           </div>
 
           {/* Pricing */}
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-3 flex-wrap">
-              <div className="flex items-end gap-2.5">
+          <div className="flex flex-col gap-0.5 sm:gap-1">
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+              <div className="flex items-end gap-1.5 sm:gap-2 md:gap-2.5">
                 {displayOriginalPrice && (
-                  <span className="text-base md:text-lg text-neutral-400 line-through font-medium">
+                  <span className="text-sm sm:text-base md:text-lg text-neutral-400 line-through font-medium">
                     Rs. {displayOriginalPrice.toLocaleString("en-IN")}
                   </span>
                 )}
-                <span className="text-2xl md:text-3xl lg:text-4xl font-bold text-neutral-900 transition-all duration-350">
+                <span className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-neutral-900 transition-all duration-350">
                   Rs. {displayPrice.toLocaleString("en-IN")}
                 </span>
                 {(discountPercent > 0 || couponDiscount > 0) && (
-                  <span className="text-xs md:text-sm font-semibold text-rose-500 mb-0.5 bg-rose-50 px-2 py-0.5 rounded-md animate-pulse">
+                  <span className="text-[10px] sm:text-xs md:text-sm font-semibold text-rose-500 mb-0.5 bg-rose-50 px-1.5 sm:px-2 py-0.5 rounded-md animate-pulse">
                     {couponDiscount > 0 && appliedCoupon
                       ? `Save ₹${couponDiscount} (${appliedCoupon.code})`
                       : `Save ${discountPercent}%`}
@@ -594,12 +594,12 @@ export const ProductDetails = ({ product }: ProductDetailsProps) => {
                 )}
               </div>
               {product?.stock <= 0 && (
-                <span className="bg-rose-50 text-rose-600 border border-rose-100 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
+                <span className="bg-rose-50 text-rose-600 border border-rose-100 text-[9px] sm:text-[10px] font-bold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full uppercase tracking-wider">
                   Out of Stock
                 </span>
               )}
             </div>
-            <span className="text-xs text-neutral-500">
+            <span className="text-[10px] sm:text-xs text-neutral-500">
               (Inclusive of all taxes)
             </span>
           </div>
@@ -640,13 +640,13 @@ export const ProductDetails = ({ product }: ProductDetailsProps) => {
           )}
 
           {product?.stock <= 0 ? (
-            <div className="bg-neutral-50/50 border border-neutral-100 rounded-2xl p-5 flex flex-col gap-4 mt-2 animate-in fade-in duration-300">
+            <div className="bg-neutral-50/50 border border-neutral-100 rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 flex flex-col gap-3 sm:gap-4 mt-1 sm:mt-2 animate-in fade-in duration-300">
               <div className="flex flex-col gap-1">
-                <h3 className="text-sm font-bold text-neutral-800 flex items-center gap-2">
+                <h3 className="text-xs sm:text-sm font-bold text-neutral-800 flex items-center gap-1.5 sm:gap-2">
                   <Bell className="w-4 h-4 text-primary animate-bounce" />
                   Out of Stock Notification
                 </h3>
-                <p className="text-xs text-neutral-500 leading-relaxed">
+                <p className="text-[11px] sm:text-xs text-neutral-500 leading-relaxed">
                   This product is currently out of stock. Get notified when it's back!
                 </p>
               </div>
@@ -667,7 +667,7 @@ export const ProductDetails = ({ product }: ProductDetailsProps) => {
                       placeholder="Enter your email address"
                       value={fallbackEmail}
                       onChange={(e) => setFallbackEmail(e.target.value)}
-                      className="border border-neutral-200 rounded-xl px-4 py-3 text-xs outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all bg-white"
+                      className="border border-neutral-200 rounded-lg sm:rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-[11px] sm:text-xs outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all bg-white"
                     />
                   )}
 
@@ -705,7 +705,7 @@ export const ProductDetails = ({ product }: ProductDetailsProps) => {
                         setIsSubmittingNotification(false);
                       }
                     }}
-                    className="flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold tracking-wider text-xs px-6 py-3.5 rounded-xl hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer uppercase w-full"
+                    className="flex items-center justify-center gap-1.5 sm:gap-2 bg-primary text-primary-foreground font-bold tracking-wider text-[11px] sm:text-xs px-4 sm:px-6 py-3 sm:py-3.5 rounded-lg sm:rounded-xl hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer uppercase w-full"
                   >
                     <Bell className="w-4 h-4" />
                     {isSubmittingNotification ? "Submitting..." : "Notify Me via Email"}
@@ -718,7 +718,7 @@ export const ProductDetails = ({ product }: ProductDetailsProps) => {
                       placeholder="WhatsApp number (e.g. 9876543210)"
                       value={whatsappNumber}
                       onChange={(e) => setWhatsappNumber(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                      className="flex-1 border border-neutral-200 rounded-xl px-4 py-3 text-xs outline-none focus:border-green-500 focus:ring-1 focus:ring-green-200 transition-all bg-white"
+                      className="flex-1 border border-neutral-200 rounded-lg sm:rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-[11px] sm:text-xs outline-none focus:border-green-500 focus:ring-1 focus:ring-green-200 transition-all bg-white"
                     />
                     <button
                       type="button"
@@ -731,7 +731,7 @@ export const ProductDetails = ({ product }: ProductDetailsProps) => {
                         toast.success(`We'll notify you on WhatsApp at ${whatsappNumber} when back in stock!`);
                         setWhatsappNumber("");
                       }}
-                      className="flex items-center gap-1.5 bg-green-500 text-white font-bold tracking-wider text-xs px-5 py-3.5 rounded-xl hover:bg-green-600 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shrink-0 uppercase"
+                      className="flex items-center gap-1 sm:gap-1.5 bg-green-500 text-white font-bold tracking-wider text-[11px] sm:text-xs px-3 sm:px-5 py-3 sm:py-3.5 rounded-lg sm:rounded-xl hover:bg-green-600 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shrink-0 uppercase"
                     >
                       <MessageCircle className="w-4 h-4" />
                       WhatsApp
@@ -741,18 +741,18 @@ export const ProductDetails = ({ product }: ProductDetailsProps) => {
               )}
             </div>
           ) : (
-            <div className="flex gap-3 md:gap-4 w-full mt-2">
+            <div className="flex gap-2 sm:gap-3 md:gap-4 w-full mt-1 sm:mt-2">
               <button
                 type="button"
                 disabled={isAdding}
                 onClick={handleAddToCart}
-                className={`cursor-pointer flex-1 flex items-center justify-center gap-1.5 md:gap-2 shadow-sm hover:shadow-md font-semibold tracking-wider text-xs md:text-sm py-3 md:py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 active:scale-95 uppercase ${
+                className={`cursor-pointer flex-1 flex items-center justify-center gap-1 sm:gap-1.5 md:gap-2 shadow-sm hover:shadow-md font-semibold tracking-wider text-[11px] sm:text-xs md:text-sm py-2.5 sm:py-3 md:py-3.5 rounded-lg sm:rounded-xl transition-all duration-300 hover:-translate-y-0.5 active:scale-95 uppercase ${
                   isAddedToCart || isAlreadyInCart
                     ? "bg-[#F5F5DC] border-[#F5F5DC] text-neutral-800"
                     : "bg-white border border-primary/30 text-primary hover:border-primary/50 hover:bg-primary/5"
                 } ${isAdding ? "opacity-70 cursor-not-allowed" : ""}`}
               >
-                <ShoppingCart className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                <ShoppingCart className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4" />
                 {isAdding
                   ? "Adding..."
                   : isAddedToCart || isAlreadyInCart
@@ -763,49 +763,49 @@ export const ProductDetails = ({ product }: ProductDetailsProps) => {
                 type="button"
                 disabled={isAdding}
                 onClick={handleBuyNow}
-                className={`cursor-pointer flex-1 flex items-center justify-center gap-1.5 md:gap-2 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-md hover:shadow-lg hover:to-primary/70 font-semibold tracking-wider text-xs md:text-sm py-3 md:py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 active:scale-95 uppercase ${isAdding ? "opacity-70 cursor-not-allowed" : ""}`}
+                className={`cursor-pointer flex-1 flex items-center justify-center gap-1 sm:gap-1.5 md:gap-2 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-md hover:shadow-lg hover:to-primary/70 font-semibold tracking-wider text-[11px] sm:text-xs md:text-sm py-2.5 sm:py-3 md:py-3.5 rounded-lg sm:rounded-xl transition-all duration-300 hover:-translate-y-0.5 active:scale-95 uppercase ${isAdding ? "opacity-70 cursor-not-allowed" : ""}`}
               >
-                <ShoppingBag className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                <ShoppingBag className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4" />
                 Buy Now
               </button>
             </div>
           )}
 
           {/* Value Props - Premium Badges */}
-          <div className="grid grid-cols-3 gap-2 py-4 px-2 bg-neutral-50/50 rounded-xl border border-neutral-100/80">
-            <div className="flex flex-col items-center text-center gap-1.5">
-              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                <Truck className="w-4 h-4" />
+          <div className="grid grid-cols-3 gap-1.5 sm:gap-2 py-3 sm:py-4 px-1.5 sm:px-2 bg-neutral-50/50 rounded-lg sm:rounded-xl border border-neutral-100/80">
+            <div className="flex flex-col items-center text-center gap-1 sm:gap-1.5">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                <Truck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
-              <span className="text-[10px] text-neutral-600 font-bold uppercase tracking-wider">
+              <span className="text-[9px] sm:text-[10px] text-neutral-600 font-bold uppercase tracking-wider">
                 Free Shipping
               </span>
             </div>
-            <div className="flex flex-col items-center text-center gap-1.5">
-              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                <ShieldCheck className="w-4 h-4" />
+            <div className="flex flex-col items-center text-center gap-1 sm:gap-1.5">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
-              <span className="text-[10px] text-neutral-600 font-bold uppercase tracking-wider">
+              <span className="text-[9px] sm:text-[10px] text-neutral-600 font-bold uppercase tracking-wider">
                 100% Secure
               </span>
             </div>
-            <div className="flex flex-col items-center text-center gap-1.5">
-              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                <RotateCcw className="w-4 h-4" />
+            <div className="flex flex-col items-center text-center gap-1 sm:gap-1.5">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                <RotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
-              <span className="text-[10px] text-neutral-600 font-bold uppercase tracking-wider">
+              <span className="text-[9px] sm:text-[10px] text-neutral-600 font-bold uppercase tracking-wider">
                 Easy Returns
               </span>
             </div>
           </div>
 
           {/* Coupon Input Section */}
-          <div className="flex flex-col gap-2">
-            <span className="text-xs font-semibold text-neutral-700 uppercase tracking-wider">
+          <div className="flex flex-col gap-1.5 sm:gap-2">
+            <span className="text-[11px] sm:text-xs font-semibold text-neutral-700 uppercase tracking-wider">
               Apply Coupon Code
             </span>
             {appliedCoupon ? (
-              <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100/80 rounded-xl px-4 py-3 animate-in fade-in duration-200">
+              <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100/80 rounded-lg sm:rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 animate-in fade-in duration-200">
                 <div className="flex items-center gap-2">
                   <span className="bg-emerald-600 text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase">
                     {appliedCoupon.code}
@@ -823,7 +823,7 @@ export const ProductDetails = ({ product }: ProductDetailsProps) => {
                 </button>
               </div>
             ) : (
-              <div className="relative flex items-center border border-neutral-200 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 rounded-xl overflow-hidden transition-all bg-white">
+              <div className="relative flex items-center border border-neutral-200 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 rounded-lg sm:rounded-xl overflow-hidden transition-all bg-white">
                 <Tag className="w-4 h-4 text-neutral-400 ml-3.5 shrink-0" />
                 <input
                   type="text"
@@ -831,13 +831,13 @@ export const ProductDetails = ({ product }: ProductDetailsProps) => {
                   value={couponInput}
                   onChange={(e) => setCouponInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleApplyCoupon()}
-                  className="flex-1 px-3 py-3.5 text-sm bg-transparent outline-none border-none placeholder:text-neutral-400 uppercase"
+                  className="flex-1 px-2.5 sm:px-3 py-2.5 sm:py-3 md:py-3.5 text-xs sm:text-sm bg-transparent outline-none border-none placeholder:text-neutral-400 uppercase"
                 />
                 <button
                   type="button"
                   onClick={handleApplyCoupon}
                   disabled={!couponInput.trim() || isValidatingCoupon}
-                  className="mr-1.5 bg-primary text-primary-foreground hover:opacity-90 disabled:bg-neutral-100 disabled:text-neutral-400 font-bold text-xs px-5 py-2.5 rounded-lg transition-all uppercase disabled:cursor-not-allowed cursor-pointer shrink-0"
+                  className="mr-1 sm:mr-1.5 bg-primary text-primary-foreground hover:opacity-90 disabled:bg-neutral-100 disabled:text-neutral-400 font-bold text-[11px] sm:text-xs px-3 sm:px-5 py-2 sm:py-2.5 rounded-md sm:rounded-lg transition-all uppercase disabled:cursor-not-allowed cursor-pointer shrink-0"
                 >
                   {isValidatingCoupon ? "..." : "Apply"}
                 </button>
@@ -848,10 +848,10 @@ export const ProductDetails = ({ product }: ProductDetailsProps) => {
           {/* Offers — Dynamic from Backend */}
           {activeCoupons && activeCoupons.length > 0 && (
             <div className="pt-2">
-              <h4 className="text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-3">
+              <h4 className="text-[11px] sm:text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-2 sm:mb-3">
                 Available Offers
               </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                 {activeCoupons.map((coupon) => {
                   const isUsed = coupon.userHasUsed;
                   const label =
@@ -870,7 +870,7 @@ export const ProductDetails = ({ product }: ProductDetailsProps) => {
                           setCouponInput(coupon.code);
                         }
                       }}
-                      className={`cursor-pointer text-left border border-dashed rounded-xl p-3.5 flex flex-col gap-1 transition-colors ${
+                      className={`cursor-pointer text-left border border-dashed rounded-lg sm:rounded-xl p-2.5 sm:p-3 md:p-3.5 flex flex-col gap-0.5 sm:gap-1 transition-colors ${
                         isUsed
                           ? "border-neutral-200 bg-neutral-50 opacity-60 cursor-not-allowed"
                           : "border-primary/40 bg-primary/5 hover:bg-primary/10"
@@ -878,13 +878,13 @@ export const ProductDetails = ({ product }: ProductDetailsProps) => {
                     >
                       <div className="flex items-center gap-1.5">
                         <span
-                          className={`text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase ${
+                          className={`text-white text-[8px] sm:text-[9px] font-bold px-1.5 sm:px-2 py-0.5 rounded uppercase ${
                             isUsed ? "bg-neutral-400" : "bg-primary"
                           }`}
                         >
                           {coupon.code}
                         </span>
-                        <span className="text-xs font-bold text-neutral-800">
+                        <span className="text-[11px] sm:text-xs font-bold text-neutral-800">
                           {label}
                         </span>
                         {isUsed && (
@@ -893,7 +893,7 @@ export const ProductDetails = ({ product }: ProductDetailsProps) => {
                           </span>
                         )}
                       </div>
-                      <p className="text-[11px] text-neutral-600 leading-relaxed mt-1">
+                      <p className="text-[10px] sm:text-[11px] text-neutral-600 leading-relaxed mt-0.5 sm:mt-1">
                         {coupon.description}
                         {coupon.minOrderAmount
                           ? ` (Min order: ₹${coupon.minOrderAmount})`

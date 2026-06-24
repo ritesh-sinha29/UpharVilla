@@ -159,12 +159,44 @@ export default function RelationshipSelector({
           </div>
         </div>
       ) : (
-        /* Static layout for products/listing pages */
-        <div className="relative w-full z-20 py-1 md:py-2 overflow-x-auto scrollbar-none flex justify-start md:justify-center">
-          <div className="flex items-center gap-2 md:gap-4 px-4 md:px-8 w-max md:w-auto mx-auto">
-            {RELATIONSHIPS.map((rel) => renderPill(rel, rel))}
+        /* Static layout for products/listing pages — auto-scrolls on mobile */
+        <>
+          {/* Mobile: auto-scroll marquee */}
+          <div className="relative w-full z-20 py-1 md:hidden overflow-hidden">
+            {/* Edge fade gradients */}
+            <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white via-white/80 to-transparent pointer-events-none z-30" />
+            <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white via-white/80 to-transparent pointer-events-none z-30" />
+
+            <style>{`
+              @keyframes static-pills-scroll {
+                0% { transform: translateX(0); }
+                100% { transform: translateX(-33.333%); }
+              }
+              .static-pills-track {
+                display: flex;
+                gap: 8px;
+                width: max-content;
+                animation: static-pills-scroll 22s linear infinite;
+              }
+              .static-pills-track:active {
+                animation-play-state: paused;
+              }
+            `}</style>
+
+            <div className="static-pills-track px-2">
+              {[0, 1, 2].map((setIdx) =>
+                RELATIONSHIPS.map((rel) => renderPill(rel, `static-${setIdx}-${rel}`)),
+              )}
+            </div>
           </div>
-        </div>
+
+          {/* Tablet & Desktop: centered static layout */}
+          <div className="hidden md:flex relative w-full z-20 py-2 justify-center">
+            <div className="flex items-center gap-4 px-8 flex-wrap justify-center">
+              {RELATIONSHIPS.map((rel) => renderPill(rel, rel))}
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
