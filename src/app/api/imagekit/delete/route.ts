@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { imagekit } from "@/lib/ImageKit";
+import { getImageKit } from "@/lib/ImageKit";
 
 export async function POST(req: Request) {
   try {
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     console.log("Searching for file name on ImageKit:", fileName);
 
     // List files matching the name
-    const files = await imagekit.listFiles({
+    const files = await getImageKit().listFiles({
       searchQuery: `name = "${fileName}"`,
     });
 
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
       console.log("Found file on ImageKit, deleting ID:", files[0].fileId);
       // Delete the file using fileId
       // @ts-expect-error
-      await imagekit.deleteFile(files[0].fileId);
+      await getImageKit().deleteFile(files[0].fileId);
       return NextResponse.json({
         success: true,
         message: "File deleted from ImageKit",
