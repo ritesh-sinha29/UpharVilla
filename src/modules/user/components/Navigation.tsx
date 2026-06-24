@@ -22,6 +22,7 @@ interface SubCategory {
 interface NavItem {
   title: string;
   hasDropdown: boolean;
+  categorySlug?: string; // maps to the database category field
   align?: "left" | "center" | "right";
   categories?: SubCategory[];
   images?: {
@@ -35,6 +36,7 @@ const navItems: NavItem[] = [
   {
     title: "Customized Gifts",
     hasDropdown: true,
+    categorySlug: "customized-gifts",
     align: "left",
     categories: [
       {
@@ -70,6 +72,7 @@ const navItems: NavItem[] = [
   {
     title: "Corporate Gifts",
     hasDropdown: true,
+    categorySlug: "corporate-gifts",
     align: "left",
     categories: [
       {
@@ -109,6 +112,7 @@ const navItems: NavItem[] = [
   {
     title: "Trending Gifts",
     hasDropdown: true,
+    categorySlug: "__flag:trending",
     align: "center",
     categories: [
       {
@@ -140,6 +144,7 @@ const navItems: NavItem[] = [
   {
     title: "Hampers",
     hasDropdown: true,
+    categorySlug: "hampers",
     align: "center",
     categories: [
       {
@@ -171,6 +176,7 @@ const navItems: NavItem[] = [
   {
     title: "Shop by Occasion",
     hasDropdown: true,
+    categorySlug: "shop-by-occasion",
     align: "right",
     categories: [
       {
@@ -427,7 +433,11 @@ export const Navigation = () => {
                                 : subItem.label;
                             const href =
                               typeof subItem === "string"
-                                ? `/products?tag=${encodeURIComponent(subItem)}`
+                                ? activeItem.categorySlug
+                                  ? activeItem.categorySlug.startsWith("__flag:")
+                                    ? `/products?flag=${activeItem.categorySlug.replace("__flag:", "")}&tag=${encodeURIComponent(subItem)}`
+                                    : `/products?category=${activeItem.categorySlug}&tag=${encodeURIComponent(subItem)}`
+                                  : `/products?tag=${encodeURIComponent(subItem)}`
                                 : subItem.link;
                             const isLong = label.length > 18;
                             return (
@@ -449,7 +459,13 @@ export const Navigation = () => {
                   {/* View all link */}
                   <div className="px-3 pb-2.5">
                     <Link
-                      href={`/products?tag=${encodeURIComponent(activeItem.title)}`}
+                      href={
+                        activeItem.categorySlug
+                          ? activeItem.categorySlug.startsWith("__flag:")
+                            ? `/products?flag=${activeItem.categorySlug.replace("__flag:", "")}`
+                            : `/products?category=${activeItem.categorySlug}`
+                          : `/products?tag=${encodeURIComponent(activeItem.title)}`
+                      }
                       onClick={() => setMobileOpen(null)}
                       className="block w-full text-center text-[12px] font-semibold text-primary border border-primary/20 bg-primary/5 rounded-lg py-2 hover:bg-primary/10 transition-colors"
                     >
@@ -503,7 +519,11 @@ export const Navigation = () => {
                                     : subItem.label;
                                 const href =
                                   typeof subItem === "string"
-                                    ? `/products?tag=${encodeURIComponent(subItem)}`
+                                    ? item.categorySlug
+                                      ? item.categorySlug.startsWith("__flag:")
+                                        ? `/products?flag=${item.categorySlug.replace("__flag:", "")}&tag=${encodeURIComponent(subItem)}`
+                                        : `/products?category=${item.categorySlug}&tag=${encodeURIComponent(subItem)}`
+                                      : `/products?tag=${encodeURIComponent(subItem)}`
                                     : subItem.link;
                                 return (
                                   <Link
@@ -529,7 +549,13 @@ export const Navigation = () => {
                         {item.images?.map((img, idx) => (
                           <Link
                             key={idx}
-                            href={`/products?tag=${encodeURIComponent(img.label)}`}
+                            href={
+                              item.categorySlug
+                                ? item.categorySlug.startsWith("__flag:")
+                                  ? `/products?flag=${item.categorySlug.replace("__flag:", "")}&tag=${encodeURIComponent(img.label)}`
+                                  : `/products?category=${item.categorySlug}&tag=${encodeURIComponent(img.label)}`
+                                : `/products?tag=${encodeURIComponent(img.label)}`
+                            }
                             onClick={closeMenu}
                             className="flex-1 relative rounded-xl overflow-hidden group/img-card shadow-md h-full block"
                           >

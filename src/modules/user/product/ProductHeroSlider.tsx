@@ -3,6 +3,9 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
+/* ──────────────────────────────────────────────────────────────────────────────
+   SLIDE DATA
+   ────────────────────────────────────────────────────────────────────────────── */
 const SLIDES = [
   {
     image: "/promo-offer-1.png",
@@ -42,15 +45,17 @@ const SLIDES = [
   },
 ];
 
+/* ──────────────────────────────────────────────────────────────────────────────
+   SLIDE BOX — a single auto-rotating banner card
+   Uses aspect-ratio for intrinsic sizing so it scales identically at every vw.
+   Text uses clamp() for smooth fluid scaling — no breakpoint jumps.
+   ────────────────────────────────────────────────────────────────────────────── */
 interface SlideBoxProps {
   slides: typeof SLIDES;
   initialSlide?: number;
 }
 
-function SlideBox({
-  slides,
-  initialSlide = 0,
-}: SlideBoxProps) {
+function SlideBox({ slides, initialSlide = 0 }: SlideBoxProps) {
   const [current, setCurrent] = useState(initialSlide);
   const [animating, setAnimating] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -67,10 +72,7 @@ function SlideBox({
   const startInterval = () => {
     if (intervalRef.current) clearInterval(intervalRef.current);
     intervalRef.current = setInterval(() => {
-      setCurrent((prev) => {
-        const next = (prev + 1) % slides.length;
-        return next;
-      });
+      setCurrent((prev) => (prev + 1) % slides.length);
     }, 3000);
   };
 
@@ -86,59 +88,71 @@ function SlideBox({
 
   return (
     <div
-      className={`group relative flex-1 rounded-2xl overflow-hidden bg-gradient-to-br border min-h-[160px] sm:min-h-[180px] md:min-h-[200px] transition-all duration-500 ease-in-out ${slide.gradient}`}
+      className={`
+        hero-slide group relative flex-1 rounded-2xl overflow-hidden
+        bg-gradient-to-br border transition-all duration-500 ease-in-out
+        ${slide.gradient}
+      `}
     >
-      {/* Layout wrapper */}
-      <div className="relative z-10 flex items-center h-full min-h-[160px] sm:min-h-[180px] md:min-h-[200px]">
-        {/* Left: Text Content */}
-        <div className="flex-1 min-w-0 px-5 sm:px-8 pt-4 pb-8 md:pt-6 md:pb-10 pr-[145px] sm:pr-[170px] md:pr-[190px] lg:pr-[230px] flex flex-col justify-start">
-          <div
-            className="transition-all duration-500 ease-out"
-            style={{
-              opacity: animating ? 0 : 1,
-              transform: animating ? "translateY(8px)" : "translateY(0)",
-            }}
-          >
-            <span
-              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold uppercase tracking-[0.05em] border mb-2 md:mb-3 shadow-sm ${slide.badge}`}
-            >
-              <span className="w-1 h-1 rounded-full bg-current mr-1.5 animate-pulse" />
-              {slide.tag}
-            </span>
-            <h2 className="text-[17px] sm:text-xl md:text-2xl lg:text-3xl font-extrabold text-neutral-900 leading-tight tracking-tight">
-              {slide.title}
-            </h2>
-            <p className="mt-1 md:mt-2 text-neutral-500 text-[11px] sm:text-xs md:text-sm leading-relaxed max-w-[180px] sm:max-w-[220px] md:max-w-xs line-clamp-2 md:line-clamp-3">
-              {slide.subtitle}
-            </p>
-          </div>
-        </div>
+      {/* ── Text side (left 60%) ─────────────────────────────────── */}
+      <div
+        className="relative z-10 flex flex-col justify-center h-full w-[60%] px-[5%] py-[6%]"
+        style={{
+          opacity: animating ? 0 : 1,
+          transform: animating ? "translateY(6px)" : "translateY(0)",
+          transition: "opacity 0.4s, transform 0.4s",
+        }}
+      >
+        <span
+          className={`
+            inline-flex items-center self-start px-2 py-0.5 rounded-full
+            font-bold uppercase tracking-wide border shadow-sm mb-[4%]
+            ${slide.badge}
+          `}
+          style={{ fontSize: "clamp(7px, 0.7vw, 11px)" }}
+        >
+          <span className="w-1 h-1 rounded-full bg-current mr-1.5 animate-pulse" />
+          {slide.tag}
+        </span>
+
+        <h2
+          className="font-extrabold text-neutral-900 leading-[1.15] tracking-tight"
+          style={{ fontSize: "clamp(14px, 2vw, 28px)" }}
+        >
+          {slide.title}
+        </h2>
+
+        <p
+          className="mt-[3%] text-neutral-500 leading-relaxed line-clamp-2"
+          style={{ fontSize: "clamp(9px, 1vw, 14px)" }}
+        >
+          {slide.subtitle}
+        </p>
       </div>
 
-      {/* Product Image — anchored bottom-right */}
-      <div className="absolute right-0 sm:right-2 top-0 bottom-0 w-[140px] sm:w-[160px] md:w-[180px] lg:w-[220px] overflow-hidden pointer-events-none">
-        <div
-          className="relative w-full h-full transition-all duration-500 ease-out group-hover:scale-105"
-          style={{
-            opacity: animating ? 0 : 1,
-            transform: animating
-              ? "scale(0.9) translateY(8px)"
-              : "scale(1) translateY(0)",
-          }}
-        >
+      {/* ── Image side (right 40%) ───────────────────────────────── */}
+      <div
+        className="absolute top-0 right-0 bottom-0 w-[40%] overflow-hidden pointer-events-none"
+        style={{
+          opacity: animating ? 0 : 1,
+          transform: animating ? "scale(0.92) translateY(6px)" : "scale(1) translateY(0)",
+          transition: "opacity 0.45s, transform 0.45s",
+        }}
+      >
+        <div className="relative w-full h-full group-hover:scale-105 transition-transform duration-500">
           <Image
             src={slide.image}
             alt={slide.title}
             fill
             className="object-contain object-bottom drop-shadow-lg"
-            sizes="(max-width: 640px) 140px, (max-width: 768px) 160px, (max-width: 1024px) 180px, 220px"
+            sizes="(max-width: 768px) 40vw, 20vw"
             priority
           />
         </div>
       </div>
 
-      {/* Dot Indicators */}
-      <div className="absolute bottom-2.5 sm:bottom-3.5 left-5 sm:left-8 flex items-center gap-1.5 z-20">
+      {/* ── Dot Indicators ───────────────────────────────────────── */}
+      <div className="absolute bottom-[8%] left-[5%] flex items-center gap-1.5 z-20">
         {slides.map((_, idx) => (
           <button
             key={idx}
@@ -157,20 +171,41 @@ function SlideBox({
         ))}
       </div>
 
-      {/* Background glowing accent */}
-      <div className={`absolute -right-10 -bottom-10 w-44 h-44 rounded-full blur-3xl transition-all duration-1000 ease-in-out pointer-events-none ${slide.glow}`} />
+      {/* ── Glow accent ──────────────────────────────────────────── */}
+      <div
+        className={`absolute -right-10 -bottom-10 w-44 h-44 rounded-full blur-3xl pointer-events-none ${slide.glow}`}
+      />
     </div>
   );
 }
 
+/* ──────────────────────────────────────────────────────────────────────────────
+   HERO SLIDER LAYOUT
+   Mobile: 1 card, aspect-[2.2/1]
+   Desktop (md+): 2 cards side by side, aspect-[2.5/1]
+   ────────────────────────────────────────────────────────────────────────────── */
 export default function ProductHeroSlider() {
   return (
-    <div className="mx-4 md:mx-12 mt-4 md:mt-6 mb-4 flex flex-col md:flex-row gap-4 md:gap-6">
-      <SlideBox slides={SLIDES} initialSlide={0} />
-      {/* Second slider — desktop only */}
-      <div className="hidden md:flex flex-1">
-        <SlideBox slides={SLIDES} initialSlide={1 % SLIDES.length} />
+    <>
+      {/* Intrinsic sizing via aspect-ratio — the card heights are always proportional to width */}
+      <style jsx>{`
+        .hero-slide {
+          aspect-ratio: 2.4 / 1;
+        }
+        @media (min-width: 768px) {
+          .hero-slide {
+            aspect-ratio: 2.6 / 1;
+          }
+        }
+      `}</style>
+
+      <div className="mx-4 md:mx-8 lg:mx-12 mt-4 md:mt-6 mb-4 flex flex-col md:flex-row gap-3 md:gap-5 lg:gap-6">
+        <SlideBox slides={SLIDES} initialSlide={0} />
+        {/* Second slider — desktop only */}
+        <div className="hidden md:flex flex-1">
+          <SlideBox slides={SLIDES} initialSlide={1 % SLIDES.length} />
+        </div>
       </div>
-    </div>
+    </>
   );
 }

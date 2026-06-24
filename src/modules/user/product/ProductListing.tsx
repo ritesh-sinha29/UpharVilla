@@ -274,7 +274,7 @@ export default function ProductListing({
   }, [hasMore, productList.length]);
 
   const hasActiveFilters =
-    selectedTags.length > 0 || minPrice || maxPrice || searchTerm || minRating;
+    selectedTags.length > 0 || minPrice || maxPrice || searchTerm || minRating || categoryParam || flagParam;
 
   const handleTagToggle = useCallback(
     (tag: string) => {
@@ -404,7 +404,9 @@ export default function ProductListing({
                   {(selectedTags.length > 0 ? 1 : 0) +
                     (minPrice || maxPrice ? 1 : 0) +
                     (sortBy !== "newest" ? 1 : 0) +
-                    (minRating ? 1 : 0)}
+                    (minRating ? 1 : 0) +
+                    (categoryParam ? 1 : 0) +
+                    (flagParam ? 1 : 0)}
                 </span>
               )}
             </button>
@@ -460,6 +462,48 @@ export default function ProductListing({
           {/* Active Filter Chips Bar */}
           {hasActiveFilters && (
             <div className="mb-4 flex flex-wrap items-center gap-2">
+              {/* Active category filter */}
+              {categoryParam && (
+                <Badge
+                  variant="secondary"
+                  className="gap-1 px-3 py-1 text-xs font-medium bg-amber-50 text-amber-700 border-amber-200"
+                >
+                  {CATEGORY_LABELS[categoryParam] || categoryParam}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const url = new URL(window.location.href);
+                      url.searchParams.delete("category");
+                      router.replace(url.pathname + url.search, { scroll: false });
+                    }}
+                    className="hover:bg-amber-200 rounded-full p-0.5 transition-colors cursor-pointer"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </Badge>
+              )}
+
+              {/* Active flag filter */}
+              {flagParam && (
+                <Badge
+                  variant="secondary"
+                  className="gap-1 px-3 py-1 text-xs font-medium bg-rose-50 text-rose-700 border-rose-200"
+                >
+                  {FLAG_LABELS[flagParam] || flagParam}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const url = new URL(window.location.href);
+                      url.searchParams.delete("flag");
+                      router.replace(url.pathname + url.search, { scroll: false });
+                    }}
+                    className="hover:bg-rose-200 rounded-full p-0.5 transition-colors cursor-pointer"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </Badge>
+              )}
+
               {/* Active tags */}
               {selectedTags.map((tag) => (
                 <Badge

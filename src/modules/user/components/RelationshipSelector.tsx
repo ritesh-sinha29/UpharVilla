@@ -62,14 +62,25 @@ export default function RelationshipSelector({
         whileHover={{ scale: 1.06, y: -2 }}
         whileTap={{ scale: 0.95 }}
         className={cn(
-          "flex items-center pl-1 pr-3 py-1 md:pl-2 md:pr-5 md:py-2 rounded-full border text-xs md:text-sm font-sans font-medium select-none transition-all duration-300 shadow-sm cursor-pointer whitespace-nowrap",
+          "flex items-center rounded-full border font-sans font-medium select-none transition-all duration-300 shadow-sm cursor-pointer whitespace-nowrap",
           isActive
             ? "bg-primary/10 text-primary border-primary font-bold shadow-md"
             : "bg-white text-neutral-700 border-neutral-200/80 hover:border-primary/40 hover:bg-primary/5 hover:text-primary hover:shadow-md",
         )}
+        style={{
+          padding: "clamp(3px, 0.4vw, 8px) clamp(10px, 1.2vw, 20px) clamp(3px, 0.4vw, 8px) clamp(3px, 0.35vw, 8px)",
+          fontSize: "clamp(11px, 0.95vw, 14px)",
+        }}
       >
         {RELATIONSHIP_AVATARS[rel] && (
-          <div className="relative w-7 h-7 md:w-9 md:h-9 mr-1.5 md:mr-2.5 shrink-0">
+          <div
+            className="relative shrink-0"
+            style={{
+              width: "clamp(24px, 2.5vw, 36px)",
+              height: "clamp(24px, 2.5vw, 36px)",
+              marginRight: "clamp(4px, 0.5vw, 10px)",
+            }}
+          >
             <Image
               src={RELATIONSHIP_AVATARS[rel]}
               alt={rel}
@@ -104,7 +115,8 @@ export default function RelationshipSelector({
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="text-[15px] md:text-2xl lg:text-3xl font-bold md:font-semibold text-neutral-800 tracking-tight text-center"
+          className="font-bold md:font-semibold text-neutral-800 tracking-tight text-center"
+          style={{ fontSize: "clamp(15px, 1.8vw, 30px)" }}
         >
           For Every Relationship
         </motion.h2>
@@ -113,14 +125,16 @@ export default function RelationshipSelector({
           whileInView={{ scaleX: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="w-10 md:w-20 h-[2.5px] md:h-[3px] bg-gradient-to-r from-primary/60 to-primary rounded-full origin-center"
+          className="h-[2.5px] md:h-[3px] bg-gradient-to-r from-primary/60 to-primary rounded-full origin-center"
+          style={{ width: "clamp(40px, 3vw, 80px)" }}
         />
         <motion.p
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.3 }}
-          className="hidden md:block text-muted-foreground font-mono text-sm md:text-base max-w-lg text-center tracking-wide"
+          className="hidden md:block text-muted-foreground font-mono max-w-lg text-center tracking-wide"
+          style={{ fontSize: "clamp(12px, 1vw, 16px)" }}
         >
           Find the perfect gift for every special person in your life.
         </motion.p>
@@ -192,7 +206,10 @@ export default function RelationshipSelector({
 
           {/* Tablet & Desktop: centered static layout */}
           <div className="hidden md:flex relative w-full z-20 py-2 justify-center">
-            <div className="flex items-center gap-4 px-8 flex-wrap justify-center">
+            <div
+              className="flex items-center px-8 flex-wrap justify-center"
+              style={{ gap: "clamp(8px, 1vw, 16px)" }}
+            >
               {RELATIONSHIPS.map((rel) => renderPill(rel, rel))}
             </div>
           </div>
