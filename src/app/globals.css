@@ -224,6 +224,7 @@
   /* Native horizontal scroll for mobile product sections */
   .mobile-scroll {
     overflow-x: auto;
+    overflow-y: hidden;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;

@@ -113,6 +113,9 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://ik.imagekit.io" />
         <link rel="dns-prefetch" href="https://www.google-analytics.com" />
+        {/* Mobile splash / browser-chrome colors */}
+        <meta name="theme-color" content="#ffffff" />
+        <meta name="background-color" content="#ffffff" />
       </head>
       <body
         className={`${fontSans.variable} ${fontSerif.variable} ${fontMono.variable} font-sans antialiased`}
