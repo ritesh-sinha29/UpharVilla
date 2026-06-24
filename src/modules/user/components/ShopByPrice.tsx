@@ -104,7 +104,7 @@ const ShopByPrice = () => {
                 }}
               >
                 {/* Gift image — compact, centered */}
-                <div className="relative w-full aspect-[5/4] overflow-hidden flex items-center justify-center p-3">
+                <div className="relative w-full aspect-[16/9] overflow-hidden flex items-center justify-center p-3">
                   <img
                     src={category.image}
                     alt={category.label}
