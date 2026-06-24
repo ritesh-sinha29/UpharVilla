@@ -5,7 +5,7 @@ import { ShoppingBag } from "lucide-react";
 import { motion } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { thumbnailUrl } from "@/lib/imagekit-url";
 import WishlistButton from "./WishlistButton";
@@ -218,4 +218,4 @@ const ProductCard = ({ product, className }: ProductCardProps) => {
   );
 };
 
-export default ProductCard;
+export default memo(ProductCard);

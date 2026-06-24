@@ -2,7 +2,6 @@
 
 import { useQuery } from "convex/react";
 import {
-  ChevronLeft,
   ChevronRight,
   PackageOpen,
   RotateCcw,
@@ -11,7 +10,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -74,9 +73,10 @@ export default function ProductListing({
   );
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
-  const pageParam = Number(searchParams.get("page") || "1");
-  const [currentPage, setCurrentPage] = useState(pageParam > 0 ? pageParam : 1);
-  const ITEMS_PER_PAGE = 12;
+  // Infinite scroll state
+  const ITEMS_PER_BATCH = 20;
+  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_BATCH);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   // ── FIX 4: Re-sync ALL state whenever the URL searchParams change ──
   useEffect(() => {
@@ -105,8 +105,8 @@ export default function ProductListing({
     const ratingVal = searchParams.get("rating");
     setMinRatingState(ratingVal ? Number(ratingVal) : null);
 
-    const pageVal = Number(searchParams.get("page") || "1");
-    setCurrentPage(pageVal > 0 ? pageVal : 1);
+    // Reset visible count when filters change
+    setVisibleCount(ITEMS_PER_BATCH);
   }, [searchParams]);
 
   // Determine base path for URL routing
@@ -237,15 +237,36 @@ export default function ProductListing({
     sortBy,
   ]);
 
-  // Pagination
-  const totalPages = Math.max(
-    1,
-    Math.ceil(productList.length / ITEMS_PER_PAGE),
+  // Infinite scroll — show products up to visibleCount
+  const visibleProducts = useMemo(
+    () => productList.slice(0, visibleCount),
+    [productList, visibleCount],
   );
-  const safePage = Math.min(currentPage, totalPages);
-  const startIndex = (safePage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const paginatedProducts = productList.slice(startIndex, endIndex);
+  const hasMore = visibleCount < productList.length;
+
+  // IntersectionObserver for infinite scroll (throttled)
+  const isLoadingMore = useRef(false);
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoadingMore.current) {
+          isLoadingMore.current = true;
+          startTransition(() => {
+            setVisibleCount((prev) => Math.min(prev + ITEMS_PER_BATCH, productList.length));
+          });
+          // Throttle: prevent re-trigger for 200ms
+          setTimeout(() => { isLoadingMore.current = false; }, 200);
+        }
+      },
+      { rootMargin: "400px" },
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMore, productList.length]);
 
   const hasActiveFilters =
     selectedTags.length > 0 || minPrice || maxPrice || searchTerm || minRating;
@@ -278,39 +299,7 @@ export default function ProductListing({
     router.replace(basePath, { scroll: false });
   }, [router, basePath]);
 
-  const goToPage = useCallback(
-    (page: number) => {
-      const targetPage = Math.max(1, Math.min(page, totalPages));
-      const params = new URLSearchParams(window.location.search);
-      params.set("page", String(targetPage));
-      router.push(`${basePath}?${params.toString()}`, { scroll: false });
-      // Scroll to the product grid, not the top of the page
-      const gridEl = document.getElementById("product-grid");
-      if (gridEl) {
-        const offset = 120; // account for sticky header
-        const top = gridEl.getBoundingClientRect().top + window.scrollY - offset;
-        window.scrollTo({ top, behavior: "smooth" });
-      }
-    },
-    [totalPages, router, basePath],
-  );
 
-  // Generate page numbers for pagination (with ellipsis)
-  const pageNumbers = useMemo(() => {
-    const pages: (number | "ellipsis")[] = [];
-    if (totalPages <= 7) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else {
-      pages.push(1);
-      if (safePage > 3) pages.push("ellipsis");
-      const start = Math.max(2, safePage - 1);
-      const end = Math.min(totalPages - 1, safePage + 1);
-      for (let i = start; i <= end; i++) pages.push(i);
-      if (safePage < totalPages - 2) pages.push("ellipsis");
-      pages.push(totalPages);
-    }
-    return pages;
-  }, [totalPages, safePage]);
 
   const pageTitle = useNewArrivals
     ? "New Arrivals"
@@ -552,78 +541,27 @@ export default function ProductListing({
           ) : productList.length > 0 ? (
             <>
               <div id="product-grid" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 md:gap-6 lg:gap-7">
-                {paginatedProducts.map((product) => (
+                {visibleProducts.map((product) => (
                   <ProductCard key={product._id} product={product} />
                 ))}
               </div>
 
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="mt-12 pt-6 border-t border-neutral-100 flex flex-col sm:flex-row items-center justify-between gap-4 w-full animate-in fade-in duration-300">
-                  {/* Left: Page count indicator */}
-                  <span className="text-sm font-semibold text-neutral-500">
-                    Page {safePage} of {totalPages}
-                  </span>
-
-                  {/* Right: Flipkart style pagination controls */}
-                  <nav className="flex items-center gap-2">
-                    {/* Previous */}
-                    <button
-                      type="button"
-                      onClick={() => goToPage(safePage - 1)}
-                      disabled={safePage <= 1}
-                      className={`text-xs font-bold tracking-wider uppercase transition-colors mr-3 cursor-pointer select-none ${
-                        safePage <= 1
-                          ? "text-neutral-300 cursor-not-allowed"
-                          : "text-primary hover:text-primary/80"
-                      }`}
-                    >
-                      Previous
-                    </button>
-
-                    {/* Page numbers */}
-                    <div className="flex items-center gap-1.5">
-                      {pageNumbers.map((page, idx) =>
-                        page === "ellipsis" ? (
-                          <span
-                            key={`ellipsis-${idx}`}
-                            className="w-8 h-8 flex items-center justify-center text-xs font-semibold text-neutral-400 select-none"
-                          >
-                            ...
-                          </span>
-                        ) : (
-                          <button
-                            key={page}
-                            type="button"
-                            onClick={() => goToPage(page)}
-                            className={`w-8 h-8 flex items-center justify-center text-xs font-bold rounded-full transition-all duration-200 cursor-pointer ${
-                              page === safePage
-                                ? "bg-primary text-primary-foreground shadow-sm scale-110"
-                                : "text-neutral-700 hover:text-primary hover:bg-neutral-50"
-                            }`}
-                          >
-                            {page}
-                          </button>
-                        ),
-                      )}
+              {/* Infinite scroll sentinel + product count */}
+              <div className="mt-8 flex flex-col items-center gap-3">
+                {hasMore ? (
+                  <>
+                    <div ref={sentinelRef} className="w-full h-1" />
+                    <div className="flex items-center gap-2 text-sm text-neutral-400">
+                      <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                      Loading more products...
                     </div>
-
-                    {/* Next */}
-                    <button
-                      type="button"
-                      onClick={() => goToPage(safePage + 1)}
-                      disabled={safePage >= totalPages}
-                      className={`text-xs font-bold tracking-wider uppercase transition-colors ml-3 cursor-pointer select-none ${
-                        safePage >= totalPages
-                          ? "text-neutral-300 cursor-not-allowed"
-                          : "text-primary hover:text-primary/80"
-                      }`}
-                    >
-                      Next
-                    </button>
-                  </nav>
-                </div>
-              )}
+                  </>
+                ) : (
+                  <p className="text-xs text-neutral-400 font-medium">
+                    Showing all {productList.length} products
+                  </p>
+                )}
+              </div>
             </>
           ) : (
             <div className="flex flex-col items-center justify-center py-24 px-4">
