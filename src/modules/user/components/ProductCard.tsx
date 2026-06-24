@@ -210,7 +210,7 @@ const ProductCard = ({ product, className }: ProductCardProps) => {
           opacity-100 translate-y-0
           md:${isHovered ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1 pointer-events-none"}`}
       >
-        <WishlistButton productId={product._id} />
+        <WishlistButton productId={product._id} className="bg-transparent backdrop-blur-none shadow-none p-1 md:p-1.5" />
       </div>
     </motion.div>
   );
