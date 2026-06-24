@@ -167,8 +167,8 @@ export function HeroBannerManager() {
                 />
               </div>
               <div
-                onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center gap-2 cursor-pointer border-muted-foreground/20 hover:border-primary/50 hover:bg-muted/30"
+                onClick={() => !selectedFile && fileInputRef.current?.click()}
+                className={`border-2 border-dashed rounded-lg overflow-hidden flex flex-col items-center justify-center gap-2 ${selectedFile ? "border-primary/30 bg-primary/5" : "border-muted-foreground/20 hover:border-primary/50 hover:bg-muted/30 cursor-pointer"} transition-all`}
               >
                 <input
                   ref={fileInputRef}
@@ -180,14 +180,50 @@ export function HeroBannerManager() {
                   }
                 />
                 {selectedFile ? (
-                  <span className="text-sm font-medium truncate max-w-full px-2">
-                    {selectedFile.name}
-                  </span>
+                  <div className="w-full">
+                    <div className="relative aspect-[21/9] w-full bg-muted">
+                      <img
+                        src={URL.createObjectURL(selectedFile)}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between px-3 py-2 bg-slate-50">
+                      <span className="text-xs text-muted-foreground truncate max-w-[200px]">
+                        {selectedFile.name}
+                      </span>
+                      <div className="flex gap-1.5">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            fileInputRef.current?.click();
+                          }}
+                          className="text-[10px] text-primary font-medium hover:underline cursor-pointer"
+                        >
+                          Change
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedFile(null);
+                          }}
+                          className="text-[10px] text-destructive font-medium hover:underline cursor-pointer"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 ) : (
-                  <div className="flex flex-col items-center gap-1">
-                    <UploadCloud className="h-6 w-6 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">
-                      Select Image
+                  <div className="flex flex-col items-center gap-1.5 py-8">
+                    <UploadCloud className="h-8 w-8 text-muted-foreground/50" />
+                    <span className="text-xs font-medium text-muted-foreground">
+                      Click to upload banner image
+                    </span>
+                    <span className="text-[10px] text-muted-foreground/60">
+                      Recommended: 1920×820px (21:9 ratio)
                     </span>
                   </div>
                 )}

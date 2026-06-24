@@ -252,7 +252,6 @@ const SLUG_TO_HEADING: Record<string, string> = {
   congratulations: "Sentiments",
   "get-well-soon": "Sentiments",
   sorry: "Sentiments",
-  "just-because": "Sentiments",
 };
 
 export const Navigation = () => {

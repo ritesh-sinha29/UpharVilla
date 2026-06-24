@@ -40,11 +40,10 @@ const SECTION_PRESETS = [
   { label: "Ganesh Chaturthi", slug: "ganesh-chaturthi" },
   { label: "Housewarming", slug: "housewarming" },
   // ── Sentiments ──
-  { label: "Thank You", slug: "thank-you" },
-  { label: "Congratulations", slug: "congratulations" },
-  { label: "Get Well Soon", slug: "get-well-soon" },
-  { label: "Sorry", slug: "sorry" },
-  { label: "Just Because", slug: "just-because" },
+  { label: "Gratitude & Appreciation", slug: "thank-you" },
+  { label: "Celebrations & Achievements", slug: "congratulations" },
+  { label: "Care & Recovery", slug: "get-well-soon" },
+  { label: "Apology & Reconciliation", slug: "sorry" },
 ];
 
 // ─── Auto-categorize occasion slugs into navbar heading groups ───────────────
@@ -85,7 +84,6 @@ const SLUG_TO_HEADING: Record<string, string> = {
   congratulations: "Sentiments",
   "get-well-soon": "Sentiments",
   sorry: "Sentiments",
-  "just-because": "Sentiments",
 };
 
 export function OccasionManager() {

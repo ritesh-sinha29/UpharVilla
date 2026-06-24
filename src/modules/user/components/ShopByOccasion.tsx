@@ -77,7 +77,6 @@ const ICON_MAP: Record<string, React.ElementType> = {
   congratulations: Gift,
   "get-well-soon": MessageCircleHeart,
   sorry: MessageCircleHeart,
-  "just-because": ThumbsUp,
 };
 
 const DEFAULT_OCCASIONS = [

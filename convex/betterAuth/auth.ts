@@ -42,10 +42,11 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
     process.env.SITE_URL ||
     process.env.BETTER_AUTH_URL ||
     "http://localhost:3000";
-  const trustedOrigins = [baseURL];
-  if (!trustedOrigins.includes("http://localhost:3000")) {
-    trustedOrigins.push("http://localhost:3000");
-  }
+
+  // Dynamically build trusted origins from SITE_URL — no hardcoding needed
+  const trustedOrigins = Array.from(
+    new Set([baseURL, "http://localhost:3000"].filter(Boolean))
+  );
 
   return {
     appName: "upharvilla",
