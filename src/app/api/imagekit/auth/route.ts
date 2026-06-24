@@ -1,29 +1,39 @@
 import { getUploadAuthParams } from "@imagekit/next/server";
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { isAuthenticated } from "@/lib/auth-server";
 
 export async function GET() {
-  // Use the authenticated check from your auth-server
-  const isAuthed = await isAuthenticated();
+  // Check for Better Auth session cookie — this is a lightweight,
+  // server-side-only check that works reliably on Vercel without
+  // needing a roundtrip to the Convex backend.
+  const cookieStore = await cookies();
+  const sessionCookie =
+    cookieStore.get("better-auth.session_token") ??
+    cookieStore.get("__Secure-better-auth.session_token");
 
-  if (!isAuthed) {
+  if (!sessionCookie?.value) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const privateKey = process.env.IMAGEKIT_PRIVATE_KEY;
+  const publicKey = process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY;
+
+  if (!privateKey || !publicKey) {
+    return NextResponse.json(
+      { error: "ImageKit keys not configured" },
+      { status: 500 },
+    );
+  }
+
   const { token, expire, signature } = getUploadAuthParams({
-    privateKey: process.env.IMAGEKIT_PRIVATE_KEY!,
-    publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY!,
+    privateKey,
+    publicKey,
   });
 
   return NextResponse.json({
     token,
     expire,
     signature,
-    publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY,
+    publicKey,
   });
 }
-
-// import { getUploadAuthParams } from "@imagekit/next/server";
-// import { isAuthenticated } from "@/lib/auth-server";
-// import { headers } from "next/headers";
-// import { NextResponse } from "next/server";

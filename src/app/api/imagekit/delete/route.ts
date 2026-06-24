@@ -1,7 +1,18 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { getImageKit } from "@/lib/ImageKit";
 
 export async function POST(req: Request) {
+  // Auth check — verify session cookie exists
+  const cookieStore = await cookies();
+  const sessionCookie =
+    cookieStore.get("better-auth.session_token") ??
+    cookieStore.get("__Secure-better-auth.session_token");
+
+  if (!sessionCookie?.value) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const { url } = await req.json();
     if (!url) {
@@ -9,7 +20,6 @@ export async function POST(req: Request) {
     }
 
     // Extract the file name from the URL path
-    // e.g. "https://ik.imagekit.io/dedak5eij/banners/hero_banner_1779528790609_fDeriPQEn" -> "hero_banner_1779528790609_fDeriPQEn"
     const parts = url.split("/");
     const fileName = parts[parts.length - 1];
 
@@ -20,17 +30,12 @@ export async function POST(req: Request) {
       );
     }
 
-    console.log("Searching for file name on ImageKit:", fileName);
-
     // List files matching the name
     const files = await getImageKit().listFiles({
       searchQuery: `name = "${fileName}"`,
     });
 
     if (files && files.length > 0) {
-      // @ts-expect-error
-      console.log("Found file on ImageKit, deleting ID:", files[0].fileId);
-      // Delete the file using fileId
       // @ts-expect-error
       await getImageKit().deleteFile(files[0].fileId);
       return NextResponse.json({
@@ -39,7 +44,6 @@ export async function POST(req: Request) {
       });
     }
 
-    console.log("File not found on ImageKit:", fileName);
     return NextResponse.json({
       success: true,
       message: "File not found on ImageKit, skipped deletion",
