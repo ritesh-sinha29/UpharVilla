@@ -15,7 +15,7 @@ import { api } from "../../../../convex/_generated/api";
 
 const tabs = [
   { label: "Home", icon: Home, href: "/" },
-  { label: "Categories", icon: LayoutGrid, href: "/products" },
+  { label: "Explore", icon: LayoutGrid, href: "/products" },
   { label: "Cart", icon: ShoppingBag, href: "/cart", badge: true },
   { label: "Wishlist", icon: Heart, href: "/wishlist" },
   { label: "Account", icon: User, href: "/auth" },
