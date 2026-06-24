@@ -61,19 +61,7 @@ const SUBCATEGORIES_MAP: Record<string, string[]> = {
     "Artificial Bouquet",
     "Frame + Bouquet Combo",
   ],
-  "shop-by-occasion": [
-    "Birthday",
-    "Anniversary",
-    "Wedding",
-    "Engagement",
-    "Valentine's Day",
-    "Mother's Day",
-    "Father's Day",
-    "Baby Shower & Newborn",
-    "Raksha Bandhan",
-    "Graduation & Achievement",
-    "Festivals & Celebrations",
-  ],
+  "shop-by-occasion": [] as string[], // ← populated dynamically from active occasions DB
 };
 
 export { CATEGORIES_MAP, SUBCATEGORIES_MAP };
@@ -114,6 +102,17 @@ export function ProductTableFilters({
     isSearchActive ? { searchTerm: debouncedSearch, includeInactive: true } : "skip",
   );
   const isSearching = isSearchActive && searchResults === undefined;
+
+  // ── Dynamic occasion subcategories from DB ──
+  const activeOccasions = useQuery(api.occasions.getOccasions);
+
+  // Helper: get subcategory options for a given category filter
+  const getSubcategoryOptions = (cat: string): string[] => {
+    if (cat === "shop-by-occasion" && activeOccasions) {
+      return activeOccasions.map((o) => o.label);
+    }
+    return SUBCATEGORIES_MAP[cat] ?? [];
+  };
 
   // Handle click outside of search dropdown
   useEffect(() => {
@@ -253,7 +252,7 @@ export function ProductTableFilters({
           <SelectContent>
             <SelectItem value="all">All Subcategories</SelectItem>
             {categoryFilter !== "all" &&
-              SUBCATEGORIES_MAP[categoryFilter]?.map((sub) => (
+              getSubcategoryOptions(categoryFilter).map((sub) => (
                 <SelectItem key={sub} value={sub}>
                   {sub}
                 </SelectItem>
@@ -405,7 +404,7 @@ export function ProductTableFilters({
           <SelectContent>
             <SelectItem value="all">All Subcategories</SelectItem>
             {categoryFilter !== "all" &&
-              SUBCATEGORIES_MAP[categoryFilter]?.map((sub) => (
+              getSubcategoryOptions(categoryFilter).map((sub) => (
                 <SelectItem key={sub} value={sub}>
                   {sub}
                 </SelectItem>
