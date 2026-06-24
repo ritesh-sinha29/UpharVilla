@@ -1,210 +1,252 @@
 "use client";
 
-import React from "react";
-import Image from "next/image";
 import { Rating } from "@mui/material";
+import useEmblaCarousel from "embla-carousel-react";
+import Autoplay from "embla-carousel-autoplay";
 import { motion } from "framer-motion";
+import { ChevronLeft, ChevronRight, Quote } from "lucide-react";
+import Image from "next/image";
+import { useCallback } from "react";
 
-const testimonials = [
+// ─── Review Data ──────────────────────────────────────────────────────────────
+const reviews = [
   {
     name: "Aarav Sharma",
-    location: "Mumbai, IN",
-    date: "12/03/2026",
-    text: "The custom hamper was absolutely beautiful! Every item felt premium and the packaging was top-notch. My sister was thrilled to receive it.",
+    location: "Mumbai",
+    text: "The custom hamper was absolutely beautiful! Every item felt premium and the packaging was top-notch. My sister was thrilled to receive it on her birthday.",
     rating: 5,
-    image:
-      "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=500&auto=format&fit=crop&q=60",
     avatar: "https://i.pravatar.cc/150?u=aarav",
+    product: "Luxury Birthday Hamper",
   },
   {
     name: "Ananya Iyer",
-    location: "Bangalore, IN",
-    date: "15/04/2026",
+    location: "Bangalore",
     text: "Ordered a personalized photo frame for my parents' anniversary. The print quality is excellent and the wood finish is very elegant.",
-    rating: 4.5,
+    rating: 5,
     avatar: "https://i.pravatar.cc/150?u=ananya",
+    product: "Custom Photo Frame",
   },
   {
     name: "Ishaan Gupta",
-    location: "Delhi, IN",
-    date: "20/04/2026",
-    text: "Quick delivery and very helpful customer support. They even accommodated a last-minute change in the gift card message.",
+    location: "Delhi",
+    text: "Quick delivery and very helpful customer support. They even accommodated a last-minute change in the gift card message. Will order again!",
     rating: 5,
-    image:
-      "https://images.unsplash.com/photo-1512909006721-3d6018887383?w=500&auto=format&fit=crop&q=60",
     avatar: "https://i.pravatar.cc/150?u=ishaan",
+    product: "Premium Gift Set",
   },
   {
     name: "Priya Lakshmi",
-    location: "Chennai, IN",
-    date: "05/05/2026",
-    text: "The 'Under 499' collection has some gems! Found the perfect birthday gift for my colleague without breaking the bank.",
+    location: "Chennai",
+    text: "The 'Under ₹499' collection has some gems! Found the perfect birthday gift for my colleague without breaking the bank.",
     rating: 4,
     avatar: "https://i.pravatar.cc/150?u=priya",
+    product: "Budget Gift Box",
   },
   {
     name: "Rohan Verma",
-    location: "Pune, IN",
-    date: "10/05/2026",
-    text: "Best gifting site I've used so far. The curation is very thoughtful and not generic like other platforms.",
+    location: "Pune",
+    text: "Best gifting site I've used so far. The curation is very thoughtful and not generic like other platforms. Every hamper feels personalised.",
     rating: 5,
-    image:
-      "https://images.unsplash.com/photo-1513201099705-a9746e1e201f?w=500&auto=format&fit=crop&q=60",
     avatar: "https://i.pravatar.cc/150?u=rohan",
+    product: "Curated Gift Hamper",
   },
   {
     name: "Sanya Malhotra",
-    location: "Hyderabad, IN",
-    date: "18/05/2026",
-    text: "Loved the eco-friendly packaging options. The products inside were just as described. Will definitely order again.",
-    rating: 4.5,
-    image:
-      "https://images.unsplash.com/photo-1544816155-12df9643f363?w=500&auto=format&fit=crop&q=60",
+    location: "Hyderabad",
+    text: "Loved the eco-friendly packaging options. The products inside were just as described. Will definitely order again for the festive season.",
+    rating: 5,
     avatar: "https://i.pravatar.cc/150?u=sanya",
+    product: "Eco Gift Collection",
   },
   {
     name: "Vikram Singh",
-    location: "Jaipur, IN",
-    date: "22/05/2026",
-    text: "The premium hampers are truly luxury. Great for corporate gifting. My clients were very impressed.",
+    location: "Jaipur",
+    text: "The premium hampers are truly luxury. Great for corporate gifting — my clients were very impressed with the presentation and quality.",
     rating: 5,
     avatar: "https://i.pravatar.cc/150?u=vikram",
+    product: "Corporate Gift Set",
   },
   {
     name: "Meera Reddy",
-    location: "Kolkata, IN",
-    date: "25/05/2026",
-    text: "The attention to detail in the custom notes is what sets them apart. Highly recommended for personal gifts.",
+    location: "Kolkata",
+    text: "The attention to detail in the custom notes is what sets UpharVilla apart. Highly recommended for personal gifts!",
     rating: 5,
-    image:
-      "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=500&auto=format&fit=crop&q=60",
     avatar: "https://i.pravatar.cc/150?u=meera",
-  },
-  {
-    name: "Arjun Kapoor",
-    location: "Ahmedabad, IN",
-    date: "01/06/2026",
-    text: "Good value for money. The combo sets are well-priced.",
-    rating: 4,
-    avatar: "https://i.pravatar.cc/150?u=arjun",
+    product: "Personalised Hamper",
   },
 ];
 
+// ─── Review Card ──────────────────────────────────────────────────────────────
+function ReviewCard({ item }: { item: (typeof reviews)[0] }) {
+  return (
+    <div className="h-full flex flex-col bg-white rounded-xl md:rounded-2xl border border-gray-100 p-4 md:p-5 lg:p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
+      {/* Stars */}
+      <Rating
+        value={item.rating}
+        precision={0.5}
+        readOnly
+        size="small"
+        sx={{ fontSize: "0.85rem" }}
+      />
+
+      {/* Quote */}
+      <p className="text-[12px] md:text-[13px] lg:text-sm text-gray-600 leading-relaxed mt-3 flex-1">
+        &ldquo;{item.text}&rdquo;
+      </p>
+
+      {/* Divider */}
+      <div className="h-px bg-gray-100 my-3 md:my-4" />
+
+      {/* Author */}
+      <div className="flex items-center gap-2.5">
+        <div className="w-8 h-8 md:w-9 md:h-9 rounded-full overflow-hidden ring-1 ring-gray-200 shrink-0">
+          <Image
+            src={item.avatar}
+            alt={item.name}
+            width={36}
+            height={36}
+            className="object-cover w-full h-full"
+          />
+        </div>
+        <div className="min-w-0">
+          <p className="text-[11px] md:text-xs font-semibold text-gray-900 truncate">
+            {item.name}
+          </p>
+          <p className="text-[10px] text-gray-400 font-medium truncate">
+            {item.location} &middot; Verified Buyer
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 const Testimonials = () => {
-  // Split into 3 columns for the grid
-  const column1 = [testimonials[0], testimonials[3], testimonials[6]];
-  const column2 = [testimonials[1], testimonials[4], testimonials[7]];
-  const column3 = [testimonials[2], testimonials[5], testimonials[8]];
+  const [emblaRef, emblaApi] = useEmblaCarousel(
+    {
+      align: "start",
+      loop: true,
+      slidesToScroll: 1,
+      dragFree: false,
+      containScroll: "trimSnaps",
+    },
+    [Autoplay({ delay: 4000, stopOnInteraction: true })]
+  );
+
+  const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
+  const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
 
   return (
-    <section className="py-14 relative overflow-hidden">
-      <div className="max-w-[1440px] mx-auto px-8 relative z-10">
-        <div className="text-center mb-10">
-          <h2 className="text-3xl font-semibold underline underline-offset-8 mb-3">
-            Loved by everyone, trusted by many!
-          </h2>
-          <div className="flex items-center justify-center gap-2">
-            <Rating value={5} readOnly size="medium" />
-            <span className="text-gray-600 font-medium">
-              from 16549 reviews
-            </span>
+    <section className="py-4 md:py-6 lg:py-8 bg-white relative overflow-hidden">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-5 md:px-6 lg:px-8 xl:px-12 relative z-10">
+        {/* ── Header ── */}
+        <div className="md:text-center mb-4 md:mb-6 lg:mb-8">
+          {/* Mobile header */}
+          <div className="flex items-center justify-between md:hidden">
+            <div className="flex items-center gap-2">
+              <div className="w-1 h-5 bg-primary rounded-full" />
+              <h2 className="text-[15px] font-bold text-neutral-900">
+                Customer Reviews
+              </h2>
+            </div>
+            <div className="flex items-center gap-1">
+              <Rating value={5} readOnly size="small" sx={{ fontSize: "0.7rem" }} />
+              <span className="text-[10px] text-gray-400 font-medium">
+                16,549
+              </span>
+            </div>
+          </div>
+
+          {/* Desktop header */}
+          <div className="hidden md:block">
+            <motion.h2
+              initial={{ opacity: 0, y: -10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="text-2xl md:text-3xl lg:text-4xl font-semibold text-neutral-900 underline underline-offset-8"
+            >
+              What Our Customers Say
+            </motion.h2>
+            <motion.div
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="flex items-center justify-center gap-2 mt-3"
+            >
+              <Rating value={5} readOnly size="medium" sx={{ fontSize: "1.1rem" }} />
+              <span className="text-sm text-gray-500 font-medium font-mono">
+                from 16,549 reviews
+              </span>
+            </motion.div>
+            <motion.p
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="text-muted-foreground max-w-xl mx-auto text-sm md:text-base font-mono font-medium mt-2"
+            >
+              Real feedback from people who trust UpharVilla for their special moments.
+            </motion.p>
           </div>
         </div>
 
-        {/* Scrollable Container with Fade Mask */}
-        <div className="relative h-[800px] overflow-hidden">
-          {/* Top and Bottom Fade Overlays */}
-          <div className="absolute top-0 left-0 right-0 h-32 bg-linear-to-b from-background to-transparent z-20 pointer-events-none"></div>
-          <div className="absolute bottom-0 left-0 right-0 h-32 bg-linear-to-t from-background to-transparent z-20 pointer-events-none"></div>
+        {/* ── Mobile: horizontal scroll ── */}
+        <div className="md:hidden flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 mobile-scroll">
+          {reviews.slice(0, 5).map((item) => (
+            <div key={item.name} className="flex-none w-[260px]">
+              <ReviewCard item={item} />
+            </div>
+          ))}
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full">
-            {[column1, column2, column3].map((column, colIndex) => (
-              <motion.div
-                key={colIndex}
-                animate={{
-                  y: [0, -500],
-                }}
-                transition={{
-                  duration: 20 + colIndex * 5,
-                  repeat: Infinity,
-                  ease: "linear",
-                }}
-                className="flex flex-col gap-6"
-              >
-                {/* Double the column content for seamless loop */}
-                {[...column, ...column].map((item, index) => (
+        {/* ── Desktop: carousel with arrows ── */}
+        <div className="hidden md:block relative">
+          <div className="mx-12">
+            <div ref={emblaRef} className="overflow-hidden">
+              <div className="flex">
+                {reviews.map((item) => (
                   <div
-                    key={index}
-                    className="bg-white p-5 rounded-2xl shadow-sm border border-neutral-100 flex flex-col gap-4 hover:shadow-md transition-shadow duration-300"
+                    key={item.name}
+                    className="flex-none w-[calc(100%/3)] px-2 lg:px-2.5"
                   >
-                    {/* Header: Avatar, Name, Location, Date */}
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="relative w-10 h-10 rounded-full overflow-hidden border border-neutral-200">
-                          <Image
-                            src={item.avatar}
-                            alt={item.name}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                        <div className="flex flex-col">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-bold text-gray-900 leading-none">
-                              {item.name}
-                            </span>
-                            <span className="bg-neutral-900 text-white text-[8px] px-1.5 py-0.5 rounded uppercase font-black tracking-tighter">
-                              Verified
-                            </span>
-                          </div>
-                          <span className="text-[10px] text-gray-400 mt-1">
-                            {item.location}
-                          </span>
-                        </div>
-                      </div>
-                      <span className="text-[10px] text-gray-400 font-medium">
-                        {item.date}
-                      </span>
-                    </div>
-
-                    {/* Content: Image (Optional) */}
-                    {item.image && (
-                      <div className="relative aspect-video rounded-xl overflow-hidden border border-neutral-100">
-                        <Image
-                          src={item.image}
-                          alt="Purchased item"
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                    )}
-
-                    {/* Content: Text */}
-                    <p className="text-xs text-gray-600 leading-relaxed font-medium">
-                      {item.text}
-                    </p>
-
-                    {/* Footer: Rating */}
-                    <div className="pt-2 border-t border-neutral-50">
-                      <Rating
-                        value={item.rating}
-                        precision={0.5}
-                        readOnly
-                        size="small"
-                        sx={{ fontSize: "0.875rem" }}
-                      />
-                    </div>
+                    <ReviewCard item={item} />
                   </div>
                 ))}
-              </motion.div>
-            ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Arrows */}
+          <button
+            type="button"
+            onClick={scrollPrev}
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full border border-gray-200 bg-white shadow-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:shadow-xl cursor-pointer transition-all duration-200 flex items-center justify-center"
+            aria-label="Previous"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={scrollNext}
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full border border-gray-200 bg-white shadow-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:shadow-xl cursor-pointer transition-all duration-200 flex items-center justify-center"
+            aria-label="Next"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* ── Quote decoration ── */}
+        <div className="hidden md:flex justify-center mt-8 lg:mt-10">
+          <div className="flex items-center gap-3 text-gray-300">
+            <div className="w-16 h-px bg-gray-200" />
+            <Quote className="w-5 h-5 rotate-180" />
+            <div className="w-16 h-px bg-gray-200" />
           </div>
         </div>
       </div>
-
-      {/* Background Decorative Elements */}
-      <div className="absolute top-1/2 left-0 -translate-y-1/2 -translate-x-1/2 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10"></div>
-      <div className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-1/2 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl -z-10"></div>
     </section>
   );
 };

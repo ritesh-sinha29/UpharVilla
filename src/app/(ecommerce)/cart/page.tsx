@@ -1,7 +1,7 @@
 import { Cart } from "@/modules/user/product/Cart";
 
 export const metadata = {
-  title: "Cart | Upharvilla",
+  title: "Cart | upharVilla",
   description: "Your shopping cart",
 };
 

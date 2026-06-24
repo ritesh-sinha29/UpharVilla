@@ -1,32 +1,38 @@
 "use client";
-import React from "react";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-} from "@/components/ui/sidebar";
 import {
   LayoutDashboard,
   Package,
   Package2,
-  Settings,
-  UserCircle,
+  ShieldCheck,
+  ShoppingBag,
+  Ticket,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@/components/ui/sidebar";
 
 const adminRoutes = [
   {
     title: "Dashboard",
     url: "/admin",
     icon: LayoutDashboard,
+  },
+  {
+    title: "Orders",
+    url: "/admin/orders",
+    icon: ShoppingBag,
   },
   {
     title: "Inventory",
@@ -38,6 +44,11 @@ const adminRoutes = [
     url: "/admin/content-management",
     icon: Package2,
   },
+  {
+    title: "Coupons & Offers",
+    url: "/admin/coupons",
+    icon: Ticket,
+  },
 ];
 
 export function AppSidebar() {
@@ -45,17 +56,31 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="flex items-center justify-center py-4">
-        <div className="flex items-center gap-2 px-2 w-full">
-          <div className="bg-primary/10 p-2 rounded-lg">
-            <div className="w-6 h-6 bg-primary rounded-sm flex items-center justify-center text-white font-bold text-xs">
+      <SidebarHeader className="flex items-center justify-center py-4 px-3">
+        <Link
+          href="/admin"
+          className="flex items-center justify-center w-full select-none"
+        >
+          {/* Collapsed icon state */}
+          <div className="hidden group-data-[collapsible=icon]:flex items-center justify-center w-full">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
               UV
             </div>
           </div>
-          <span className="font-bold text-lg group-data-[collapsible=icon]:hidden whitespace-nowrap overflow-hidden">
-            UpharVilla
-          </span>
-        </div>
+          {/* Expanded logo state */}
+          <div className="flex group-data-[collapsible=icon]:hidden items-center justify-center h-10 overflow-hidden w-full">
+            <Image
+              src="/logo.png"
+              alt="upharVilla Logo"
+              width={993}
+              height={294}
+              quality={100}
+              unoptimized
+              className="w-auto h-auto max-h-10 object-contain"
+              priority
+            />
+          </div>
+        </Link>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
@@ -87,20 +112,17 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
-              tooltip="Settings"
+              tooltip="Access Control"
+              isActive={pathname === "/admin/access-control"}
               className="hover:bg-sidebar-accent"
             >
-              <Settings className="size-4" />
-              <span>Settings</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Admin User"
-              className="hover:bg-sidebar-accent"
-            >
-              <UserCircle className="size-4" />
-              <span>Admin Profile</span>
+              <Link
+                href="/admin/access-control"
+                className="flex items-center gap-2 w-full"
+              >
+                <ShieldCheck className="size-4" />
+                <span>Access Control</span>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

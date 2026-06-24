@@ -1,7 +1,11 @@
-import React from "react";
+import type React from "react";
 import AnnouncementBar from "@/modules/user/components/AnnouncementBar";
+import Footer from "@/modules/user/components/Footer";
 import Header from "@/modules/user/components/Header";
 import NavBar from "@/modules/user/components/NavBar";
+import MobileBottomNav from "@/modules/user/components/MobileBottomNav";
+import { BreadcrumbSchema } from "@/components/seo/BreadcrumbSchema";
+import { WishlistProvider } from "@/lib/wishlist-context";
 
 export default function EcommerceLayout({
   children,
@@ -9,13 +13,22 @@ export default function EcommerceLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-dvh">
       <div className="sticky top-0 z-50 w-full flex flex-col bg-white shadow-sm">
         <AnnouncementBar />
         <Header />
+        {/* Category navigation bar — visible on all screens */}
         <NavBar />
       </div>
-      <main className="flex-1">{children}</main>
+      {/* Breadcrumb structured data for inner pages */}
+      <BreadcrumbSchema />
+      <main className="flex-1 pb-16 md:pb-0">
+        <WishlistProvider>{children}</WishlistProvider>
+      </main>
+      <Footer />
+      {/* Mobile-only bottom navigation */}
+      <MobileBottomNav />
     </div>
   );
 }
+

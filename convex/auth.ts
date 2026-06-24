@@ -1,6 +1,6 @@
-import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
-import { Id } from "./_generated/dataModel";
+import type { Id } from "./_generated/dataModel";
+import { mutation, query } from "./_generated/server";
 
 /**
  * Gets the current authenticated user from the database.
@@ -14,8 +14,15 @@ export const getCurrentUser = query({
     }
 
     // better-auth uses the user's ID as the identity subject
-    const user = await ctx.db.get(identity.subject as Id<"user">);
-    
+    let user = await ctx.db.get(identity.subject as Id<"user">);
+    if (!user && identity.email) {
+      const email = identity.email as string;
+      user = await ctx.db
+        .query("user")
+        .withIndex("email_name", (q) => q.eq("email", email))
+        .first();
+    }
+
     if (!user) {
       return null;
     }
@@ -42,8 +49,18 @@ export const storeUser = mutation({
       throw new Error("Called storeUser without authentication");
     }
 
-    const userId = identity.subject as Id<"user">;
-    const existingUser = await ctx.db.get(userId);
+    let userId = identity.subject as Id<"user">;
+    let existingUser = await ctx.db.get(userId);
+    if (!existingUser && identity.email) {
+      const email = identity.email as string;
+      existingUser = await ctx.db
+        .query("user")
+        .withIndex("email_name", (q) => q.eq("email", email))
+        .first();
+      if (existingUser) {
+        userId = existingUser._id;
+      }
+    }
 
     if (existingUser) {
       await ctx.db.patch(userId, {
@@ -79,3 +96,5 @@ export const checkUserByEmail = query({
     return !!user;
   },
 });
+
+

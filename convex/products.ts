@@ -1,20 +1,59 @@
-import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
-import { Id } from "./_generated/dataModel";
 import { paginationOptsValidator } from "convex/server";
+import { v } from "convex/values";
+import { internal } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
+import { internalMutation, mutation, query } from "./_generated/server";
+import { getTableCount, incrementCounter, decrementCounter } from "./counterUtils";
+
+// Shared category validator — single source of truth
+const CATEGORY_VALIDATOR = v.union(
+  v.literal("customized-gifts"),
+  v.literal("corporate-gifts"),
+  v.literal("hampers"),
+  v.literal("frames-bouquet"),
+  v.literal("shop-by-occasion"),
+  v.literal("new-arrivals"),
+);
 
 // ──────────────────────────────────────────────
 // QUERIES
 // ──────────────────────────────────────────────
 
 /**
- * Kept for legacy use (e.g. dropdowns, counts). NOT used for the main table.
+ * Lightweight list for admin inventory table — returns only display fields.
+ * Full product data should use getById when editing.
  */
 export const list = query({
   args: {},
   handler: async (ctx) => {
     const products = await ctx.db.query("products").order("desc").collect();
-    return products;
+    return products.map(({ _id, _creationTime, name, slug, description, price, stock, category, subCategory, thumbnail, isActive, markNewArrival, markTrending, markMostPurchased, markMostSold, discount, launchedAt, tags }) => ({
+      _id,
+      _creationTime,
+      name,
+      slug,
+      description,
+      price,
+      stock,
+      category,
+      subCategory,
+      thumbnail,
+      isActive,
+      markNewArrival,
+      markTrending,
+      markMostPurchased,
+      markMostSold,
+      discount,
+      launchedAt,
+      tags,
+    }));
+  },
+});
+
+export const count = query({
+  args: {},
+  handler: async (ctx) => {
+    return await getTableCount(ctx, "products");
   },
 });
 
@@ -48,15 +87,112 @@ export const getPaginated = query({
 export const search = query({
   args: {
     searchTerm: v.string(),
+    includeInactive: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const term = args.searchTerm.trim();
+    const term = args.searchTerm.toLowerCase().trim();
     if (!term) return [];
 
-    return await ctx.db
+    // 1. Search by name using Search Index (up to 50 results)
+    const nameMatches = await ctx.db
       .query("products")
       .withSearchIndex("search_name", (q) => q.search("name", term))
-      .take(10);
+      .take(50);
+
+    // Filter by active if required
+    const products = args.includeInactive
+      ? nameMatches
+      : nameMatches.filter((p) => p.isActive);
+
+    // 2. If term matches any known categories, fetch those using by_category_active index
+    const categories = [
+      "customized-gifts",
+      "corporate-gifts",
+      "hampers",
+      "frames-bouquet",
+      "shop-by-occasion",
+      "new-arrivals",
+    ];
+    const matchedCategories = categories.filter(
+      (cat) => cat.includes(term) || cat.replace("-", " ").includes(term)
+    );
+
+    if (matchedCategories.length > 0) {
+      const categoryProducts = [];
+      for (const cat of matchedCategories) {
+        const catResults = await ctx.db
+          .query("products")
+          .withIndex("by_category_active", (q) =>
+            q.eq("category", cat as any).eq("isActive", true)
+          )
+          .collect();
+        categoryProducts.push(...catResults);
+      }
+
+      // Merge and deduplicate
+      const productIds = new Set(products.map((p) => p._id));
+      for (const p of categoryProducts) {
+        if (!productIds.has(p._id)) {
+          products.push(p);
+          productIds.add(p._id);
+        }
+      }
+    }
+
+    const keywords = term.split(/\s+/).filter(Boolean);
+
+    // Score products based on relevance to the search term
+    const scored = products.map((p) => {
+      let score = 0;
+      const nameLower = p.name.toLowerCase();
+      const termLower = term.toLowerCase();
+
+      // 1. Exact match in name
+      if (nameLower === termLower) {
+        score += 100;
+      }
+      // 2. Name starts with the term
+      else if (nameLower.startsWith(termLower)) {
+        score += 80;
+      }
+      // 3. Name contains the term as a full word boundary
+      else if (new RegExp(`\\b${termLower}\\b`, "i").test(nameLower)) {
+        score += 60;
+      }
+      // 4. Name contains the term at all
+      else if (nameLower.includes(termLower)) {
+        score += 40;
+      }
+
+      // 5. Tags match the term
+      if (p.tags.some((t) => t.toLowerCase() === termLower)) {
+        score += 30;
+      } else if (p.tags.some((t) => t.toLowerCase().includes(termLower))) {
+        score += 15;
+      }
+
+      // 6. Subcategory matches the term
+      if (p.subCategory && p.subCategory.toLowerCase().includes(termLower)) {
+        score += 10;
+      }
+
+      // 7. Category matches the term
+      if (p.category.toLowerCase().includes(termLower)) {
+        score += 5;
+      }
+
+      // 8. Description contains the term
+      if (p.description.toLowerCase().includes(termLower)) {
+        score += 1;
+      }
+
+      return { product: p, score };
+    });
+
+    // Sort by score descending
+    scored.sort((a, b) => b.score - a.score);
+
+    return scored.map((s) => s.product).slice(0, 10);
   },
 });
 
@@ -72,38 +208,235 @@ export const getBySlug = query({
 
 export const getByCategory = query({
   args: {
-    category: v.union(
-      v.literal("mens"),
-      v.literal("womens"),
-      v.literal("anniversary-birthday"),
-      v.literal("festival-corporate"),
-      v.literal("frames-bouquet"),
-      v.literal("custom-hampers"),
-    ),
+    category: CATEGORY_VALIDATOR,
   },
   handler: async (ctx, args) => {
     return await ctx.db
       .query("products")
-      .withIndex("by_category", (q) => q.eq("category", args.category))
+      .withIndex("by_category_active", (q) => q.eq("category", args.category).eq("isActive", true))
       .collect();
   },
 });
 
-export const getNewArrivals = query({
-  args: {},
-  handler: async (ctx) => {
-    const twentyFourHoursAgo = Date.now() - 24 * 60 * 60 * 1000;
+/**
+ * Filter products by one or more tags (AND logic).
+ * Streams and stops early at 50 results.
+ */
+export const getByTags = query({
+  args: { tags: v.array(v.string()) },
+  handler: async (ctx, args) => {
+    if (args.tags.length === 0) return [];
 
+    const results = [];
+    for await (const p of ctx.db
+      .query("products")
+      .withIndex("by_active_launched_at", (q) => q.eq("isActive", true))
+      .order("desc")) {
+      if (args.tags.every((tag) => p.tags.includes(tag))) {
+        results.push(p);
+        if (results.length >= 50) break;
+      }
+    }
+    return results;
+  },
+});
+
+/**
+ * Filter products with sorting, price range, and tag filtering.
+ * All filter parameters are optional.
+ */
+export const getFilteredProducts = query({
+  args: {
+    tags: v.optional(v.array(v.string())),
+    sortBy: v.optional(
+      v.union(
+        v.literal("price_asc"),
+        v.literal("price_desc"),
+        v.literal("newest"),
+        v.literal("name"),
+        v.literal("relevance"),
+      ),
+    ),
+    minPrice: v.optional(v.number()),
+    maxPrice: v.optional(v.number()),
+    searchTerm: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    let products;
+    if (args.searchTerm) {
+      const term = args.searchTerm.toLowerCase().trim();
+      // Use search index for name (highly targeted)
+      const nameMatches = await ctx.db
+        .query("products")
+        .withSearchIndex("search_name", (q) => q.search("name", term))
+        .collect();
+      products = nameMatches.filter((p) => p.isActive);
+
+      // Fetch matching category products
+      const categories = [
+        "customized-gifts",
+        "corporate-gifts",
+        "hampers",
+        "frames-bouquet",
+        "shop-by-occasion",
+        "new-arrivals",
+      ];
+      const matchedCategories = categories.filter(
+        (cat) => cat.includes(term) || cat.replace("-", " ").includes(term)
+      );
+      if (matchedCategories.length > 0) {
+        const categoryProducts = [];
+        for (const cat of matchedCategories) {
+          const catResults = await ctx.db
+            .query("products")
+            .withIndex("by_category_active", (q) =>
+              q.eq("category", cat as any).eq("isActive", true)
+            )
+            .collect();
+          categoryProducts.push(...catResults);
+        }
+        const productIds = new Set(products.map((p) => p._id));
+        for (const p of categoryProducts) {
+          if (!productIds.has(p._id)) {
+            products.push(p);
+            productIds.add(p._id);
+          }
+        }
+      }
+    } else {
+      // No search term: query using by_active_launched_at index (very fast and uses index)
+      products = await ctx.db
+        .query("products")
+        .withIndex("by_active_launched_at", (q) => q.eq("isActive", true))
+        .order("desc")
+        .collect();
+    }
+
+    // Filter by search term in memory if it was search-indexed, but now we split by keywords
+    if (args.searchTerm) {
+      const term = args.searchTerm.toLowerCase().trim();
+      const keywords = term.split(/\s+/).filter(Boolean);
+      products = products.filter((p) => {
+        const textToSearch =
+          `${p.name} ${p.description} ${p.category} ${p.subCategory || ""} ${p.tags.join(" ")}`.toLowerCase();
+        return keywords.every((keyword) => textToSearch.includes(keyword));
+      });
+    }
+
+    // Filter by tags (AND logic)
+    if (args.tags && args.tags.length > 0) {
+      products = products.filter((p) =>
+        args.tags?.every((tag) => p.tags.includes(tag)),
+      );
+    }
+
+    // Filter by price range
+    if (args.minPrice !== undefined) {
+      products = products.filter((p) => p.price >= args.minPrice!);
+    }
+    if (args.maxPrice !== undefined) {
+      products = products.filter((p) => p.price <= args.maxPrice!);
+    }
+
+    // Sort
+    const sortBy = args.sortBy || "newest";
+    switch (sortBy) {
+      case "price_asc":
+        products.sort((a, b) => a.price - b.price);
+        break;
+      case "price_desc":
+        products.sort((a, b) => b.price - a.price);
+        break;
+      case "name":
+        products.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case "relevance": {
+        const term = args.searchTerm?.toLowerCase().trim() || "";
+        if (!term) {
+          products.sort((a, b) => b._creationTime - a._creationTime);
+          break;
+        }
+        const scored = products.map((p) => {
+          let score = 0;
+          const nameLower = p.name.toLowerCase();
+          const termLower = term.toLowerCase();
+
+          // 1. Exact match in name
+          if (nameLower === termLower) {
+            score += 100;
+          }
+          // 2. Name starts with the term
+          else if (nameLower.startsWith(termLower)) {
+            score += 80;
+          }
+          // 3. Name contains the term as a full word boundary
+          else if (new RegExp(`\\b${termLower}\\b`, "i").test(nameLower)) {
+            score += 60;
+          }
+          // 4. Name contains the term at all
+          else if (nameLower.includes(termLower)) {
+            score += 40;
+          }
+
+          // 5. Tags match the term
+          if (p.tags.some((t) => t.toLowerCase() === termLower)) {
+            score += 30;
+          } else if (p.tags.some((t) => t.toLowerCase().includes(termLower))) {
+            score += 15;
+          }
+
+          // 6. Subcategory matches the term
+          if (p.subCategory && p.subCategory.toLowerCase().includes(termLower)) {
+            score += 10;
+          }
+
+          // 7. Category matches the term
+          if (p.category.toLowerCase().includes(termLower)) {
+            score += 5;
+          }
+
+          // 8. Description contains the term
+          if (p.description.toLowerCase().includes(termLower)) {
+            score += 1;
+          }
+
+          return { product: p, score };
+        });
+
+        // Sort by score descending
+        scored.sort((a, b) => b.score - a.score);
+        products = scored.map((s) => s.product);
+        break;
+      }
+      default:
+        products.sort((a, b) => b._creationTime - a._creationTime);
+        break;
+    }
+
+    return products;
+  },
+});
+
+export const getNewArrivals = query({
+  args: { limit: v.optional(v.number()), strict: v.optional(v.boolean()) },
+  handler: async (ctx, args) => {
     // 1. Fetch products explicitly marked as new arrival
     const markedNewArrivals = await ctx.db
       .query("products")
-      .withIndex("by_new_arrival", (q) => q.eq("markNewArrival", true))
+      .withIndex("by_new_arrival_active", (q) => q.eq("markNewArrival", true).eq("isActive", true))
       .collect();
 
-    // 2. Fetch products launched in last 24 hours
+    // In strict mode (used by /new-arrivals page), only return explicitly marked products
+    if (args.strict) {
+      markedNewArrivals.sort((a, b) => b.launchedAt - a.launchedAt);
+      return args.limit ? markedNewArrivals.slice(0, args.limit) : markedNewArrivals;
+    }
+
+    // 2. Also fetch products launched in last 30 days (for homepage sections)
+    const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
     const recentArrivals = await ctx.db
       .query("products")
-      .withIndex("by_launched_at", (q) => q.gte("launchedAt", twentyFourHoursAgo))
+      .withIndex("by_active_launched_at", (q) => q.eq("isActive", true).gte("launchedAt", thirtyDaysAgo))
       .collect();
 
     // Combine and deduplicate
@@ -111,10 +444,106 @@ export const getNewArrivals = query({
     const uniqueMap = new Map();
     combined.forEach((p) => uniqueMap.set(p._id, p));
 
-    // Return only 8
-    return Array.from(uniqueMap.values()).slice(0, 8);
+    const results = Array.from(uniqueMap.values());
+
+    // Sort by creation time / launchedAt desc to show latest first
+    results.sort((a, b) => b.launchedAt - a.launchedAt);
+
+    return args.limit ? results.slice(0, args.limit) : results;
   },
 });
+
+export const getTrending = query({
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const products = await ctx.db
+      .query("products")
+      .withIndex("by_trending_active", (q) => q.eq("markTrending", true).eq("isActive", true))
+      .collect();
+
+    // Sort by creation time desc to show latest trending products first
+    products.sort((a, b) => b._creationTime - a._creationTime);
+
+    return args.limit ? products.slice(0, args.limit) : products;
+  },
+});
+
+export const getMostPurchased = query({
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const products = await ctx.db
+      .query("products")
+      .withIndex("by_most_purchased_active", (q) => q.eq("markMostPurchased", true).eq("isActive", true))
+      .collect();
+
+    // Sort by creation time desc to show latest first
+    products.sort((a, b) => b._creationTime - a._creationTime);
+
+    return args.limit ? products.slice(0, args.limit) : products;
+  },
+});
+
+export const getMostSold = query({
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const products = await ctx.db
+      .query("products")
+      .withIndex("by_most_sold_active", (q) => q.eq("markMostSold", true).eq("isActive", true))
+      .collect();
+
+    // Sort by creation time desc to show latest first
+    products.sort((a, b) => b._creationTime - a._creationTime);
+
+    return args.limit ? products.slice(0, args.limit) : products;
+  },
+});
+
+/**
+ * Lightweight query that returns up to 8 active products for carousels
+ * using index ranges rather than doing a full database list scan.
+ */
+export const getRecommendations = query({
+  args: { currentProductId: v.id("products") },
+  handler: async (ctx, args) => {
+    const products = await ctx.db
+      .query("products")
+      .withIndex("by_active_launched_at", (q) => q.eq("isActive", true))
+      .order("desc")
+      .take(9);
+    return products.filter((p) => p._id !== args.currentProductId).slice(0, 8);
+  },
+});
+
+/**
+ * Returns up to `limit` active products that carry a specific occasion tag.
+ * Products are matched when their `tags` array includes the given tag string
+ * (e.g. "fathers-day", "birthday").
+ */
+export const getProductsByOccasion = query({
+  args: {
+    tag: v.string(),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const cap = args.limit ?? 50;
+    const tagLower = args.tag.toLowerCase();
+    const results = [];
+
+    // Stream through indexed products, stop early once we have enough
+    for await (const p of ctx.db
+      .query("products")
+      .withIndex("by_active_launched_at", (q) => q.eq("isActive", true))
+      .order("desc")) {
+      if (p.tags.some((t) => t.toLowerCase() === tagLower)) {
+        results.push(p);
+        if (results.length >= cap) break;
+      }
+    }
+
+    return results;
+  },
+});
+
 
 // ──────────────────────────────────────────────
 // MUTATIONS
@@ -126,19 +555,16 @@ export const create = mutation({
     description: v.string(),
     price: v.number(),
     thumbnail: v.optional(v.string()),
-    category: v.union(
-      v.literal("mens"),
-      v.literal("womens"),
-      v.literal("anniversary-birthday"),
-      v.literal("festival-corporate"),
-      v.literal("frames-bouquet"),
-      v.literal("custom-hampers"),
-    ),
+    category: CATEGORY_VALIDATOR,
+    subCategory: v.optional(v.string()),
+    recipients: v.optional(v.array(v.string())),
     tags: v.array(v.string()),
     stock: v.number(),
     images: v.optional(v.array(v.string())),
     markNewArrival: v.optional(v.boolean()),
     markTrending: v.optional(v.boolean()),
+    markMostPurchased: v.optional(v.boolean()),
+    markMostSold: v.optional(v.boolean()),
     discount: v.optional(v.number()),
     variants: v.optional(
       v.object({
@@ -173,15 +599,21 @@ export const create = mutation({
       thumbnail: args.thumbnail,
       images: args.images,
       category: args.category,
+      subCategory: args.subCategory,
+      recipients: args.recipients,
       tags: args.tags,
       stock: args.stock,
       launchedAt: Date.now(),
       markNewArrival: args.markNewArrival,
       markTrending: args.markTrending,
+      markMostPurchased: args.markMostPurchased,
+      markMostSold: args.markMostSold,
       discount: args.discount,
       variants: args.variants,
       isActive: true,
     });
+
+    await incrementCounter(ctx, "products");
 
     return productId;
   },
@@ -191,6 +623,17 @@ export const remove = mutation({
   args: { id: v.id("products") },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id);
+    await decrementCounter(ctx, "products");
+  },
+});
+
+export const bulkRemove = mutation({
+  args: { ids: v.array(v.id("products")) },
+  handler: async (ctx, args) => {
+    for (const id of args.ids) {
+      await ctx.db.delete(id);
+      await decrementCounter(ctx, "products");
+    }
   },
 });
 
@@ -211,21 +654,16 @@ export const update = mutation({
     price: v.optional(v.number()),
     thumbnail: v.optional(v.string()),
     images: v.optional(v.array(v.string())),
-    category: v.optional(
-      v.union(
-        v.literal("mens"),
-        v.literal("womens"),
-        v.literal("anniversary-birthday"),
-        v.literal("festival-corporate"),
-        v.literal("frames-bouquet"),
-        v.literal("custom-hampers"),
-      ),
-    ),
+    category: v.optional(CATEGORY_VALIDATOR),
+    subCategory: v.optional(v.string()),
+    recipients: v.optional(v.array(v.string())),
     tags: v.optional(v.array(v.string())),
     stock: v.optional(v.number()),
     isActive: v.optional(v.boolean()),
     markNewArrival: v.optional(v.boolean()),
     markTrending: v.optional(v.boolean()),
+    markMostPurchased: v.optional(v.boolean()),
+    markMostSold: v.optional(v.boolean()),
     discount: v.optional(v.number()),
     variants: v.optional(
       v.object({
@@ -236,6 +674,39 @@ export const update = mutation({
   },
   handler: async (ctx, args) => {
     const { id, ...fields } = args;
+
+    // Handle restock notification trigger
+    if (fields.stock !== undefined && fields.stock > 0) {
+      const oldProduct = await ctx.db.get(id);
+      if (oldProduct && oldProduct.stock <= 0) {
+        // Restock event detected! Get pending notifications.
+        const pendingNotifications = await ctx.db
+          .query("stockNotifications")
+          .withIndex("by_product_status", (q) =>
+            q.eq("productId", id).eq("status", "pending"),
+          )
+          .collect();
+
+        if (pendingNotifications.length > 0) {
+          // Schedule restock emails
+          await ctx.scheduler.runAfter(
+            0,
+            internal.emails.restockEmail.notifyUsersOfRestock,
+            {
+              productId: id,
+              productName: oldProduct.name,
+              productSlug: oldProduct.slug,
+              thumbnail: oldProduct.thumbnail || "",
+              notifications: pendingNotifications.map((n) => ({
+                id: n._id,
+                email: n.email,
+              })),
+            },
+          );
+        }
+      }
+    }
+
     await ctx.db.patch(id, fields);
   },
 });
@@ -255,6 +726,97 @@ export const getImageUrl = query({
       return await ctx.storage.getUrl(args.storageId);
     } catch {
       return null;
+    }
+  },
+});
+
+export const requestStockNotification = mutation({
+  args: {
+    productId: v.id("products"),
+    email: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const email = args.email.trim().toLowerCase();
+    if (!email) {
+      throw new Error("Email is required");
+    }
+
+    // Optional: get current user id if they are logged in
+    const identity = await ctx.auth.getUserIdentity();
+    const userId = identity ? (identity.subject as Id<"user">) : undefined;
+
+    // Check if they already requested a notification for this product
+    const existing = await ctx.db
+      .query("stockNotifications")
+      .withIndex("by_email_product", (q) =>
+        q.eq("email", email).eq("productId", args.productId),
+      )
+      .filter((q) => q.eq(q.field("status"), "pending"))
+      .first();
+
+    if (existing) {
+      return { success: true, alreadyExists: true };
+    }
+
+    await ctx.db.insert("stockNotifications", {
+      productId: args.productId,
+      email,
+      userId,
+      createdAt: Date.now(),
+      status: "pending",
+    });
+
+    return { success: true, alreadyExists: false };
+  },
+});
+
+export const markNotificationsNotified = internalMutation({
+  args: {
+    notificationIds: v.array(v.id("stockNotifications")),
+  },
+  handler: async (ctx, args) => {
+    for (const id of args.notificationIds) {
+      await ctx.db.patch(id, { status: "notified" });
+    }
+  },
+});
+
+export const recalculateMostSold = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    // Use indexed query — only fetch paid orders, not ALL orders
+    const paidOrders = await ctx.db
+      .query("orders")
+      .withIndex("by_payment_status_created", (q) =>
+        q.eq("paymentStatus", "paid"),
+      )
+      .collect();
+
+    const salesMap: Record<string, number> = {};
+    for (const order of paidOrders) {
+      for (const item of order.items) {
+        salesMap[item.productId] =
+          (salesMap[item.productId] || 0) + item.quantity;
+      }
+    }
+
+    const allProducts = await ctx.db.query("products").collect();
+
+    // Find top 8 by sales
+    const productSales = allProducts
+      .map((p) => ({ id: p._id, salesCount: salesMap[p._id] || 0 }))
+      .filter((ps) => ps.salesCount > 0)
+      .sort((a, b) => b.salesCount - a.salesCount)
+      .slice(0, 8);
+
+    const topSoldIds = new Set(productSales.map((ps) => ps.id));
+
+    // Only patch products whose flag needs to change — avoids unnecessary writes
+    for (const product of allProducts) {
+      const shouldBeMarked = topSoldIds.has(product._id);
+      if (product.markMostSold !== shouldBeMarked) {
+        await ctx.db.patch(product._id, { markMostSold: shouldBeMarked });
+      }
     }
   },
 });

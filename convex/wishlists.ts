@@ -1,6 +1,6 @@
 import { v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
-import { Id } from "./_generated/dataModel";
 
 export const toggle = mutation({
   args: { productId: v.id("products") },
@@ -16,7 +16,7 @@ export const toggle = mutation({
     const existing = await ctx.db
       .query("wishlists")
       .withIndex("by_user_and_product", (q) =>
-        q.eq("userId", userId).eq("productId", args.productId)
+        q.eq("userId", userId).eq("productId", args.productId),
       )
       .first();
 
@@ -47,11 +47,28 @@ export const check = query({
     const existing = await ctx.db
       .query("wishlists")
       .withIndex("by_user_and_product", (q) =>
-        q.eq("userId", userId).eq("productId", args.productId)
+        q.eq("userId", userId).eq("productId", args.productId),
       )
       .first();
 
     return !!existing;
+  },
+});
+
+/** Returns all wishlisted product IDs for the current user — 1 query for all cards */
+export const getMyProductIds = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return [];
+    const userId = identity.subject as Id<"user">;
+
+    const items = await ctx.db
+      .query("wishlists")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    return items.map((i) => i.productId);
   },
 });
 
@@ -76,11 +93,13 @@ export const getUserWishlist = query({
       wishlists.map(async (wishlist) => {
         const product = await ctx.db.get(wishlist.productId);
         return product;
-      })
+      }),
     );
 
     // Filter out nulls if a product was deleted but wishlist item remained
-    return products.filter((p) => p !== null) as NonNullable<typeof products[0]>[];
+    return products.filter((p) => p !== null) as NonNullable<
+      (typeof products)[0]
+    >[];
   },
 });
 

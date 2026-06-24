@@ -1,10 +1,10 @@
 import { v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
-import { Id } from "./_generated/dataModel";
 
 /* ─── Limits ─────────────────────────────────────────────────────────────── */
-const CART_LIMIT = 25;   // max total items (sum of quantities) in cart
-const SAVE_LIMIT = 20;   // max items in saved-for-later list
+const CART_LIMIT = 25; // max total items (sum of quantities) in cart
+const SAVE_LIMIT = 20; // max items in saved-for-later list
 
 /* ═══════════════════════════════════════════════════════════════════════════
    CART
@@ -25,7 +25,7 @@ export const addToCart = mutation({
     const currentTotal = cartItems.reduce((s, i) => s + i.quantity, 0);
     if (currentTotal + args.quantity > CART_LIMIT) {
       throw new Error(
-        `Cart limit reached! You can have at most ${CART_LIMIT} items in your cart.`
+        `Cart limit reached! You can have at most ${CART_LIMIT} items in your cart.`,
       );
     }
 
@@ -33,16 +33,21 @@ export const addToCart = mutation({
     const existing = await ctx.db
       .query("carts")
       .withIndex("by_user_and_product", (q) =>
-        q.eq("userId", userId).eq("productId", args.productId)
+        q.eq("userId", userId).eq("productId", args.productId),
       )
       .first();
 
     if (existing) {
       // Would the new total exceed limit?
-      if (currentTotal - existing.quantity + existing.quantity + args.quantity > CART_LIMIT) {
+      if (
+        currentTotal - existing.quantity + existing.quantity + args.quantity >
+        CART_LIMIT
+      ) {
         throw new Error(`Cart is limited to ${CART_LIMIT} items.`);
       }
-      await ctx.db.patch(existing._id, { quantity: existing.quantity + args.quantity });
+      await ctx.db.patch(existing._id, {
+        quantity: existing.quantity + args.quantity,
+      });
       return { added: true, updated: true };
     } else {
       await ctx.db.insert("carts", {
@@ -118,10 +123,17 @@ export const getCartItems = query({
       cartItems.map(async (item) => {
         const product = await ctx.db.get(item.productId);
         if (!product) return null;
-        return { _id: item._id, productId: item.productId, quantity: item.quantity, product };
-      })
+        return {
+          _id: item._id,
+          productId: item.productId,
+          quantity: item.quantity,
+          product,
+        };
+      }),
     );
-    return populated.filter((p) => p !== null) as NonNullable<typeof populated[0]>[];
+    return populated.filter((p) => p !== null) as NonNullable<
+      (typeof populated)[0]
+    >[];
   },
 });
 
@@ -161,10 +173,15 @@ export const getSavedItems = query({
       saved.map(async (s) => {
         const product = await ctx.db.get(s.productId);
         if (!product) return null;
-        return { _id: s._id, productId: s.productId, createdAt: s.createdAt, product };
-      })
+        return {
+          _id: s._id,
+          productId: s.productId,
+          createdAt: s.createdAt,
+          product,
+        };
+      }),
     );
-    return populated.filter(Boolean) as NonNullable<typeof populated[0]>[];
+    return populated.filter(Boolean) as NonNullable<(typeof populated)[0]>[];
   },
 });
 
@@ -176,7 +193,8 @@ export const saveForLater = mutation({
     const userId = identity.subject as Id<"user">;
 
     const cartItem = await ctx.db.get(cartItemId);
-    if (!cartItem || cartItem.userId !== userId) throw new Error("Item not found");
+    if (!cartItem || cartItem.userId !== userId)
+      throw new Error("Item not found");
 
     // ── Enforce save limit ──────────────────────────────────────────────
     const savedCount = (
@@ -194,7 +212,7 @@ export const saveForLater = mutation({
     const alreadySaved = await ctx.db
       .query("savedForLater")
       .withIndex("by_user_and_product", (q) =>
-        q.eq("userId", userId).eq("productId", cartItem.productId)
+        q.eq("userId", userId).eq("productId", cartItem.productId),
       )
       .first();
 
@@ -220,7 +238,8 @@ export const moveToCart = mutation({
     const userId = identity.subject as Id<"user">;
 
     const savedItem = await ctx.db.get(savedItemId);
-    if (!savedItem || savedItem.userId !== userId) throw new Error("Item not found");
+    if (!savedItem || savedItem.userId !== userId)
+      throw new Error("Item not found");
 
     // ── Enforce cart limit ──────────────────────────────────────────────
     const cartItems = await ctx.db
@@ -231,7 +250,7 @@ export const moveToCart = mutation({
 
     if (cartTotal >= CART_LIMIT) {
       throw new Error(
-        `Cart is full! You can have at most ${CART_LIMIT} items. Remove something first.`
+        `Cart is full! You can have at most ${CART_LIMIT} items. Remove something first.`,
       );
     }
 
@@ -239,7 +258,7 @@ export const moveToCart = mutation({
     const inCart = await ctx.db
       .query("carts")
       .withIndex("by_user_and_product", (q) =>
-        q.eq("userId", userId).eq("productId", savedItem.productId)
+        q.eq("userId", userId).eq("productId", savedItem.productId),
       )
       .first();
 

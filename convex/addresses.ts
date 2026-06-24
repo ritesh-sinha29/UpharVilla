@@ -1,6 +1,6 @@
 import { v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
-import { Id } from "./_generated/dataModel";
 
 // ── Get all addresses for the logged-in user ──────────────────────────────
 export const list = query({
@@ -22,13 +22,18 @@ export const add = mutation({
   args: {
     fullName: v.string(),
     phone: v.string(),
+    alternatePhone: v.optional(v.string()),
     pincode: v.string(),
     locality: v.string(),
     address: v.string(),
     city: v.string(),
     state: v.string(),
     landmark: v.optional(v.string()),
-    addressType: v.union(v.literal("home"), v.literal("work"), v.literal("other")),
+    addressType: v.union(
+      v.literal("home"),
+      v.literal("work"),
+      v.literal("other"),
+    ),
     isDefault: v.boolean(),
   },
   handler: async (ctx, args) => {

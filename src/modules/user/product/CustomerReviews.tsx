@@ -1,65 +1,31 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import { useQuery } from "convex/react";
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { api } from "../../../../convex/_generated/api";
+import type { Id } from "../../../../convex/_generated/dataModel";
 
-// Mock data based on the screenshot provided
-const MOCK_REVIEWS = [
-  {
-    id: 1,
-    initials: "JM",
-    name: "Jhansi Mulakalapally",
-    time: "2 days ago",
-    rating: 5,
-    text: "Good",
-    tags: [{ label: "City", value: "Hyderabad" }],
-  },
-  {
-    id: 2,
-    initials: "CMR",
-    name: "Chandra Mouli Rokk...",
-    time: "2 days ago",
-    rating: 5,
-    text: "Best delivery",
-    tags: [
-      { label: "Occasion", value: "Anniversary" },
-      { label: "City", value: "Miyapur-Hyderabad" },
-    ],
-  },
-  {
-    id: 3,
-    initials: "NY",
-    name: "Nandini Yadav",
-    time: "2 days ago",
-    rating: 5,
-    text: "Great!",
-    tags: [
-      { label: "Occasion", value: "I-Am-Sorry" },
-      { label: "City", value: "Delhi" },
-    ],
-  },
-  {
-    id: 4,
-    initials: "AK",
-    name: "Aditya K",
-    time: "2 days ago",
-    rating: 5,
-    text: "The delivery agent handled the flowers very carefully and got them on time. Excellent job",
-    tags: [{ label: "City", value: "Ranga-Reddy" }],
-  },
-  {
-    id: 5,
-    initials: "SD",
-    name: "Sneha Das",
-    time: "3 days ago",
-    rating: 4,
-    text: "Loved the quality of the product. Will buy again.",
-    tags: [{ label: "City", value: "Mumbai" }],
-  },
-];
+interface CustomerReviewsProps {
+  productId: Id<"products">;
+}
 
-export const CustomerReviews = () => {
+const getRelativeTime = (timestamp: number) => {
+  const diff = Date.now() - timestamp;
+  const mins = Math.floor(diff / 60000);
+  const hours = Math.floor(mins / 60);
+  const days = Math.floor(hours / 24);
+
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  return `${days}d ago`;
+};
+
+export const CustomerReviews = ({ productId }: CustomerReviewsProps) => {
+  const reviews = useQuery(api.reviews.listProductReviews, { productId });
+
   const [emblaRef, emblaApi] = useEmblaCarousel({
     align: "start",
     loop: false,
@@ -90,21 +56,60 @@ export const CustomerReviews = () => {
     emblaApi.on("reInit", onSelect);
   }, [emblaApi, onSelect]);
 
+  if (reviews === undefined) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-neutral-100">
+        <h2 className="text-2xl font-semibold text-neutral-800 mb-6">
+          Customer Reviews
+        </h2>
+        <div className="flex gap-4 overflow-hidden">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex-none w-[85%] sm:w-[45%] md:w-[35%] lg:w-[28%] bg-neutral-50 h-[180px] rounded-xl border border-neutral-100 animate-pulse"
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (reviews.length === 0) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-neutral-100 text-center flex flex-col items-center justify-center gap-1.5">
+        <h2 className="text-xl font-semibold text-neutral-800">
+          Customer Reviews
+        </h2>
+        <p className="text-xs text-neutral-500 max-w-sm leading-relaxed">
+          No reviews yet for this product. Write a review from your order
+          details after purchase!
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-neutral-100">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-semibold text-neutral-800">Customer Reviews</h2>
-        <button className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-neutral-700 border border-[#bfa268] rounded-md hover:bg-[#bfa268]/5 transition-colors cursor-pointer">
-          Show All Reviews <ChevronRight className="w-3.5 h-3.5" />
-        </button>
+        <h2 className="text-2xl font-semibold text-neutral-800">
+          Customer Reviews
+        </h2>
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider hidden sm:inline">
+            {reviews.length} {reviews.length === 1 ? "Review" : "Reviews"}
+          </span>
+          <button className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-neutral-700 border border-[#bfa268] rounded-md hover:bg-[#bfa268]/5 transition-colors cursor-pointer">
+            Show All Reviews <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
 
       <div className="relative group">
         <div ref={emblaRef} className="overflow-hidden py-2">
           <div className="flex -ml-4">
-            {MOCK_REVIEWS.map((review) => (
+            {reviews.map((review) => (
               <div
-                key={review.id}
+                key={review._id}
                 className="flex-none w-[85%] sm:w-[45%] md:w-[35%] lg:w-[28%] pl-4"
               >
                 <div className="flex flex-col justify-between h-[180px] p-5 bg-white border border-neutral-200 rounded-xl shadow-sm hover:shadow-md transition-shadow">
@@ -112,13 +117,17 @@ export const CustomerReviews = () => {
                   <div>
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 rounded-full bg-[#566e7a] text-white flex items-center justify-center text-sm font-semibold flex-shrink-0">
-                        {review.initials}
+                        {review.userInitials}
                       </div>
                       <div className="flex flex-col">
                         <div className="text-sm text-neutral-700 flex items-center">
-                          <span className="font-medium truncate max-w-[130px]">{review.name}</span>
+                          <span className="font-medium truncate max-w-[130px] capitalize">
+                            {review.userName}
+                          </span>
                           <span className="text-neutral-400 mx-1">•</span>
-                          <span className="text-neutral-400 text-xs">{review.time}</span>
+                          <span className="text-neutral-400 text-xs">
+                            {getRelativeTime(review.createdAt)}
+                          </span>
                         </div>
                         <div className="flex gap-0.5 mt-0.5">
                           {[...Array(5)].map((_, i) => (
@@ -134,23 +143,18 @@ export const CustomerReviews = () => {
                         </div>
                       </div>
                     </div>
-                    
+
                     {/* Review Text */}
-                    <p className="text-sm text-neutral-700 mt-3 line-clamp-3">
-                      {review.text}
+                    <p className="text-sm text-neutral-700 mt-3 line-clamp-3 leading-relaxed">
+                      {review.reviewText}
                     </p>
                   </div>
 
                   {/* Review Tags */}
                   <div className="flex flex-wrap gap-2 mt-4">
-                    {review.tags.map((tag, idx) => (
-                      <div
-                        key={idx}
-                        className="px-2 py-1 bg-neutral-100 rounded text-[11px] text-neutral-600 font-medium"
-                      >
-                        {tag.label}: {tag.value}
-                      </div>
-                    ))}
+                    <div className="px-2 py-1 bg-neutral-100 rounded text-[11px] text-neutral-600 font-medium">
+                      Verified Purchase
+                    </div>
                   </div>
                 </div>
               </div>

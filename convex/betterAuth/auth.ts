@@ -38,7 +38,10 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
     };
   }
 
-  const baseURL = process.env.SITE_URL || process.env.BETTER_AUTH_URL || "http://localhost:3000";
+  const baseURL =
+    process.env.SITE_URL ||
+    process.env.BETTER_AUTH_URL ||
+    "http://localhost:3000";
   const trustedOrigins = [baseURL];
   if (!trustedOrigins.includes("http://localhost:3000")) {
     trustedOrigins.push("http://localhost:3000");
@@ -57,7 +60,9 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
         if (process.env.RESEND_API_KEY) {
           const resend = new Resend(process.env.RESEND_API_KEY);
           await resend.emails.send({
-            from: process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev",
+            from:
+              process.env.RESEND_FROM_EMAIL ||
+              "UpharVilla Support <support@upharvilla.in>",
             to: user.email,
             subject: "Reset your password for upharVilla",
             html: `
@@ -75,7 +80,12 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
             `,
           });
         } else {
-          console.warn("No RESEND_API_KEY found. Reset URL:", url, "for", user.email);
+          console.warn(
+            "No RESEND_API_KEY found. Reset URL:",
+            url,
+            "for",
+            user.email,
+          );
         }
       },
     },
@@ -94,12 +104,17 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
           if (process.env.RESEND_API_KEY) {
             const resend = new Resend(process.env.RESEND_API_KEY);
             const isReset = type === "forget-password";
-            
+
             await resend.emails.send({
-              from: process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev",
+              from:
+                process.env.RESEND_FROM_EMAIL ||
+                "UpharVilla Support <support@upharvilla.in>",
               to: email,
-              subject: isReset ? "Reset your password for upharVilla" : "Your OTP for upharVilla",
-              html: isReset ? `
+              subject: isReset
+                ? "Reset your password for upharVilla"
+                : "Your OTP for upharVilla",
+              html: isReset
+                ? `
                 <div style="font-family: sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px;">
                   <h2 style="color: #1e1b4b; margin-bottom: 16px;">Password Reset Request</h2>
                   <p style="color: #475569; line-height: 1.6;">We received a request to reset your password for your upharVilla account.</p>
@@ -111,7 +126,8 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
                   <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 32px 0;" />
                   <p style="color: #94a3b8; font-size: 12px; text-align: center;">© 2026 upharVilla. All rights reserved.</p>
                 </div>
-              ` : `
+              `
+                : `
                 <div style="font-family: sans-serif; padding: 20px;">
                   <h2>Welcome to upharVilla!</h2>
                   <p>Your verification code is: <strong style="font-size: 24px;">${otp}</strong></p>
@@ -120,7 +136,12 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
               `,
             });
           } else {
-            console.warn(`No RESEND_API_KEY found. Simulated OTP (${type}):`, otp, "for", email);
+            console.warn(
+              `No RESEND_API_KEY found. Simulated OTP (${type}):`,
+              otp,
+              "for",
+              email,
+            );
           }
         },
       }),

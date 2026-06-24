@@ -1,239 +1,847 @@
 "use client";
 
-import React, { useState } from "react";
-import Image from "next/image";
-import { Eye, Gift, Truck, ShieldCheck, CreditCard, RotateCcw, Share, ShoppingCart, Zap } from "lucide-react";
 import { Rating } from "@mui/material";
+import { useConvex, useConvexAuth, useMutation, useQuery } from "convex/react";
+import {
+  Bell,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  RotateCcw,
+  Share2,
+  ShieldCheck,
+  ShoppingBag,
+  ShoppingCart,
+  Tag,
+  Truck,
+} from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useMutation, useConvexAuth } from "convex/react";
-import { api } from "../../../../convex/_generated/api";
-import { authClient } from "@/lib/auth-client";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { authClient } from "@/lib/auth-client";
+import { api } from "../../../../convex/_generated/api";
 
 interface ProductDetailsProps {
   product: any; // We'll pass the convex product here
 }
 
 export const ProductDetails = ({ product }: ProductDetailsProps) => {
-  const [selectedImage, setSelectedImage] = useState(
-    product?.thumbnail || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1999&auto=format&fit=crop"
-  );
   const [isAddedToCart, setIsAddedToCart] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
-  const router = useRouter();
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    couponId: string;
+    discountType: "percentage" | "flat" | "free_shipping";
+    discountValue: number;
+    discountAmount: number;
+    message: string;
+  } | null>(null);
+
+  // Notify Me states
   const { data: session } = authClient.useSession();
+  const [notifyEmail, setNotifyEmail] = useState("");
+  const [isSubmittingNotification, setIsSubmittingNotification] =
+    useState(false);
+  const [notificationSuccess, setNotificationSuccess] = useState(false);
+
+  const router = useRouter();
   const { isAuthenticated, isLoading } = useConvexAuth();
   const addToCart = useMutation(api.cart.addToCart);
-  
-  const allImages = [product?.thumbnail, ...(product?.images || [])].filter(Boolean);
+  const requestNotification = useMutation(
+    api.products.requestStockNotification,
+  );
+  const cartItems = useQuery(
+    api.cart.getCartItems,
+    session ? undefined : "skip",
+  );
+  const isAlreadyInCart =
+    cartItems?.some((item) => item.product._id === product._id) ?? false;
+
+  // Fetch active coupons from backend for "Available Offers"
+  const activeCoupons = useQuery(api.coupons.listActiveForUser, {
+    userId: session?.user?.id,
+  });
+
+  // Pre-fill email when session is loaded
+  useEffect(() => {
+    if (session?.user?.email) {
+      setNotifyEmail(session.user.email);
+    }
+  }, [session]);
+
+  const allImages = [product?.thumbnail, ...(product?.images || [])].filter(
+    Boolean,
+  );
   if (allImages.length === 0) {
-    allImages.push("https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1999&auto=format&fit=crop");
+    allImages.push(
+      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1999&auto=format&fit=crop",
+    );
   }
 
-  const originalPrice = product?.discount
-    ? Math.round(product.price / (1 - product.discount / 100))
-    : null;
+  // Build unified media items (images + videos)
+  const mediaItems: { type: "image" | "video"; url: string }[] = [];
+  const addedUrls = new Set<string>();
 
-  // Mock data as per screenshot requirements
-  const viewingCount = 67;
-  const reviewCount = 22;
-  const ratingValue = 4.5;
-  const isPersonalised = product?.category === "custom-hampers";
+  if (product?.thumbnail) {
+    mediaItems.push({ type: "image", url: product.thumbnail });
+    addedUrls.add(product.thumbnail);
+  }
+
+  // Include video only if present/uploaded in backend
+  if (product?.videoUrl) {
+    mediaItems.push({ type: "video", url: product.videoUrl });
+  }
+
+  if (product?.images) {
+    product.images.forEach((img: string) => {
+      if (!addedUrls.has(img)) {
+        mediaItems.push({ type: "image", url: img });
+        addedUrls.add(img);
+      }
+    });
+  }
+
+  if (mediaItems.length === 0) {
+    mediaItems.push({
+      type: "image",
+      url: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1999&auto=format&fit=crop",
+    });
+  }
+
+  // Mobile detection
+  const [isMobile, setIsMobile] = useState(false);
+  const [transitionEnabled, setTransitionEnabled] = useState(true);
+  const [currentIndex, setCurrentIndex] = useState(mediaItems.length > 1 ? 1 : 0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // Reset slider index when product or images list changes
+  useEffect(() => {
+    setCurrentIndex(mediaItems.length > 1 ? 1 : 0);
+    setTransitionEnabled(true);
+    setIsTransitioning(false);
+  }, [product?._id, mediaItems.length]);
+
+  const slides = mediaItems.length > 1
+    ? [mediaItems[mediaItems.length - 1], ...mediaItems, mediaItems[0]]
+    : mediaItems;
+
+  // Compute active display index (1-based index corresponding to mediaItems)
+  const getDisplayIndex = () => {
+    if (mediaItems.length <= 1) return 1;
+    if (currentIndex === 0) return mediaItems.length;
+    if (currentIndex === mediaItems.length + 1) return 1;
+    return currentIndex;
+  };
+
+  const selectedImage = mediaItems[getDisplayIndex() - 1]?.url || mediaItems[0]?.url;
+
+  const handleNext = () => {
+    if (mediaItems.length <= 1 || isTransitioning) return;
+    setIsTransitioning(true);
+    setTransitionEnabled(true);
+    setCurrentIndex((prev) => prev + 1);
+  };
+
+  const handlePrev = () => {
+    if (mediaItems.length <= 1 || isTransitioning) return;
+    setIsTransitioning(true);
+    setTransitionEnabled(true);
+    setCurrentIndex((prev) => prev - 1);
+  };
+
+  const changeImage = (idx: number) => {
+    if (mediaItems.length <= 1 || isTransitioning) return;
+    setIsTransitioning(true);
+    setTransitionEnabled(true);
+    setCurrentIndex(idx + 1);
+  };
+
+  // Transition reset effect for looping infinite slides
+  useEffect(() => {
+    if (mediaItems.length <= 1) return;
+
+    let timeoutId: NodeJS.Timeout;
+    let transitionTimeoutId: NodeJS.Timeout;
+
+    if (currentIndex === mediaItems.length + 1) {
+      // Slid past the last item to the duplicate of the first item
+      timeoutId = setTimeout(() => {
+        setTransitionEnabled(false);
+        setCurrentIndex(1);
+        transitionTimeoutId = setTimeout(() => {
+          setTransitionEnabled(true);
+          setIsTransitioning(false);
+        }, 30);
+      }, 300); // 300ms transition duration
+    } else if (currentIndex === 0) {
+      // Slid backwards past the first item to the duplicate of the last item
+      timeoutId = setTimeout(() => {
+        setTransitionEnabled(false);
+        setCurrentIndex(mediaItems.length);
+        transitionTimeoutId = setTimeout(() => {
+          setTransitionEnabled(true);
+          setIsTransitioning(false);
+        }, 30);
+      }, 300); // 300ms transition duration
+    } else {
+      // Normal slide
+      timeoutId = setTimeout(() => {
+        setIsTransitioning(false);
+      }, 300);
+    }
+
+    return () => {
+      clearTimeout(timeoutId);
+      clearTimeout(transitionTimeoutId);
+    };
+  }, [currentIndex, mediaItems.length]);
+
+  // Auto-slide effect for mobile image gallery (4s interval, resets on manual interaction)
+  useEffect(() => {
+    if (!isMobile || mediaItems.length <= 1) return;
+
+    // Do not auto-slide if the currently viewed item is a video
+    const currentItem = mediaItems[getDisplayIndex() - 1];
+    if (currentItem?.type === "video") return;
+
+    const timer = setTimeout(() => {
+      handleNext();
+    }, 4000);
+
+    return () => clearTimeout(timer);
+  }, [currentIndex, mediaItems.length, isMobile, isTransitioning]);
+
+  // Pricing with dynamic coupon support
+  const basePrice = product?.price || 690;
+  const productDiscountPercent = product?.discount || 0;
+  const couponDiscount = appliedCoupon ? appliedCoupon.discountAmount : 0;
+
+  const displayPrice = Math.max(
+    0,
+    basePrice - couponDiscount,
+  );
+
+  const displayOriginalPrice =
+    productDiscountPercent > 0 || couponDiscount > 0
+      ? Math.round(basePrice / (1 - productDiscountPercent / 100))
+      : null;
+
+  const discountPercent =
+    productDiscountPercent +
+    (appliedCoupon?.discountType === "percentage"
+      ? appliedCoupon.discountValue
+      : 0);
+
+  // Fetch real reviews to display rating stats dynamically
+  const reviews = useQuery(api.reviews.listProductReviews, {
+    productId: product._id,
+  });
+  const reviewCount = reviews ? reviews.length : 0;
+  const ratingValue =
+    reviews && reviews.length > 0
+      ? parseFloat(
+          (
+            reviews.reduce((acc: number, r: any) => acc + r.rating, 0) /
+            reviews.length
+          ).toFixed(1),
+        )
+      : 5;
+  const productSeed = product?._id
+    ? product._id
+        .toString()
+        .split("")
+        .reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0)
+    : 0;
+  const boughtCount = `${(1000 + (productSeed % 400)).toLocaleString("en-IN")}+`;
+  const _isPersonalised = product?.category === "hampers";
+
+  /* ── Share handler ── */
+  const handleShare = async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: product?.name || "Check out this product",
+          text: `Check out ${product?.name} on upharVilla!`,
+          url,
+        });
+      } catch {
+        // User cancelled share or error — fall back silently
+      }
+    } else {
+      // Fallback: copy to clipboard
+      try {
+        await navigator.clipboard.writeText(url);
+        toast.success("Link copied to clipboard!");
+      } catch {
+        toast.error("Could not copy link.");
+      }
+    }
+  };
+
+  /* ── Coupon Code Handlers (backend-driven) ── */
+  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
+  const convex = useConvex();
+
+  const handleApplyCoupon = async () => {
+    const code = couponInput.trim().toUpperCase();
+    if (!code) return;
+
+    if (!session?.user?.id) {
+      toast.error("Please sign in to apply coupon codes.");
+      return;
+    }
+
+    setIsValidatingCoupon(true);
+    try {
+      const result = await convex.query(api.coupons.validateCoupon, {
+        code,
+        userId: session.user.id,
+        cartTotal: product?.price || 0,
+        productCategory: product?.category,
+        productId: product?._id,
+      });
+
+      if (result.valid) {
+        setAppliedCoupon({
+          code: result.code,
+          couponId: result.couponId,
+          discountType: result.discountType,
+          discountValue: result.discountValue,
+          discountAmount: result.discountAmount,
+          message: result.message,
+        });
+        toast.success(result.message);
+      } else {
+        toast.error(result.reason);
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to validate coupon.");
+    } finally {
+      setIsValidatingCoupon(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponInput("");
+    toast.info("Coupon removed.");
+  };
+
+  /* ── Add to cart + Buy Now handler ── */
+  const handleAddToCart = async () => {
+    if (isAddedToCart || isAlreadyInCart) {
+      router.push("/cart");
+      return;
+    }
+    if (isLoading) {
+      toast.info("Please wait, loading authentication state...");
+      return;
+    }
+    if (!isAuthenticated) {
+      toast.error("Please sign in to add items to your cart");
+      router.push("/auth");
+      return;
+    }
+    try {
+      setIsAdding(true);
+      await addToCart({ productId: product._id, quantity: 1 });
+      setIsAddedToCart(true);
+      toast.success("Added to cart");
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to add to cart");
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
+  const handleBuyNow = async () => {
+    if (isLoading) {
+      toast.info("Please wait, loading authentication state...");
+      return;
+    }
+    if (!isAuthenticated) {
+      toast.error("Please sign in to continue");
+      router.push("/auth");
+      return;
+    }
+    // Go directly to checkout with ONLY this product — do NOT add to cart
+    const couponQuery = appliedCoupon ? `&coupon=${appliedCoupon.code}` : "";
+    router.push(
+      `/checkout?productId=${product._id}&quantity=1${couponQuery}`,
+    );
+  };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-12">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 pt-6 pb-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 xl:gap-16">
         {/* Left: Image Gallery */}
-        <div className="flex gap-4 h-[600px]">
+        <div className="flex flex-col-reverse md:flex-row gap-3 md:gap-4 h-auto md:h-[500px] lg:h-[560px] xl:h-[620px]">
           {/* Thumbnails */}
-          <div className="flex flex-col gap-3 w-20 overflow-y-auto hidden-scrollbar">
-            {allImages.map((img, idx) => (
-              <button
-                key={idx}
-                className={`cursor-pointer relative w-20 h-20 rounded-xl overflow-hidden border-2 flex-shrink-0 transition-all ${
-                  selectedImage === img ? "border-primary" : "border-transparent hover:border-neutral-300"
-                }`}
-                onClick={() => setSelectedImage(img)}
-              >
-                <Image src={img} alt={`Thumbnail ${idx}`} fill className="object-cover" />
-              </button>
-            ))}
+          <div className="flex flex-row md:flex-col gap-2 md:gap-3 w-full md:w-20 overflow-x-auto md:overflow-y-auto hidden-scrollbar">
+            {mediaItems.map((item, idx) => {
+              const isActive = (getDisplayIndex() - 1) === idx;
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  className={`cursor-pointer relative w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-xl overflow-hidden border-2 flex-shrink-0 transition-all ${
+                    isActive
+                      ? "border-primary"
+                      : "border-transparent hover:border-neutral-300"
+                  }`}
+                  onClick={() => changeImage(idx)}
+                >
+                  {item.type === "video" ? (
+                    <div className="relative w-full h-full bg-neutral-900 flex items-center justify-center">
+                      <div className="absolute inset-0 opacity-60">
+                        <Image
+                          src={product?.thumbnail || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1999&auto=format&fit=crop"}
+                          alt="Video Thumbnail"
+                          fill
+                          sizes="80px"
+                          className="object-cover blur-[1px]"
+                        />
+                      </div>
+                      <div className="relative z-10 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center shadow-md">
+                        <svg className="w-4 h-4 fill-primary text-primary ml-0.5" viewBox="0 0 24 24">
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      </div>
+                    </div>
+                  ) : (
+                    <Image
+                      src={item.url}
+                      alt={`Thumbnail ${idx}`}
+                      fill
+                      sizes="80px"
+                      className="object-cover"
+                    />
+                  )}
+                </button>
+              );
+            })}
           </div>
-          
-          {/* Main Image */}
-          <div className="relative flex-1 rounded-2xl overflow-hidden bg-[#F7F7F7]">
-            <Image
-              src={selectedImage}
-              alt={product?.name || "Product"}
-              fill
-              className="object-cover"
-              priority
-            />
+
+          {/* Main Image/Video */}
+          <div className="relative flex-1 rounded-2xl overflow-hidden bg-white aspect-[4/3] max-h-[320px] sm:max-h-[400px] md:max-h-none md:aspect-auto">
+            {/* Sliding strip */}
+            <div
+              className={`flex h-full ${transitionEnabled ? "transition-transform duration-300 ease-in-out" : "transition-none"}`}
+              style={{
+                width: `${slides.length * 100}%`,
+                transform: `translateX(-${(currentIndex * 100) / slides.length}%)`,
+              }}
+            >
+              {slides.map((item: { type: "image" | "video"; url: string }, idx: number) => (
+                <div
+                  key={idx}
+                  className="relative h-full flex-none"
+                  style={{ width: `${100 / slides.length}%` }}
+                >
+                  {item.type === "video" ? (
+                    <div className="w-full h-full bg-white flex items-center justify-center">
+                      <video
+                        src={item.url}
+                        controls
+                        playsInline
+                        muted
+                        autoPlay
+                        loop
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                  ) : (
+                    <Image
+                      src={item.url}
+                      alt={`${product?.name || "Product"} ${idx}`}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      className="object-contain"
+                      priority={idx === (mediaItems.length > 1 ? 1 : 0)}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Left/Right navigation chevrons for mobile */}
+            {mediaItems.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={handlePrev}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm text-neutral-800 shadow-sm md:hidden z-10 active:scale-95 transition-all"
+                  aria-label="Previous image"
+                >
+                  <ChevronLeft className="w-4 h-4 text-neutral-700" />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm text-neutral-800 shadow-sm md:hidden z-10 active:scale-95 transition-all"
+                  aria-label="Next image"
+                >
+                  <ChevronRight className="w-4 h-4 text-neutral-700" />
+                </button>
+              </>
+            )}
+
+            {/* Pagination Index Badge (Mobile Only) */}
+            {mediaItems.length > 1 && (
+              <div className="absolute bottom-3 right-3 z-10 bg-black/45 text-white text-[10px] font-sans font-semibold px-2.5 py-1 rounded-full backdrop-blur-xs select-none md:hidden">
+                {getDisplayIndex()} / {mediaItems.length}
+              </div>
+            )}
           </div>
         </div>
 
         {/* Right: Product Info */}
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-5 md:gap-6">
           {/* Title & Share */}
-          <div className="flex justify-between items-start">
-            <h1 className="text-3xl font-semibold text-neutral-800 capitalize">
-              {product?.name || "Product Name"}
-            </h1>
-            <button className="cursor-pointer flex items-center gap-1.5 px-3 py-1.5 border border-neutral-200 rounded-lg text-sm text-neutral-600 hover:bg-neutral-50 transition-colors">
-              Share <Share className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          {/* Views & Ratings */}
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2 text-sm text-neutral-600 font-medium">
-              <Eye className="w-4 h-4 text-neutral-500" />
-              {viewingCount} People Viewing This
+          <div className="flex justify-between items-start gap-4">
+            <div className="flex flex-col gap-2">
+              <div className="flex flex-wrap gap-1.5 items-center">
+                {product?.markMostSold && (
+                  <span className="bg-[#E2AF3E]/10 text-[#E2AF3E] text-[10px] font-sans font-bold tracking-wider px-2.5 py-0.5 rounded-full border border-[#E2AF3E]/20 uppercase">
+                    Most Sold
+                  </span>
+                )}
+                {product?.markTrending && (
+                  <span className="bg-[#FC2779]/10 text-[#FC2779] text-[10px] font-sans font-bold tracking-wider px-2.5 py-0.5 rounded-full border border-[#FC2779]/20 uppercase">
+                    Trending
+                  </span>
+                )}
+                {product?.markNewArrival && (
+                  <span className="bg-[#0D9488]/10 text-[#0D9488] text-[10px] font-sans font-bold tracking-wider px-2.5 py-0.5 rounded-full border border-[#0D9488]/20 uppercase">
+                    New Arrival
+                  </span>
+                )}
+              </div>
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-semibold text-neutral-800 capitalize leading-tight">
+                {product?.name || "Product Name"}
+              </h1>
             </div>
-            <div className="flex items-center gap-2">
-              <Rating
-                name="read-only"
-                value={ratingValue}
-                precision={0.5}
-                readOnly
-                size="small"
-                sx={{ color: "#000" }} // Matches screenshot black stars
-              />
-              <span className="text-sm text-neutral-500">{reviewCount} reviews</span>
-            </div>
-          </div>
-
-          {/* Pricing */}
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-end gap-3">
-              {originalPrice && (
-                <span className="text-lg text-neutral-400 line-through font-medium">
-                  Rs. {originalPrice.toLocaleString("en-IN")}
-                </span>
-              )}
-              <span className="text-3xl font-bold text-neutral-900">
-                Rs. {product?.price?.toLocaleString("en-IN") || "690.00"}
-              </span>
-              {product?.discount && (
-                <span className="text-sm font-semibold text-rose-500 mb-1">
-                  Save {product.discount}%
-                </span>
-              )}
-            </div>
-            <span className="text-sm text-neutral-500">(Inclusive of all taxes)</span>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-4 w-full mt-4">
-            <button 
-              disabled={isAdding}
-              onClick={async () => {
-                if (isAddedToCart) {
-                  router.push("/cart");
-                } else {
-                  if (isLoading) {
-                    toast.info("Please wait, loading authentication state...");
-                    return;
-                  }
-                  if (!isAuthenticated) {
-                    toast.error("Please sign in to add items to your cart");
-                    router.push("/auth");
-                    return;
-                  }
-                  try {
-                    setIsAdding(true);
-                    await addToCart({ productId: product._id, quantity: 1 });
-                    setIsAddedToCart(true);
-                    toast.success("Added to cart");
-                  } catch (error: any) {
-                    toast.error(error?.message || "Failed to add to cart");
-                  } finally {
-                    setIsAdding(false);
-                  }
-                }
-              }}
-              className={`cursor-pointer flex-1 flex items-center justify-center gap-2 shadow-sm hover:shadow-md font-semibold tracking-wider text-sm py-4 rounded-xl transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] active:scale-95 uppercase ${
-                isAddedToCart 
-                  ? "bg-[#F5F5DC] border-[#F5F5DC] text-neutral-800" 
-                  : "bg-white border border-primary/30 text-primary hover:border-primary/50 hover:bg-primary/5"
-              } ${isAdding ? "opacity-70 cursor-not-allowed" : ""}`}
+            <button
+              type="button"
+              onClick={handleShare}
+              className="cursor-pointer flex items-center justify-center p-2 md:px-3 md:py-1.5 border border-neutral-200 rounded-full md:rounded-lg text-neutral-600 hover:bg-neutral-50 hover:text-neutral-800 transition-all shrink-0 mt-1"
+              title="Share Product"
             >
-              <ShoppingCart className="w-4 h-4" />
-              {isAdding ? "Adding..." : (isAddedToCart ? "Go to Cart" : "Add to Cart")}
-            </button>
-            <button className="cursor-pointer flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-md hover:shadow-lg hover:to-primary/70 font-semibold tracking-wider text-sm py-4 rounded-xl transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] active:scale-95 uppercase">
-              <Zap className="w-4 h-4" />
-              Buy Now
+              <span className="hidden md:inline mr-1.5 text-sm font-medium">
+                Share
+              </span>
+              <Share2 className="w-4 h-4 md:w-3.5 md:h-3.5" />
             </button>
           </div>
 
-          {/* Freebie Bar */}
-          <div className="mt-4 bg-[#FDFDFD] p-6 rounded-2xl border border-neutral-100 shadow-sm flex flex-col items-center gap-6">
-            <span className="bg-primary/10 text-primary text-sm font-medium px-4 py-1.5 rounded-full">
-              Free gift on every purchase
-            </span>
-            
-            {/* Progress Bar Container */}
-            <div className="w-full relative px-6 mt-4">
-              {/* Background Line */}
-              <div className="absolute top-1/2 left-8 right-8 h-1.5 bg-neutral-200 -translate-y-1/2 rounded-full" />
-              
-              {/* Nodes */}
-              <div className="relative flex justify-between">
-                {[1000, 2000, 3000].map((amount, idx) => (
-                  <div key={idx} className="flex flex-col items-center gap-2 z-10 w-24">
-                    <div className="w-10 h-10 rounded-full bg-white border-2 border-primary/30 flex items-center justify-center shadow-sm">
-                      <Gift className="w-5 h-5 text-primary" />
-                    </div>
-                    <div className="text-center">
-                      <div className="text-xs font-semibold text-neutral-700">{idx + 1} Freebie</div>
-                      <div className="text-[10px] text-neutral-500">(orders &gt;₹{amount})</div>
-                    </div>
-                  </div>
-                ))}
+          {/* Ratings & Bought Count unified box */}
+          <div className="flex flex-col gap-2 bg-neutral-50 p-3.5 rounded-xl border border-neutral-100/50">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <div className="flex items-center gap-1.5">
+                <Rating
+                  name="read-only"
+                  value={ratingValue}
+                  precision={0.5}
+                  readOnly
+                  size="small"
+                  sx={{ color: "#000" }}
+                />
+                <span className="text-xs font-semibold text-neutral-800">
+                  {ratingValue}
+                </span>
+                <span className="text-xs text-neutral-500">
+                  ({reviewCount} reviews)
+                </span>
+              </div>
+              <div className="h-3 w-px bg-neutral-200 hidden sm:block" />
+              <div className="flex items-center gap-1.5 text-xs text-emerald-700 font-medium">
+                <ShoppingBag className="w-3.5 h-3.5 shrink-0" />
+                <span>{boughtCount} bought recently</span>
               </div>
             </div>
           </div>
 
-          {/* Value Props */}
-          <div className="grid grid-cols-3 gap-4 py-6 border-b border-neutral-100">
-            <div className="flex flex-col items-center text-center gap-2">
-              <Truck className="w-6 h-6 text-neutral-600" strokeWidth={1.5} />
-              <span className="text-[11px] text-neutral-600 font-medium">Free delivery</span>
+          {/* Pricing */}
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-end gap-2.5">
+                {displayOriginalPrice && (
+                  <span className="text-base md:text-lg text-neutral-400 line-through font-medium">
+                    Rs. {displayOriginalPrice.toLocaleString("en-IN")}
+                  </span>
+                )}
+                <span className="text-2xl md:text-3xl lg:text-4xl font-bold text-neutral-900 transition-all duration-350">
+                  Rs. {displayPrice.toLocaleString("en-IN")}
+                </span>
+                {(discountPercent > 0 || couponDiscount > 0) && (
+                  <span className="text-xs md:text-sm font-semibold text-rose-500 mb-0.5 bg-rose-50 px-2 py-0.5 rounded-md animate-pulse">
+                    {couponDiscount > 0 && appliedCoupon
+                      ? `Save ₹${couponDiscount} (${appliedCoupon.code})`
+                      : `Save ${discountPercent}%`}
+                  </span>
+                )}
+              </div>
+              {product?.stock <= 0 && (
+                <span className="bg-rose-50 text-rose-600 border border-rose-100 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
+                  Out of Stock
+                </span>
+              )}
             </div>
-            <div className="flex flex-col items-center text-center gap-2">
-              <ShieldCheck className="w-6 h-6 text-neutral-600" strokeWidth={1.5} />
-              <span className="text-[11px] text-neutral-600 font-medium">Secure Checkout</span>
-            </div>
-            <div className="flex flex-col items-center text-center gap-2">
-              <RotateCcw className="w-6 h-6 text-neutral-600" strokeWidth={1.5} />
-              <span className="text-[11px] text-neutral-600 font-medium">Easy Return</span>
-            </div>
+            <span className="text-xs text-neutral-500">
+              (Inclusive of all taxes)
+            </span>
           </div>
 
-          {/* Pincode Checker */}
-          <div className="flex flex-col gap-3">
-            <span className="text-sm font-medium text-neutral-700">Check Shipping Availability</span>
-            <div className="flex gap-3">
-              <input 
-                type="text" 
-                placeholder="Enter Pincode" 
-                className="flex-1 border border-neutral-300 rounded-xl px-4 text-sm outline-none focus:border-primary transition-colors"
-              />
-              <button className="cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 font-semibold tracking-wider text-sm px-8 py-3 rounded-xl transition-colors uppercase">
-                Submit
+          {/* Action Buttons */}
+          {product?.stock <= 0 ? (
+            <div className="bg-neutral-50/50 border border-neutral-100 rounded-2xl p-5 flex flex-col gap-4 mt-2 animate-in fade-in duration-300">
+              <div className="flex flex-col gap-1">
+                <h3 className="text-sm font-bold text-neutral-800 flex items-center gap-2">
+                  <Bell className="w-4 h-4 text-primary animate-bounce" />
+                  Out of Stock Notification
+                </h3>
+                <p className="text-xs text-neutral-500 leading-relaxed">
+                  This product is currently out of stock. Leave your email
+                  address and we will notify you automatically when it becomes
+                  available again.
+                </p>
+              </div>
+
+              {notificationSuccess ? (
+                <div className="bg-emerald-50 border border-emerald-100 text-emerald-800 text-xs font-semibold rounded-xl p-3 flex items-center gap-2 animate-in fade-in duration-300">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  We'll email you at{" "}
+                  <strong className="font-bold">{notifyEmail}</strong> when back
+                  in stock.
+                </div>
+              ) : (
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    const email = notifyEmail.trim();
+                    if (!email || !/\S+@\S+\.\S+/.test(email)) {
+                      toast.error("Please enter a valid email address.");
+                      return;
+                    }
+                    try {
+                      setIsSubmittingNotification(true);
+                      const res = await requestNotification({
+                        productId: product._id,
+                        email,
+                      });
+                      setNotificationSuccess(true);
+                      if (res.alreadyExists) {
+                        toast.info(
+                          "You've already requested a notification for this product!",
+                        );
+                      } else {
+                        toast.success(
+                          "Notification request registered successfully!",
+                        );
+                      }
+                    } catch (err: any) {
+                      toast.error(
+                        err?.message || "Failed to register request.",
+                      );
+                    } finally {
+                      setIsSubmittingNotification(false);
+                    }
+                  }}
+                  className="flex flex-col sm:flex-row gap-3 w-full"
+                >
+                  <input
+                    type="email"
+                    placeholder="Enter your email address"
+                    value={notifyEmail}
+                    onChange={(e) => setNotifyEmail(e.target.value)}
+                    required
+                    className="flex-1 border border-neutral-200 rounded-xl px-4 py-3 text-xs outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all bg-white"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isSubmittingNotification || !notifyEmail}
+                    className="bg-primary text-primary-foreground font-bold tracking-wider text-xs px-6 py-3.5 rounded-xl hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shrink-0 uppercase"
+                  >
+                    {isSubmittingNotification ? "Submitting..." : "Notify Me"}
+                  </button>
+                </form>
+              )}
+            </div>
+          ) : (
+            <div className="flex gap-3 md:gap-4 w-full mt-2">
+              <button
+                type="button"
+                disabled={isAdding}
+                onClick={handleAddToCart}
+                className={`cursor-pointer flex-1 flex items-center justify-center gap-1.5 md:gap-2 shadow-sm hover:shadow-md font-semibold tracking-wider text-xs md:text-sm py-3 md:py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 active:scale-95 uppercase ${
+                  isAddedToCart || isAlreadyInCart
+                    ? "bg-[#F5F5DC] border-[#F5F5DC] text-neutral-800"
+                    : "bg-white border border-primary/30 text-primary hover:border-primary/50 hover:bg-primary/5"
+                } ${isAdding ? "opacity-70 cursor-not-allowed" : ""}`}
+              >
+                <ShoppingCart className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                {isAdding
+                  ? "Adding..."
+                  : isAddedToCart || isAlreadyInCart
+                    ? "Go to Cart"
+                    : "Add to Cart"}
+              </button>
+              <button
+                type="button"
+                disabled={isAdding}
+                onClick={handleBuyNow}
+                className={`cursor-pointer flex-1 flex items-center justify-center gap-1.5 md:gap-2 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-md hover:shadow-lg hover:to-primary/70 font-semibold tracking-wider text-xs md:text-sm py-3 md:py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 active:scale-95 uppercase ${isAdding ? "opacity-70 cursor-not-allowed" : ""}`}
+              >
+                <ShoppingBag className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                Buy Now
               </button>
             </div>
-          </div>
+          )}
 
-          {/* Offers */}
-          <div className="pt-2">
-            <h4 className="text-sm font-semibold text-neutral-800 mb-2">Offers Available</h4>
-            <div className="text-sm text-neutral-600">
-              No active offers for this product.
+          {/* Value Props - Premium Badges */}
+          <div className="grid grid-cols-3 gap-2 py-4 px-2 bg-neutral-50/50 rounded-xl border border-neutral-100/80">
+            <div className="flex flex-col items-center text-center gap-1.5">
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                <Truck className="w-4 h-4" />
+              </div>
+              <span className="text-[10px] text-neutral-600 font-bold uppercase tracking-wider">
+                Free Shipping
+              </span>
+            </div>
+            <div className="flex flex-col items-center text-center gap-1.5">
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                <ShieldCheck className="w-4 h-4" />
+              </div>
+              <span className="text-[10px] text-neutral-600 font-bold uppercase tracking-wider">
+                100% Secure
+              </span>
+            </div>
+            <div className="flex flex-col items-center text-center gap-1.5">
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                <RotateCcw className="w-4 h-4" />
+              </div>
+              <span className="text-[10px] text-neutral-600 font-bold uppercase tracking-wider">
+                Easy Returns
+              </span>
             </div>
           </div>
 
+          {/* Coupon Input Section */}
+          <div className="flex flex-col gap-2">
+            <span className="text-xs font-semibold text-neutral-700 uppercase tracking-wider">
+              Apply Coupon Code
+            </span>
+            {appliedCoupon ? (
+              <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100/80 rounded-xl px-4 py-3 animate-in fade-in duration-200">
+                <div className="flex items-center gap-2">
+                  <span className="bg-emerald-600 text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase">
+                    {appliedCoupon.code}
+                  </span>
+                  <span className="text-xs font-semibold text-emerald-800">
+                    {appliedCoupon.message}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRemoveCoupon}
+                  className="text-xs text-rose-600 font-bold hover:underline cursor-pointer"
+                >
+                  Remove
+                </button>
+              </div>
+            ) : (
+              <div className="relative flex items-center border border-neutral-200 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 rounded-xl overflow-hidden transition-all bg-white">
+                <Tag className="w-4 h-4 text-neutral-400 ml-3.5 shrink-0" />
+                <input
+                  type="text"
+                  placeholder="Enter coupon code"
+                  value={couponInput}
+                  onChange={(e) => setCouponInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleApplyCoupon()}
+                  className="flex-1 px-3 py-3.5 text-sm bg-transparent outline-none border-none placeholder:text-neutral-400 uppercase"
+                />
+                <button
+                  type="button"
+                  onClick={handleApplyCoupon}
+                  disabled={!couponInput.trim() || isValidatingCoupon}
+                  className="mr-1.5 bg-primary text-primary-foreground hover:opacity-90 disabled:bg-neutral-100 disabled:text-neutral-400 font-bold text-xs px-5 py-2.5 rounded-lg transition-all uppercase disabled:cursor-not-allowed cursor-pointer shrink-0"
+                >
+                  {isValidatingCoupon ? "..." : "Apply"}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Offers — Dynamic from Backend */}
+          {activeCoupons && activeCoupons.length > 0 && (
+            <div className="pt-2">
+              <h4 className="text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-3">
+                Available Offers
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {activeCoupons.map((coupon) => {
+                  const isUsed = coupon.userHasUsed;
+                  const label =
+                    coupon.discountType === "percentage"
+                      ? `${coupon.discountValue}% OFF`
+                      : coupon.discountType === "flat"
+                        ? `₹${coupon.discountValue} OFF`
+                        : "Free Shipping";
+                  return (
+                    <button
+                      key={coupon._id}
+                      type="button"
+                      disabled={isUsed}
+                      onClick={() => {
+                        if (!isUsed) {
+                          setCouponInput(coupon.code);
+                        }
+                      }}
+                      className={`cursor-pointer text-left border border-dashed rounded-xl p-3.5 flex flex-col gap-1 transition-colors ${
+                        isUsed
+                          ? "border-neutral-200 bg-neutral-50 opacity-60 cursor-not-allowed"
+                          : "border-primary/40 bg-primary/5 hover:bg-primary/10"
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className={`text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase ${
+                            isUsed ? "bg-neutral-400" : "bg-primary"
+                          }`}
+                        >
+                          {coupon.code}
+                        </span>
+                        <span className="text-xs font-bold text-neutral-800">
+                          {label}
+                        </span>
+                        {isUsed && (
+                          <span className="text-[9px] font-bold text-rose-500 ml-auto">
+                            Used
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-neutral-600 leading-relaxed mt-1">
+                        {coupon.description}
+                        {coupon.minOrderAmount
+                          ? ` (Min order: ₹${coupon.minOrderAmount})`
+                          : ""}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

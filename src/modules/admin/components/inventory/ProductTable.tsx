@@ -1,26 +1,24 @@
 "use client";
 
+import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
+import {
+  Boxes,
+  Calendar,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  CircleDot,
+  IndianRupee,
+  Layers,
+  Loader2,
+  Package,
+  ShoppingBag,
+  Tag,
+  Zap,
+} from "lucide-react";
 import React, { useState } from "react";
-import { usePaginatedQuery, useQuery, useMutation } from "convex/react";
-import { api } from "../../../../../convex/_generated/api";
-import type { Id } from "../../../../../convex/_generated/dataModel";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableHead,
-  TableRow,
-  TableCell,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,53 +29,64 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  MoreHorizontal,
-  Trash2,
-  Eye,
-  Package,
-  Tag,
-  ChevronDown,
-  ChevronUp,
-  ShoppingBag,
-  Layers,
-  IndianRupee,
-  Boxes,
-  CircleDot,
-  Calendar,
-  Zap,
-  ChevronRight,
-  Loader2,
-} from "lucide-react";
-import { toast } from "sonner";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useDebounce } from "@/hooks/use-debounce";
-import { ProductTableFilters, CATEGORIES_MAP } from "./ProductTableFilters";
-import { ProductDetailsSheet } from "./ProductDetailsSheet";
+import { api } from "../../../../../convex/_generated/api";
+import type { Id } from "../../../../../convex/_generated/dataModel";
+import { ProductActionMenu } from "./ProductActionMenu";
+import { CATEGORIES_MAP } from "./ProductTableFilters";
 
 const ITEMS_PER_PAGE = 10;
-type SortField = "price" | "stock" | "launchedAt";
+type SortField = "price" | "stock" | "launchedAt" | "relevance";
 type SortDir = "asc" | "desc";
 
-export function ProductTable() {
-  // ── Filter & sort state (lives here so it never unmounts) ──
-  const [search, setSearch] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+interface ProductTableProps {
+  search: string;
+  categoryFilter: string;
+  subCategoryFilter: string;
+  statusFilter: string;
+  onOpenDetails: (id: string, editMode?: boolean) => void;
+  selectedIds: Set<string>;
+  onSelectedIdsChange: (ids: Set<string>) => void;
+}
+
+export function ProductTable({
+  search,
+  categoryFilter,
+  subCategoryFilter,
+  statusFilter,
+  onOpenDetails,
+  selectedIds,
+  onSelectedIdsChange: setSelectedIds,
+}: ProductTableProps) {
+  // ── Filter & sort state ──
   const [sortField, setSortField] = useState<SortField>("launchedAt");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [deleteTarget, setDeleteTarget] = useState<Id<"products"> | null>(null);
-
-  // ── Sheet state ──
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(
-    null,
-  );
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const debouncedSearch = useDebounce(search, 300);
   const isSearching = debouncedSearch.trim().length > 0;
+
+  React.useEffect(() => {
+    if (isSearching) {
+      setSortField("relevance");
+      setSortDir("desc");
+    } else {
+      setSortField("launchedAt");
+      setSortDir("desc");
+    }
+  }, [isSearching]);
 
   // ── Paginated list (always subscribed — never unmounts) ──
   const {
@@ -94,7 +103,7 @@ export function ProductTable() {
   // ── Search (only fires when there is a term; skipped otherwise) ──
   const searchResults = useQuery(
     api.products.search,
-    isSearching ? { searchTerm: debouncedSearch } : "skip",
+    isSearching ? { searchTerm: debouncedSearch, includeInactive: true } : "skip",
   );
 
   const removeProduct = useMutation(api.products.remove);
@@ -110,6 +119,8 @@ export function ProductTable() {
     .filter((p) => {
       if (categoryFilter !== "all" && p.category !== categoryFilter)
         return false;
+      if (subCategoryFilter !== "all" && p.subCategory !== subCategoryFilter)
+        return false;
       if (statusFilter !== "all") {
         if (p.isActive !== (statusFilter === "active")) return false;
       }
@@ -117,9 +128,32 @@ export function ProductTable() {
     })
     .sort((a, b) => {
       let cmp = 0;
-      if (sortField === "price") cmp = a.price - b.price;
-      else if (sortField === "stock") cmp = a.stock - b.stock;
-      else cmp = a.launchedAt - b.launchedAt;
+      if (sortField === "price") {
+        cmp = a.price - b.price;
+      } else if (sortField === "stock") {
+        cmp = a.stock - b.stock;
+      } else if (sortField === "relevance") {
+        const term = debouncedSearch.toLowerCase().trim();
+        const getScore = (p: typeof a) => {
+          let score = 0;
+          const nameLower = p.name.toLowerCase();
+          if (nameLower === term) score += 100;
+          else if (nameLower.startsWith(term)) score += 80;
+          else if (new RegExp(`\\b${term}\\b`, "i").test(nameLower)) score += 60;
+          else if (nameLower.includes(term)) score += 40;
+
+          if (p.tags.some((t) => t.toLowerCase() === term)) score += 30;
+          else if (p.tags.some((t) => t.toLowerCase().includes(term))) score += 15;
+
+          if (p.subCategory && p.subCategory.toLowerCase().includes(term)) score += 10;
+          if (p.category.toLowerCase().includes(term)) score += 5;
+          if (p.description.toLowerCase().includes(term)) score += 1;
+          return score;
+        };
+        cmp = getScore(a) - getScore(b);
+      } else {
+        cmp = a.launchedAt - b.launchedAt;
+      }
       return sortDir === "asc" ? cmp : -cmp;
     });
 
@@ -128,9 +162,32 @@ export function ProductTable() {
   const isTableLoading =
     isPaginatedLoading || (isSearching && searchResults === undefined);
 
+  const [currentPageIndex, setCurrentPageIndex] = useState(1);
+
+  React.useEffect(() => {
+    setCurrentPageIndex(1);
+  }, [debouncedSearch, categoryFilter, subCategoryFilter, statusFilter, sortField, sortDir]);
+
   const loadedCount = paginatedProducts?.length ?? 0;
-  const currentPage = Math.max(1, Math.ceil(loadedCount / ITEMS_PER_PAGE));
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const isDone = status === "Exhausted";
+  const startIndex = (currentPageIndex - 1) * ITEMS_PER_PAGE;
+  const pageProducts = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  const handleNextPage = () => {
+    if (
+      currentPageIndex * ITEMS_PER_PAGE >= loadedCount &&
+      !isDone &&
+      !isSearching
+    ) {
+      loadMore(ITEMS_PER_PAGE);
+    }
+    setCurrentPageIndex((p) => p + 1);
+  };
+
+  const handlePrevPage = () => {
+    setCurrentPageIndex((p) => Math.max(1, p - 1));
+  };
 
   // ── Handlers ──
   const toggleSort = (field: SortField) => {
@@ -148,12 +205,10 @@ export function ProductTable() {
   };
 
   const handleSelect = (id: string, checked: boolean) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (checked) next.add(id);
-      else next.delete(id);
-      return next;
-    });
+    const next = new Set(selectedIds);
+    if (checked) next.add(id);
+    else next.delete(id);
+    setSelectedIds(next);
   };
 
   const handleDelete = async () => {
@@ -162,11 +217,9 @@ export function ProductTable() {
       await removeProduct({ id: deleteTarget });
       toast.success("Product deleted");
       setDeleteTarget(null);
-      setSelectedIds((prev) => {
-        const n = new Set(prev);
-        n.delete(deleteTarget);
-        return n;
-      });
+      const n = new Set(selectedIds);
+      n.delete(deleteTarget);
+      setSelectedIds(n);
     } catch {
       toast.error("Failed to delete product");
     }
@@ -244,19 +297,10 @@ export function ProductTable() {
 
   return (
     <>
-      {/* ── Filters (always rendered, never replaced by skeleton) ── */}
-      <ProductTableFilters
-        search={search}
-        onSearchChange={setSearch}
-        categoryFilter={categoryFilter}
-        onCategoryChange={setCategoryFilter}
-        statusFilter={statusFilter}
-        onStatusChange={setStatusFilter}
-      />
-
       {/* ── Table ── */}
-      <div className="rounded-xl border bg-card/70 backdrop-blur-sm overflow-hidden">
-        <Table>
+      <div className="rounded-xl border bg-card/70 backdrop-blur-sm">
+        <div className="table-scroll-x" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+        <Table className="min-w-[1200px]">
           <TableHeader>
             <TableRow className="bg-muted/30 hover:bg-muted/30">
               <TableHead className="w-10 border-b">
@@ -268,15 +312,19 @@ export function ProductTable() {
                   onCheckedChange={(c) => handleSelectAll(c as boolean)}
                 />
               </TableHead>
+              <TableHead className="w-9 border-b border-l text-[10px] font-semibold text-muted-foreground text-center">
+                #
+              </TableHead>
               <Th icon={ShoppingBag} label="Product" />
               <Th icon={Layers} label="Category" />
+              <Th icon={Layers} label="Subcategory" />
               <Th icon={IndianRupee} label="Price" sortable="price" />
               <Th icon={Boxes} label="Stock" sortable="stock" />
               <Th icon={Tag} label="Tags" />
               <Th icon={CircleDot} label="Status" />
               <Th icon={Calendar} label="Added" sortable="launchedAt" />
-              <TableHead className="w-10 text-right border-b border-l">
-                <span className="flex items-center justify-end gap-1.5 text-xs font-medium text-muted-foreground">
+              <TableHead className="w-24 text-center border-b border-l">
+                <span className="flex items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground">
                   <Zap size={12} />
                   Actions
                 </span>
@@ -292,23 +340,32 @@ export function ProductTable() {
                   <TableCell className="border-b">
                     <Skeleton className="h-4 w-4 rounded" />
                   </TableCell>
+                  <TableCell className="border-b border-l text-center">
+                    <Skeleton className="h-3 w-4 mx-auto" />
+                  </TableCell>
                   <TableCell className="border-b border-l">
-                    <div className="space-y-1.5">
-                      <Skeleton className="h-3.5 w-36" />
-                      <Skeleton className="h-2.5 w-24" />
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="h-10 w-10 rounded-lg shrink-0" />
+                      <Skeleton className="h-3.5 w-28" />
                     </div>
                   </TableCell>
                   <TableCell className="border-b border-l">
-                    <Skeleton className="h-5 w-28 rounded-full" />
+                    <Skeleton className="h-5 w-20 rounded-full" />
                   </TableCell>
                   <TableCell className="border-b border-l">
-                    <Skeleton className="h-3.5 w-16" />
+                    <Skeleton className="h-4 w-16 rounded" />
+                  </TableCell>
+                  <TableCell className="border-b border-l">
+                    <Skeleton className="h-3.5 w-12" />
                   </TableCell>
                   <TableCell className="border-b border-l">
                     <Skeleton className="h-3.5 w-8" />
                   </TableCell>
                   <TableCell className="border-b border-l">
-                    <Skeleton className="h-5 w-20 rounded-full" />
+                    <div className="flex gap-1">
+                      <Skeleton className="h-4 w-8 rounded-full" />
+                      <Skeleton className="h-4 w-8 rounded-full" />
+                    </div>
                   </TableCell>
                   <TableCell className="border-b border-l">
                     <Skeleton className="h-5 w-14 rounded-full" />
@@ -316,14 +373,14 @@ export function ProductTable() {
                   <TableCell className="border-b border-l">
                     <Skeleton className="h-3.5 w-20" />
                   </TableCell>
-                  <TableCell className="border-b border-l">
-                    <Skeleton className="h-6 w-6 rounded ml-auto" />
+                  <TableCell className="border-b border-l text-center">
+                    <Skeleton className="h-6 w-6 rounded mx-auto" />
                   </TableCell>
                 </TableRow>
               ))
             ) : filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="h-40 border-b">
+                <TableCell colSpan={11} className="h-40 border-b">
                   <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
                     <Package
                       size={32}
@@ -342,7 +399,7 @@ export function ProductTable() {
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((product) => (
+              pageProducts.map((product, idx) => (
                 <TableRow
                   key={product._id}
                   className={`cursor-pointer transition-colors ${
@@ -350,10 +407,7 @@ export function ProductTable() {
                       ? "bg-primary/5"
                       : "hover:bg-muted/30"
                   }`}
-                  onClick={() => {
-                    setSelectedProductId(product._id);
-                    setIsSheetOpen(true);
-                  }}
+                  onClick={() => onOpenDetails(product._id)}
                 >
                   <TableCell
                     className="border-b"
@@ -367,6 +421,10 @@ export function ProductTable() {
                     />
                   </TableCell>
 
+                  <TableCell className="border-b border-l text-center text-[10px] font-medium text-muted-foreground tabular-nums w-9">
+                    {startIndex + idx + 1}
+                  </TableCell>
+
                   <TableCell className="border-b border-l">
                     <div className="flex items-center gap-3">
                       <ProductThumbnail storageId={product.thumbnail} />
@@ -374,17 +432,26 @@ export function ProductTable() {
                         <span className="font-medium text-foreground truncate max-w-48">
                           {product.name}
                         </span>
-                        <span className="text-[10px] text-muted-foreground truncate max-w-48">
-                          {product.slug}
-                        </span>
                       </div>
                     </div>
                   </TableCell>
 
                   <TableCell className="border-b border-l">
-                    <Badge variant="outline" className="text-[10px]">
+                    <span className="text-[10px] font-medium text-neutral-700 dark:text-neutral-300">
                       {CATEGORIES_MAP[product.category] || product.category}
-                    </Badge>
+                    </span>
+                  </TableCell>
+
+                  <TableCell className="border-b border-l">
+                    {product.subCategory ? (
+                      <span className="text-[10px] font-medium text-neutral-600 dark:text-neutral-300">
+                        {product.subCategory}
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-neutral-400 italic">
+                        None
+                      </span>
+                    )}
                   </TableCell>
 
                   <TableCell className="font-medium tabular-nums border-b border-l">
@@ -392,17 +459,21 @@ export function ProductTable() {
                   </TableCell>
 
                   <TableCell className="border-b border-l">
-                    <span
-                      className={`tabular-nums font-medium ${
-                        product.stock === 0
-                          ? "text-destructive"
-                          : product.stock < 10
+                    {product.stock === 0 ? (
+                      <span className="text-red-500 font-medium text-[11px]">
+                        Out of stock
+                      </span>
+                    ) : (
+                      <span
+                        className={`tabular-nums font-medium ${
+                          product.stock < 10
                             ? "text-amber-600 dark:text-amber-400"
                             : "text-foreground"
-                      }`}
-                    >
-                      {product.stock}
-                    </span>
+                        }`}
+                      >
+                        {product.stock}
+                      </span>
+                    )}
                   </TableCell>
 
                   <TableCell className="border-b border-l">
@@ -425,12 +496,15 @@ export function ProductTable() {
                   </TableCell>
 
                   <TableCell className="border-b border-l">
-                    <Badge
-                      variant={product.isActive ? "default" : "destructive"}
-                      className="text-[10px]"
+                    <span
+                      className={`text-[10px] uppercase font-bold tracking-wider ${
+                        product.isActive
+                          ? "text-emerald-600"
+                          : "text-neutral-500"
+                      }`}
                     >
                       {product.isActive ? "Active" : "Inactive"}
-                    </Badge>
+                    </span>
                   </TableCell>
 
                   <TableCell className="text-muted-foreground border-b border-l">
@@ -438,121 +512,77 @@ export function ProductTable() {
                   </TableCell>
 
                   <TableCell
-                    className="text-right border-b border-l"
+                    className="text-center border-b border-l"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon-sm">
-                          <MoreHorizontal size={14} />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setSelectedProductId(product._id);
-                            setIsSheetOpen(true);
-                          }}
-                        >
-                          <Package size={14} />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() =>
-                            handleToggleActive(product._id as Id<"products">)
-                          }
-                        >
-                          <Eye size={14} />
-                          {product.isActive ? "Deactivate" : "Activate"}
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          variant="destructive"
-                          onClick={() =>
-                            setDeleteTarget(product._id as Id<"products">)
-                          }
-                        >
-                          <Trash2 size={14} />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <div className="flex justify-center">
+                      <ProductActionMenu
+                        productId={product._id}
+                        isActive={product.isActive}
+                        onOpenDetails={onOpenDetails}
+                        onToggleActive={() =>
+                          handleToggleActive(product._id as Id<"products">)
+                        }
+                        onDeleteClick={() =>
+                          setDeleteTarget(product._id as Id<"products">)
+                        }
+                        align="center"
+                      />
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
+        </div>
       </div>
 
-      {/* ── Pagination — bottom of content area ── */}
-      <div className="mt-4 bg-background/90 backdrop-blur-md border-t px-4 py-3 rounded-b-xl">
-        <div className="flex items-center justify-between">
-          {!isSearching ? (
-            <>
-              <p className="text-xs text-muted-foreground">
-                Showing{" "}
-                <span className="font-semibold text-foreground">
-                  {filtered.length}
-                </span>{" "}
-                of{" "}
-                <span className="font-semibold text-foreground">
-                  {loadedCount}
-                </span>{" "}
-                loaded products
-                {isDone && (
-                  <span className="ml-1 text-emerald-600 dark:text-emerald-400 font-medium">
-                    (all loaded)
-                  </span>
-                )}
-              </p>
+      {/* ── Pagination ── */}
+      <div className="mt-4 bg-background/90 backdrop-blur-md border px-4 py-2.5 rounded-xl">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs text-muted-foreground whitespace-nowrap">
+            Showing{" "}
+            <span className="font-semibold text-foreground">
+              {startIndex + 1}–{Math.min(startIndex + ITEMS_PER_PAGE, filtered.length)}
+            </span>{" "}
+            of{" "}
+            <span className="font-semibold text-foreground">
+              {filtered.length}
+            </span>
+          </p>
 
-              <div className="flex items-center gap-3">
-                <span className="text-xs text-muted-foreground">
-                  Page{" "}
-                  <span className="font-semibold text-foreground">
-                    {currentPage}
-                  </span>
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => loadMore(ITEMS_PER_PAGE)}
-                  disabled={isDone || status === "LoadingMore"}
-                  className="h-7 gap-1.5 text-xs"
-                >
-                  {status === "LoadingMore" ? (
-                    <>
-                      <Loader2 size={12} className="animate-spin" /> Loading...
-                    </>
-                  ) : isDone ? (
-                    "All loaded"
-                  ) : (
-                    <>
-                      Next page <ChevronRight size={13} />
-                    </>
-                  )}
-                </Button>
-              </div>
-            </>
-          ) : (
-            <p className="text-xs text-muted-foreground">
-              {searchResults === undefined ? (
-                <span className="flex items-center gap-1.5">
-                  <Loader2 size={12} className="animate-spin" /> Searching...
-                </span>
+          <div className="flex items-center gap-1.5">
+            <Button
+              variant="outline"
+              size="icon-sm"
+              onClick={handlePrevPage}
+              disabled={currentPageIndex <= 1}
+              className="h-7 w-7 hover:bg-muted/50"
+            >
+              <ChevronLeft size={14} />
+            </Button>
+            <span className="text-xs text-muted-foreground px-1 tabular-nums">
+              <span className="font-semibold text-foreground">
+                {currentPageIndex}
+              </span>
+              {" / "}
+              {Math.max(1, totalPages)}
+            </span>
+            <Button
+              variant="outline"
+              size="icon-sm"
+              onClick={handleNextPage}
+              disabled={currentPageIndex >= totalPages && isDone}
+              className="h-7 w-7 hover:bg-muted/50"
+            >
+              {status === "LoadingMore" ? (
+                <Loader2 size={12} className="animate-spin" />
               ) : (
-                <>
-                  Found{" "}
-                  <span className="font-semibold text-foreground">
-                    {searchResults.length}
-                  </span>{" "}
-                  result{searchResults.length !== 1 ? "s" : ""} for &ldquo;
-                  {debouncedSearch}&rdquo;
-                </>
+                <ChevronRight size={14} />
               )}
-            </p>
-          )}
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -563,43 +593,37 @@ export function ProductTable() {
           if (!open) setDeleteTarget(null);
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-white rounded-3xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Product</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="font-serif text-lg font-bold text-neutral-800">
+              Delete Product
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-neutral-500 text-sm">
               Are you sure you want to delete this product? This action cannot
-              be undone.
+              be undone and will remove it permanently.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              className="bg-destructive/10 text-destructive hover:bg-destructive/20"
+              className="bg-red-600 hover:bg-red-700 text-white rounded-xl"
             >
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <ProductDetailsSheet
-        productId={selectedProductId}
-        isOpen={isSheetOpen}
-        onOpenChange={(open) => {
-          setIsSheetOpen(open);
-          if (!open) setSelectedProductId(null);
-        }}
-      />
     </>
   );
 }
 
 function ProductThumbnail({ storageId }: { storageId?: string }) {
+  const isDirectUrl = storageId?.startsWith("http");
   const imageUrl = useQuery(
     api.products.getImageUrl,
-    storageId ? { storageId } : "skip",
-  );
+    storageId && !isDirectUrl ? { storageId } : "skip",
+  ) || (isDirectUrl ? storageId : null);
 
   return (
     <div className="h-10 w-10 rounded-lg bg-muted border overflow-hidden flex items-center justify-center shrink-0">

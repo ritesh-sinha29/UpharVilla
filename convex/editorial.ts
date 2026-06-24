@@ -3,7 +3,7 @@ import { mutation, query } from "./_generated/server";
 
 export const getEditorialGrid = query({
   args: {},
-  handler: async (ctx) => {
+  handler: async (_ctx) => {
     return null;
   },
 });
@@ -16,7 +16,7 @@ export const updateEditorialGrid = mutation({
     slot4: v.any(),
     slot5: v.any(),
   },
-  handler: async (ctx, args) => {
+  handler: async (_ctx, _args) => {
     return null;
   },
 });

@@ -1,21 +1,29 @@
 "use client";
 
-import React, { useState, useRef, useCallback } from "react";
-import { useMutation } from "convex/react";
+import {
+  Add01Icon,
+  Cancel01Icon,
+  ImageUploadIcon,
+  Loading03Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { upload } from "@imagekit/next";
-import { api } from "../../../../../convex/_generated/api";
+import { useMutation } from "convex/react";
+import type React from "react";
+import { useCallback, useRef, useState } from "react";
+import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogDescription,
   DialogFooter,
+  DialogHeader,
+  DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -24,26 +32,100 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  Add01Icon,
-  ImageUploadIcon,
-  Loading03Icon,
-  Cancel01Icon,
-} from "@hugeicons/core-free-icons";
-import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { getPremiumColor } from "@/lib/utils";
+import { api } from "../../../../../convex/_generated/api";
+
+// Tag presets matching the navigation mega-menu structure
+const TAG_PRESETS: Record<string, string[]> = {
+  "Customized Gifts": [
+    "Customized Photo Gifts",
+    "Customized Couple Gifts",
+    "Customized Jewelry",
+    "Customized Fashion Gifts",
+    "Customized Home Decor",
+    "Customized Drinkware",
+    "Customized Kids Gifts",
+  ],
+  "Corporate Gifts": [
+    "Employee Welcome Kits",
+    "Employee Appreciation Gifts",
+    "Work From Home Gifts",
+    "Client Gifts",
+    "Executive Gifts",
+    "Customized Branding Gifts",
+    "Eco-Friendly Gifts",
+    "Office Desk Essentials",
+    "Festive Corporate Gifts",
+  ],
+  Hampers: [
+    "Birthday Hampers",
+    "Wedding Hampers",
+    "Couple Hampers",
+    "Festive Hampers",
+    "Corporate Hampers",
+    "Luxury Hampers",
+    "Baby & Kids Hampers",
+    "Customized Hampers",
+  ],
+  "Frames & Bouquet": [
+    "Photo Frames",
+    "LED Frames",
+    "Acrylic Frames",
+    "Fresh Flower Bouquet",
+    "Artificial Bouquet",
+    "Frame + Bouquet Combo",
+  ],
+  "Shop by Occasion": [
+    "Birthday",
+    "Anniversary",
+    "Wedding",
+    "Engagement",
+    "Valentine's Day",
+    "Mother's Day",
+    "Father's Day",
+    "Baby Shower & Newborn",
+    "Raksha Bandhan",
+    "Graduation & Achievement",
+    "Festivals & Celebrations",
+  ],
+  "New Arrivals": [
+    "Viral & Bestselling Gifts",
+    "Instagram-Worthy Gifts",
+    "Spotify Gifts",
+    "Seasonal Trending Gifts",
+    "Mini Budget Gifts",
+  ],
+};
 
 const CATEGORIES = [
-  { value: "mens", label: "Men's" },
-  { value: "womens", label: "Women's" },
-  { value: "anniversary-birthday", label: "Anniversary & Birthday" },
-  { value: "festival-corporate", label: "Festival & Corporate" },
+  { value: "customized-gifts", label: "Customized Gifts" },
+  { value: "corporate-gifts", label: "Corporate Gifts" },
+  { value: "hampers", label: "Hampers" },
   { value: "frames-bouquet", label: "Frames & Bouquet" },
-  { value: "custom-hampers", label: "Custom Hampers" },
+  { value: "shop-by-occasion", label: "Shop by Occasion" },
 ] as const;
+
+const CATEGORY_TO_PRESET_KEY: Record<string, string> = {
+  "customized-gifts": "Customized Gifts",
+  "corporate-gifts": "Corporate Gifts",
+  hampers: "Hampers",
+  "frames-bouquet": "Frames & Bouquet",
+  "shop-by-occasion": "Shop by Occasion",
+};
+
+const RECIPIENT_OPTIONS = [
+  "Him",
+  "Her",
+  "Kids",
+  "Friend",
+  "Girlfriend",
+  "Boyfriend",
+  "Wife",
+  "Husband",
+];
 
 type CategoryValue = (typeof CATEGORIES)[number]["value"];
 
@@ -56,11 +138,23 @@ export function AddProductDialog() {
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState<CategoryValue | "">("");
+  const [subCategory, setSubCategory] = useState("");
+  const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [stock, setStock] = useState("");
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+  const [sizes, setSizes] = useState<string[]>([]);
+  const [colors, setColors] = useState<string[]>([]);
+  const [sizeInput, setSizeInput] = useState("");
+  const [colorInput, setColorInput] = useState("");
+
+  // Additional settings
+  const [markNewArrival, setMarkNewArrival] = useState(false);
+  const [markTrending, setMarkTrending] = useState(false);
+  const [markMostPurchased, setMarkMostPurchased] = useState(false);
+  const [markMostSold, setMarkMostSold] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -78,10 +172,20 @@ export function AddProductDialog() {
     setDescription("");
     setPrice("");
     setCategory("");
+    setSubCategory("");
+    setSelectedRecipients([]);
     setTags([]);
     setTagInput("");
     setStock("");
     setThumbnailPreview(null);
+    setMarkNewArrival(false);
+    setMarkTrending(false);
+    setMarkMostPurchased(false);
+    setMarkMostSold(false);
+    setSizes([]);
+    setColors([]);
+    setSizeInput("");
+    setColorInput("");
   }, []);
 
   const handleAddTag = useCallback(() => {
@@ -140,11 +244,14 @@ export function AddProductDialog() {
         toast.error("Please select a category");
         return;
       }
+      if (!subCategory) {
+        toast.error("Please select a subcategory");
+        return;
+      }
       if (tags.length < 2) {
         toast.error("Add at least 2 tags");
         return;
       }
-
 
       setLoading(true);
       const currentName = name.trim();
@@ -158,8 +265,19 @@ export function AddProductDialog() {
           price: Number(price),
           thumbnail: "", // Temporary empty thumbnail
           category: category as CategoryValue,
+          subCategory: subCategory || undefined,
+          recipients:
+            selectedRecipients.length > 0 ? selectedRecipients : undefined,
           tags,
           stock: Number(stock) || 0,
+          markNewArrival,
+          markTrending,
+          markMostPurchased,
+          markMostSold,
+          variants: {
+            sizes: sizes.length > 0 ? sizes : undefined,
+            colors: colors.length > 0 ? colors : undefined,
+          },
         });
 
         // 2. Success UI feedback immediately
@@ -179,7 +297,6 @@ export function AddProductDialog() {
                 folder: "/products/thumbnails",
                 ...authParams,
               });
-              // @ts-ignore
               const thumbnailImageUrl = uploadResponse.url;
 
               // Update product with actual thumbnail
@@ -206,12 +323,21 @@ export function AddProductDialog() {
       description,
       price,
       category,
+      subCategory,
+      selectedRecipients,
       tags,
       stock,
       thumbnailFile,
+      markNewArrival,
+      markTrending,
+      markMostPurchased,
+      markMostSold,
+      sizes,
+      colors,
       createProduct,
       updateProduct,
       resetForm,
+      authenticator,
     ],
   );
 
@@ -228,12 +354,18 @@ export function AddProductDialog() {
           Add Product
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto bg-sidebar">
-        <DialogHeader>
-          <DialogTitle>Add New Product</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto bg-sidebar border border-neutral-300 dark:border-neutral-700 shadow-2xl">
+        <DialogHeader className="space-y-1">
+          <DialogTitle className="text-lg font-bold tracking-tight text-neutral-800 font-serif">
+            Add New Product
+          </DialogTitle>
+          <DialogDescription className="text-xs text-muted-foreground mt-0.5">
             Fill in the details below to add a new product to your inventory.
           </DialogDescription>
+          <Separator
+            className="-mx-4 mt-2 bg-neutral-300 dark:bg-neutral-700"
+            style={{ width: "calc(100% + 32px)" }}
+          />
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="grid gap-4 py-2">
@@ -364,7 +496,10 @@ export function AddProductDialog() {
             </Label>
             <Select
               value={category}
-              onValueChange={(val) => setCategory(val as CategoryValue)}
+              onValueChange={(val) => {
+                setCategory(val as CategoryValue);
+                setSubCategory(""); // Reset subcategory when category changes
+              }}
               disabled={loading}
             >
               <SelectTrigger id="product-category" className="w-full bg-card">
@@ -378,6 +513,71 @@ export function AddProductDialog() {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Subcategory */}
+          <div className="grid gap-1.5">
+            <Label htmlFor="product-subcategory">
+              Subcategory <span className="text-destructive">*</span>
+            </Label>
+            <Select
+              value={subCategory}
+              onValueChange={setSubCategory}
+              disabled={loading || !category}
+            >
+              <SelectTrigger
+                id="product-subcategory"
+                className="w-full bg-card"
+              >
+                <SelectValue
+                  placeholder={
+                    category
+                      ? "Select a subcategory"
+                      : "Select a category first"
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {category &&
+                  CATEGORY_TO_PRESET_KEY[category] &&
+                  TAG_PRESETS[CATEGORY_TO_PRESET_KEY[category]].map((sub) => (
+                    <SelectItem key={sub} value={sub}>
+                      {sub}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Recipient / Relationship */}
+          <div className="grid gap-1.5">
+            <Label>Recipient / Relationship</Label>
+            <div className="flex items-center gap-1.5 pt-0.5 overflow-x-auto no-scrollbar scrollbar-none pb-0.5">
+              {RECIPIENT_OPTIONS.map((recipient) => {
+                const isSelected = selectedRecipients.includes(recipient);
+                return (
+                  <button
+                    key={recipient}
+                    type="button"
+                    onClick={() => {
+                      setSelectedRecipients((prev) =>
+                        prev.includes(recipient)
+                          ? prev.filter((r) => r !== recipient)
+                          : [...prev, recipient],
+                      );
+                    }}
+                    disabled={loading}
+                    className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all duration-150 cursor-pointer ${
+                      isSelected
+                        ? "bg-[#ad8de9]/15 text-[#ad8de9] border-[#ad8de9]/30 font-semibold"
+                        : "bg-card text-muted-foreground border-border hover:border-[#ad8de9]/20 hover:text-foreground"
+                    }`}
+                  >
+                    {recipient}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Tags */}
@@ -416,9 +616,177 @@ export function AddProductDialog() {
             </p>
           </div>
 
-          <Separator className="my-2" />
+          <Separator
+            className="-mx-4 my-2 bg-neutral-300 dark:bg-neutral-700"
+            style={{ width: "calc(100% + 32px)" }}
+          />
 
+          {/* Product Variants (Sizes & Colors) */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* Sizes */}
+            <div className="grid gap-1.5">
+              <Label>Sizes</Label>
+              <div className="flex flex-wrap items-center gap-1.5 min-h-9 rounded-md border border-input bg-card px-2 py-1.5 focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30 transition-colors">
+                {sizes.map((size) => (
+                  <Badge
+                    key={size}
+                    variant="secondary"
+                    className="gap-0.5 pr-1"
+                  >
+                    {size}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSizes((prev) => prev.filter((s) => s !== size))
+                      }
+                      disabled={loading}
+                      className="ml-0.5 rounded-full hover:bg-foreground/10 p-0.5 transition-colors"
+                    >
+                      <HugeiconsIcon
+                        icon={Cancel01Icon}
+                        size={10}
+                        strokeWidth={2.5}
+                      />
+                    </button>
+                  </Badge>
+                ))}
+                <input
+                  value={sizeInput}
+                  onChange={(e) => setSizeInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      const trimmed = sizeInput.trim().toUpperCase();
+                      if (trimmed && !sizes.includes(trimmed)) {
+                        setSizes((prev) => [...prev, trimmed]);
+                        setSizeInput("");
+                      }
+                    }
+                  }}
+                  placeholder={sizes.length === 0 ? "e.g. S, M, L..." : ""}
+                  className="flex-1 min-w-12 bg-transparent outline-none text-xs placeholder:text-muted-foreground"
+                  disabled={loading}
+                />
+              </div>
+            </div>
 
+            {/* Colors */}
+            <div className="grid gap-1.5">
+              <Label>Colors</Label>
+              <div className="flex flex-wrap items-center gap-1.5 min-h-9 rounded-md border border-input bg-card px-2 py-1.5 focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30 transition-colors">
+                {colors.map((color) => (
+                  <Badge
+                    key={color}
+                    variant="secondary"
+                    className="gap-0.5 pr-1 flex items-center"
+                  >
+                    <div
+                      className="w-1.5 h-1.5 rounded-full border border-black/10 shrink-0 mr-1"
+                      style={{ backgroundColor: getPremiumColor(color) }}
+                    />
+                    {color}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setColors((prev) => prev.filter((c) => c !== color))
+                      }
+                      disabled={loading}
+                      className="ml-0.5 rounded-full hover:bg-foreground/10 p-0.5 transition-colors"
+                    >
+                      <HugeiconsIcon
+                        icon={Cancel01Icon}
+                        size={10}
+                        strokeWidth={2.5}
+                      />
+                    </button>
+                  </Badge>
+                ))}
+                <input
+                  value={colorInput}
+                  onChange={(e) => setColorInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      const trimmed = colorInput.trim();
+                      if (trimmed && !colors.includes(trimmed)) {
+                        setColors((prev) => [...prev, trimmed]);
+                        setColorInput("");
+                      }
+                    }
+                  }}
+                  placeholder={colors.length === 0 ? "e.g. Red, Blue..." : ""}
+                  className="flex-1 min-w-12 bg-transparent outline-none text-xs placeholder:text-muted-foreground"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+          </div>
+
+          <Separator
+            className="-mx-4 my-2 bg-neutral-300 dark:bg-neutral-700"
+            style={{ width: "calc(100% + 32px)" }}
+          />
+
+          {/* Additional Settings */}
+          <div className="space-y-3">
+            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              Additional Settings / Badge Listing
+            </Label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {/* New Arrival Toggle */}
+              <div className="flex flex-col items-center justify-between p-2.5 rounded-xl border bg-card/50 text-center gap-1.5">
+                <span className="text-[10px] font-semibold text-muted-foreground">
+                  New Arrival
+                </span>
+                <Switch
+                  checked={markNewArrival}
+                  onCheckedChange={setMarkNewArrival}
+                  disabled={loading}
+                />
+              </div>
+
+              {/* Trending Toggle */}
+              <div className="flex flex-col items-center justify-between p-2.5 rounded-xl border bg-card/50 text-center gap-1.5">
+                <span className="text-[10px] font-semibold text-muted-foreground">
+                  Trending Item
+                </span>
+                <Switch
+                  checked={markTrending}
+                  onCheckedChange={setMarkTrending}
+                  disabled={loading}
+                />
+              </div>
+
+              {/* Most Purchased Toggle */}
+              <div className="flex flex-col items-center justify-between p-2.5 rounded-xl border bg-card/50 text-center gap-1.5">
+                <span className="text-[10px] font-semibold text-muted-foreground">
+                  Most Purchased
+                </span>
+                <Switch
+                  checked={markMostPurchased}
+                  onCheckedChange={setMarkMostPurchased}
+                  disabled={loading}
+                />
+              </div>
+
+              {/* Most Sold Toggle */}
+              <div className="flex flex-col items-center justify-between p-2.5 rounded-xl border bg-card/50 text-center gap-1.5">
+                <span className="text-[10px] font-semibold text-muted-foreground">
+                  Most Sold
+                </span>
+                <Switch
+                  checked={markMostSold}
+                  onCheckedChange={setMarkMostSold}
+                  disabled={loading}
+                />
+              </div>
+            </div>
+          </div>
+
+          <Separator
+            className="-mx-4 my-2 bg-neutral-300 dark:bg-neutral-700"
+            style={{ width: "calc(100% + 32px)" }}
+          />
 
           {/* Footer */}
           <DialogFooter className="pt-2">

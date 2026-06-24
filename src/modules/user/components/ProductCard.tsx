@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import Image from "next/image";
-import Link from "next/link";
+import { Rating } from "@mui/material";
 import { ShoppingBag } from "lucide-react";
 import { motion } from "motion/react";
-import { Rating } from "@mui/material";
+import Image from "next/image";
+import Link from "next/link";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import WishlistButton from "./WishlistButton";
 
@@ -20,7 +20,10 @@ const ProductCard = ({ product, className }: ProductCardProps) => {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const images = [product.thumbnail, ...(product.images || [])].filter(Boolean);
+  const images = useMemo(
+    () => [product.thumbnail, ...(product.images || [])].filter(Boolean),
+    [product.thumbnail, product.images],
+  );
 
   useEffect(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -43,7 +46,7 @@ const ProductCard = ({ product, className }: ProductCardProps) => {
       if (timerRef.current) clearTimeout(timerRef.current);
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [isHovered, images.length]);
+  }, [isHovered, images]);
 
   const originalPrice = product.discount
     ? Math.round(product.price / (1 - product.discount / 100))
@@ -54,20 +57,25 @@ const ProductCard = ({ product, className }: ProductCardProps) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 8 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.4 }}
+      viewport={{ once: true, margin: "100px" }}
+      transition={{ duration: 0.3 }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className={cn(
-        "group relative flex flex-col cursor-pointer",
-        className
-      )}
+      className={cn("group relative flex flex-col cursor-pointer", className)}
     >
-      <Link href={`/product/${product._id}`} className="flex flex-col h-full w-full">
+      <Link
+        href={`/product/${product._id}`}
+        className="flex flex-col h-full w-full"
+      >
         {/* Image Container — full bleed, clean */}
-        <div className="relative aspect-square overflow-hidden rounded-xl bg-[#F7F7F7]">
+        <div
+          className={cn(
+            "relative aspect-[3/4] overflow-hidden rounded-lg md:rounded-xl bg-[#F7F7F7]",
+            product.stock <= 0 && "opacity-80",
+          )}
+        >
           {/* Sliding strip */}
           <div
             className="flex h-full transition-transform duration-500 ease-in-out"
@@ -89,84 +97,115 @@ const ProductCard = ({ product, className }: ProductCardProps) => {
                   }
                   alt={product.name}
                   fill
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                   className="object-cover"
-                  priority={i === 0}
+                  loading="lazy"
                 />
               </div>
             ))}
           </div>
 
-          {/* Badge */}
-          <div className="absolute top-2.5 left-2.5 z-10">
-            {product.discount ? (
-              <span className="bg-rose-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full tracking-wide shadow-sm">
-                {product.discount}% OFF
-              </span>
-            ) : (
-              (product.markNewArrival ||
-                Date.now() - product.launchedAt < 24 * 60 * 60 * 1000) && (
-                <span className="bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full tracking-wide shadow-sm">
-                  NEW
-                </span>
-              )
-            )}
-          </div>
-
-          {/* Wishlist — appears on hover */}
+          {/* Wishlist — top-right corner, appears on hover (Flipkart/Nykaa style) */}
           <div
-            className={`absolute top-2.5 right-2.5 z-10 transition-all duration-200 ${
-              isHovered ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1 pointer-events-none"
+            className={`absolute top-1.5 right-1.5 md:top-2.5 md:right-2.5 z-10 transition-all duration-200 opacity-100 translate-y-0 md:${
+              isHovered
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 -translate-y-1 pointer-events-none"
             }`}
             onClick={(e) => e.preventDefault()}
           >
             <WishlistButton productId={product._id} />
           </div>
 
-
-
+          {/* Badge overlays at the top-left of the image container (Flipkart/Nykaa style) */}
+          {(product.stock <= 0 ||
+            product.markMostPurchased === true ||
+            product.markMostSold === true ||
+            product.markTrending === true ||
+            !!(
+              product.markNewArrival ||
+              (product.launchedAt &&
+                Date.now() - product.launchedAt < 24 * 60 * 60 * 1000)
+            )) && (
+            <div className="absolute top-1.5 md:top-2.5 left-0 z-10 flex flex-col items-start">
+              {product.stock <= 0 ? (
+                <span className="bg-[#FAFAFA]/95 backdrop-blur-xs text-[#737373] border-y border-r border-[#E5E5E5] text-[8px] font-sans font-bold tracking-wider px-2.5 py-0.5 rounded-r-md shadow-sm uppercase">
+                  Sold Out
+                </span>
+              ) : (
+                <>
+                  {product.markMostSold === true ||
+                  product.markMostPurchased === true ? (
+                    <span className="bg-[#E2AF3E] text-white text-[8px] font-sans font-extrabold tracking-wider px-2.5 py-0.5 rounded-r-md shadow-sm uppercase">
+                      Most Sold
+                    </span>
+                  ) : product.markTrending === true ? (
+                    <span className="bg-[#FC2779] text-white text-[8px] font-sans font-extrabold tracking-wider px-2.5 py-0.5 rounded-r-md shadow-sm uppercase">
+                      Trending
+                    </span>
+                  ) : (
+                    <span className="bg-[#0D9488] text-white text-[8px] font-sans font-extrabold tracking-wider px-2.5 py-0.5 rounded-r-md shadow-sm uppercase">
+                      New Arrival
+                    </span>
+                  )}
+                </>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Text content — below image, no card border */}
-        <div className="pt-3 px-0.5 flex flex-col gap-1">
+        <div className="pt-2 md:pt-3 lg:pt-4 px-0.5 flex flex-col gap-0.5 md:gap-1">
           {/* Product name */}
-          <h3 className="text-sm text-gray-800 capitalize line-clamp-2 leading-snug font-medium">
+          <h3 className="text-[11px] md:text-sm lg:text-base text-gray-800 capitalize line-clamp-1 md:line-clamp-2 leading-snug font-medium">
             {product.name}
           </h3>
 
           {/* Stars + review count */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1 shrink-0">
             <Rating
               name={`rating-${product._id}`}
               defaultValue={2.5}
               precision={0.5}
               readOnly
               size="small"
-              sx={{ fontSize: "0.85rem" }}
+              sx={{ fontSize: "0.7rem", '@media (min-width: 768px)': { fontSize: '0.85rem' } }}
             />
-            <span className="text-xs text-gray-400 font-medium">
-              {reviewCount} reviews
+            <span className="text-[10px] md:text-xs text-gray-400 font-medium whitespace-nowrap">
+              ({reviewCount})
             </span>
           </div>
 
           {/* Price */}
-          <div className="flex items-center justify-between mt-0.5">
-            <div className="flex items-baseline gap-2">
-              <span className="text-sm font-bold text-gray-900 font-mono">
+          <div className="flex items-center justify-between mt-0">
+            <div className="flex items-baseline gap-1 md:gap-1.5 min-w-0">
+              <span className="text-xs md:text-sm lg:text-base font-bold text-gray-900 font-mono">
                 ₹{product.price.toLocaleString("en-IN")}
               </span>
               {originalPrice && (
-                <span className="text-xs text-gray-400 line-through font-mono">
-                  ₹{originalPrice.toLocaleString("en-IN")}
-                </span>
+                <>
+                  <span className="text-[10px] md:text-xs text-gray-400 line-through font-mono hidden sm:inline">
+                    ₹{originalPrice.toLocaleString("en-IN")}
+                  </span>
+                  <span className="text-[9px] md:text-[10px] font-bold text-[#E11D48] font-sans">
+                    {product.discount}%
+                  </span>
+                </>
               )}
             </div>
             <span
-              className={`flex items-center gap-1 bg-primary text-primary-foreground text-[11px] font-semibold px-2.5 py-1 rounded-full transition-all duration-200 cursor-pointer ${
-                isHovered ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+              className={`flex items-center gap-0.5 text-[9px] md:text-[11px] font-semibold px-1.5 md:px-2.5 py-0.5 md:py-1 rounded-full transition-all duration-200 cursor-pointer shrink-0 ${
+                product.stock <= 0
+                  ? "bg-neutral-800 text-white"
+                  : "bg-primary text-primary-foreground"
+              } opacity-100 pointer-events-auto md:${
+                isHovered
+                  ? "opacity-100 pointer-events-auto"
+                  : "opacity-0 pointer-events-none"
               }`}
             >
-              <ShoppingBag className="w-3 h-3" />
-              Shop
+              <ShoppingBag className="w-2.5 h-2.5 md:w-3 md:h-3" />
+              {product.stock <= 0 ? "Notify" : "Shop"}
             </span>
           </div>
         </div>

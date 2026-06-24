@@ -1,7 +1,6 @@
 import { getUploadAuthParams } from "@imagekit/next/server";
-import { isAuthenticated } from "@/lib/auth-server";
-import { headers } from "next/headers";
 import { NextResponse } from "next/server";
+import { isAuthenticated } from "@/lib/auth-server";
 
 export async function GET() {
   // Use the authenticated check from your auth-server

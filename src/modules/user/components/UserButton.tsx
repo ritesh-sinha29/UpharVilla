@@ -1,6 +1,12 @@
 "use client";
 
-import React from "react";
+import {
+  Heart,
+  LogOut,
+  ShoppingBag,
+  User,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,36 +15,22 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  ChevronDown,
-  User,
-  Settings,
-  LogOut,
-  ShoppingBag,
-  Heart,
-} from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 
 export const UserButton = () => {
   const { data: session } = authClient.useSession();
+  const router = useRouter();
 
   if (!session) return null;
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <div className="flex items-center gap-2 cursor-pointer outline-none group select-none">
-          <Avatar className="h-10 w-10 border border-border">
-            <AvatarImage
-              src={session.user.image || ""}
-              alt={session.user.name || "User"}
-            />
-            <AvatarFallback className="bg-primary/5 text-primary font-medium">
-              {session.user.name?.charAt(0) || <User className="h-5 w-5" />}
-            </AvatarFallback>
-          </Avatar>
-          <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+        <div className="flex items-center cursor-pointer outline-none group select-none">
+          {/* Clean User Icon instead of Avatar Image / Initial */}
+          <div className="h-9 w-9 md:h-10 md:w-10 rounded-full border border-neutral-200/80 bg-neutral-50/50 hover:bg-neutral-50 flex items-center justify-center text-neutral-600 hover:text-primary hover:border-primary/30 transition-all duration-200 shadow-xs">
+            <User className="h-4.5 w-4.5 md:h-5 md:w-5" />
+          </div>
         </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56 p-2" sideOffset={8}>
@@ -53,22 +45,26 @@ export const UserButton = () => {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator className="my-2" />
-        {/* User requested empty dropdown logic for now, but added some structure as "default demo data" style */}
-        <DropdownMenuItem className="cursor-pointer gap-2">
+        <DropdownMenuItem
+          className="cursor-pointer gap-2"
+          onClick={() => router.push("/account")}
+        >
           <User className="h-4 w-4" />
-          <span>Profile</span>
+          <span>Account</span>
         </DropdownMenuItem>
-        <DropdownMenuItem className="cursor-pointer gap-2">
+        <DropdownMenuItem
+          className="cursor-pointer gap-2"
+          onClick={() => router.push("/my-orders")}
+        >
           <ShoppingBag className="h-4 w-4" />
           <span>My Orders</span>
         </DropdownMenuItem>
-        <DropdownMenuItem className="cursor-pointer gap-2">
+        <DropdownMenuItem
+          className="cursor-pointer gap-2"
+          onClick={() => router.push("/wishlist")}
+        >
           <Heart className="h-4 w-4" />
           <span>Wishlist</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem className="cursor-pointer gap-2">
-          <Settings className="h-4 w-4" />
-          <span>Settings</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator className="my-2" />
         <DropdownMenuItem

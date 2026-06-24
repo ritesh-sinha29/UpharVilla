@@ -1,16 +1,16 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 import {
   Carousel,
+  type CarouselApi,
   CarouselContent,
   CarouselItem,
-  type CarouselApi,
 } from "@/components/ui/carousel";
 import { cn } from "@/lib/utils";
-import Link from "next/link";
-import Image from "next/image";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const PROMO_SLIDES = [
   {
@@ -20,17 +20,19 @@ const PROMO_SLIDES = [
     badge: "Most Loved",
     badgeIcon: (
       <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
       </svg>
     ),
     badgeColor: "bg-[#8E54B0]/15 text-[#6D2F92]",
     title: "A Gift As Unique\nAs Your Love Story",
-    subtitle: "Turn your favorite memories into timeless keepsakes they will cherish forever.",
+    subtitle:
+      "Turn your favorite memories into timeless keepsakes they will cherish forever.",
     buttonText: "SHOP NOW",
-    buttonBg: "bg-[#8E54B0] hover:bg-[#7A4599] active:scale-95 text-white shadow-[0_8px_20px_-6px_rgba(142,84,176,0.5)]",
+    buttonBg:
+      "bg-[#8E54B0] hover:bg-[#7A4599] active:scale-95 text-white shadow-[0_8px_20px_-6px_rgba(142,84,176,0.5)]",
     titleColor: "text-[#4A2663]",
     themeBg: "bg-gradient-to-br from-[#F5E8FB] via-[#FEFAFF] to-[#EBD6F5]",
-    visitLink: "/category/anniversary-birthday",
+    visitLink: "/products?tag=Anniversary",
     isWallet: true,
   },
   {
@@ -40,24 +42,26 @@ const PROMO_SLIDES = [
     badge: "Perfect For Families",
     badgeIcon: (
       <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
       </svg>
     ),
     badgeColor: "bg-[#D94852]/15 text-[#B52530]",
     title: "Celebrate The People\nWho Matter Most",
-    subtitle: "Find the perfect personalized gift to capture your family's most beautiful moments.",
+    subtitle:
+      "Find the perfect personalized gift to capture your family's most beautiful moments.",
     buttonText: "SHOP NOW",
-    buttonBg: "bg-[#D94852] hover:bg-[#BD3A43] active:scale-95 text-white shadow-[0_8px_20px_-6px_rgba(217,72,82,0.5)]",
+    buttonBg:
+      "bg-[#D94852] hover:bg-[#BD3A43] active:scale-95 text-white shadow-[0_8px_20px_-6px_rgba(217,72,82,0.5)]",
     titleColor: "text-[#752026]",
     themeBg: "bg-gradient-to-br from-[#FFF2F3] via-[#FFFFFF] to-[#FCE5E6]",
-    visitLink: "/category/custom-hampers",
+    visitLink: "/products?tag=Customized Hampers",
     isWallet: false,
   },
 ];
 
 export const EditorialSlider = () => {
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
-  const [current, setCurrent] = useState(0);
+  const [_current, setCurrent] = useState(0);
 
   useEffect(() => {
     if (!carouselApi) return;
@@ -112,13 +116,16 @@ export const EditorialSlider = () => {
   }, [carouselApi]);
 
   return (
-    <section className="w-full mb-12 max-w-[1440px] mx-auto px-8 group relative" id="editorial-slider">
+    <section
+      className="w-full md:mb-4 max-w-[1400px] mx-auto px-5 sm:px-6 md:px-8 lg:px-12 group relative"
+      id="editorial-slider"
+    >
       {/* Title / Section Intro styled elegantly */}
-      <div className="flex flex-col items-center text-center mb-10">
-        <h2 className="text-2xl md:text-3xl lg:text-4xl font-serif text-neutral-800 tracking-wide font-normal">
+      <div className="flex flex-col items-center text-center mb-2 md:mb-6">
+        <h2 className="text-lg md:text-3xl lg:text-4xl font-serif text-neutral-800 tracking-wide font-normal">
           Gifts That Tell a Beautiful Story
         </h2>
-        <div className="h-[2px] w-16 bg-primary/40 mt-4 rounded-full" />
+        <div className="h-[2px] w-12 md:w-16 bg-primary/40 mt-2 md:mt-4 rounded-full" />
       </div>
 
       <Carousel
@@ -137,16 +144,61 @@ export const EditorialSlider = () => {
                 key={slide.id}
                 className="pl-4 basis-full shrink-0 grow-0 group/item"
               >
+                {/* Mobile: Beautiful horizontal card */}
                 <div
                   className={cn(
-                    "relative w-full overflow-hidden rounded-2xl transition-all duration-700 flex flex-col md:flex-row items-center justify-between min-h-[360px] md:h-[380px] lg:h-[420px] p-6 md:p-12 lg:p-16",
-                    slide.themeBg
+                    "relative w-full overflow-hidden rounded-2xl transition-all duration-700 md:hidden",
+                    slide.themeBg,
                   )}
                 >
-                  {/* Decorative Elements - floating hearts or bows based on slide type */}
+                  <div className="flex items-stretch">
+                    {/* Left: Image */}
+                    <div className="w-[40%] relative min-h-[180px]">
+                      <Image
+                        src={slide.image}
+                        alt={slide.altText}
+                        fill
+                        priority={index === 0}
+                        unoptimized
+                        className="object-cover"
+                      />
+                    </div>
+                    {/* Right: Text content */}
+                    <div className="w-[60%] flex flex-col justify-center p-4">
+                      <h3
+                        className={cn(
+                          "text-[15px] font-bold leading-tight tracking-tight mb-1.5",
+                          slide.titleColor,
+                        )}
+                      >
+                        {slide.title.replace('\n', ' ')}
+                      </h3>
+                      <p className="text-[10px] text-neutral-600 leading-snug mb-3 line-clamp-2">
+                        {slide.subtitle}
+                      </p>
+                      <Link
+                        href={slide.visitLink}
+                        className={cn(
+                          "self-start inline-flex items-center justify-center text-white px-4 py-1.5 rounded-lg font-semibold text-[10px] tracking-wide transition-all duration-300",
+                          slide.buttonBg,
+                        )}
+                      >
+                        {slide.buttonText}
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Desktop: Original full layout */}
+                <div
+                  className={cn(
+                    "relative w-full overflow-hidden rounded-2xl transition-all duration-700 hidden md:flex flex-row items-center justify-between h-[300px] lg:h-[340px] xl:h-[380px] p-8 lg:p-10 xl:p-14",
+                    slide.themeBg,
+                  )}
+                >
+                  {/* Decorative Elements */}
                   {slide.isWallet ? (
                     <>
-                      {/* Floating hearts */}
                       <svg
                         className="absolute top-1/4 left-[46%] w-4 h-4 text-[#D8B4F8] fill-current opacity-70 animate-bounce"
                         viewBox="0 0 24 24"
@@ -164,85 +216,59 @@ export const EditorialSlider = () => {
                     </>
                   ) : (
                     <>
-                      {/* Floating Red Bows */}
-                      <div className="absolute top-6 left-6 md:top-12 md:left-12 opacity-65 rotate-[15deg]">
-                        <svg className="w-5 h-5 md:w-6 md:h-6 text-[#C92A31] fill-current" viewBox="0 0 24 24">
-                          <path d="M12 7c-1.5-2.5-4.5-3-6-1.5S4.5 10 7 11.5c2.5 1.5 4.5.5 5-.5.5 1 2.5 2 5 .5 2.5-1.5 2.5-4.5 1-6s-4.5-1-6 1.5zm0 1c-.8-1.3-2.5-1.7-3.3-1s-.7 2.3.5 3c1.2.7 2.3.2 2.8-.5-.2-.5-.1-1-.8-1.5zm.8.5c.5.7 1.6 1.2 2.8.5 1.2-.7 1.3-2.3.5-3-.8-.7-2.5-.3-3.3 1-.7.5-.6 1 .8 1.5zM12 11c-.3 0-.6.1-.8.3L7.5 16c-.5.5-.5 1.3 0 1.8s1.3.5 1.8 0l3-3.2c.4.3.9.3 1.3 0l3 3.2c.5.5 1.3.5 1.8 0s.5-1.3 0-1.8l-3.7-4.7c-.2-.2-.5-.3-.8-.3z"/>
+                      <div className="absolute top-12 left-12 opacity-65 rotate-[15deg]">
+                        <svg className="w-6 h-6 text-[#C92A31] fill-current" viewBox="0 0 24 24">
+                          <path d="M12 7c-1.5-2.5-4.5-3-6-1.5S4.5 10 7 11.5c2.5 1.5 4.5.5 5-.5.5 1 2.5 2 5 .5 2.5-1.5 2.5-4.5 1-6s-4.5-1-6 1.5zm0 1c-.8-1.3-2.5-1.7-3.3-1s-.7 2.3.5 3c1.2.7 2.3.2 2.8-.5-.2-.5-.1-1-.8-1.5zm.8.5c.5.7 1.6 1.2 2.8.5 1.2-.7 1.3-2.3.5-3-.8-.7-2.5-.3-3.3 1-.7.5-.6 1 .8 1.5zM12 11c-.3 0-.6.1-.8.3L7.5 16c-.5.5-.5 1.3 0 1.8s1.3.5 1.8 0l3-3.2c.4.3.9.3 1.3 0l3 3.2c.5.5 1.3.5 1.8 0s.5-1.3 0-1.8l-3.7-4.7c-.2-.2-.5-.3-.8-.3z" />
                         </svg>
                       </div>
                       <div className="absolute top-[20%] left-[45%] opacity-65 -rotate-[12deg]">
                         <svg className="w-5 h-5 text-[#C92A31] fill-current animate-pulse" viewBox="0 0 24 24">
-                          <path d="M12 7c-1.5-2.5-4.5-3-6-1.5S4.5 10 7 11.5c2.5 1.5 4.5.5 5-.5.5 1 2.5 2 5 .5 2.5-1.5 2.5-4.5 1-6s-4.5-1-6 1.5zm0 1c-.8-1.3-2.5-1.7-3.3-1s-.7 2.3.5 3c1.2.7 2.3.2 2.8-.5-.2-.5-.1-1-.8-1.5zm.8.5c.5.7 1.6 1.2 2.8.5 1.2-.7 1.3-2.3.5-3-.8-.7-2.5-.3-3.3 1-.7.5-.6 1 .8 1.5zM12 11c-.3 0-.6.1-.8.3L7.5 16c-.5.5-.5 1.3 0 1.8s1.3.5 1.8 0l3-3.2c.4.3.9.3 1.3 0l3 3.2c.5.5 1.3.5 1.8 0s.5-1.3 0-1.8l-3.7-4.7c-.2-.2-.5-.3-.8-.3z"/>
-                        </svg>
-                      </div>
-                      <div className="absolute bottom-10 left-[40%] opacity-65 rotate-[25deg]">
-                        <svg className="w-4 h-4 text-[#C92A31] fill-current" viewBox="0 0 24 24">
-                          <path d="M12 7c-1.5-2.5-4.5-3-6-1.5S4.5 10 7 11.5c2.5 1.5 4.5.5 5-.5.5 1 2.5 2 5 .5 2.5-1.5 2.5-4.5 1-6s-4.5-1-6 1.5zm0 1c-.8-1.3-2.5-1.7-3.3-1s-.7 2.3.5 3c1.2.7 2.3.2 2.8-.5-.2-.5-.1-1-.8-1.5zm.8.5c.5.7 1.6 1.2 2.8.5 1.2-.7 1.3-2.3.5-3-.8-.7-2.5-.3-3.3 1-.7.5-.6 1 .8 1.5zM12 11c-.3 0-.6.1-.8.3L7.5 16c-.5.5-.5 1.3 0 1.8s1.3.5 1.8 0l3-3.2c.4.3.9.3 1.3 0l3 3.2c.5.5 1.3.5 1.8 0s.5-1.3 0-1.8l-3.7-4.7c-.2-.2-.5-.3-.8-.3z"/>
-                        </svg>
-                      </div>
-                      <div className="absolute bottom-16 left-6 opacity-65 -rotate-[10deg]">
-                        <svg className="w-5 h-5 text-[#C92A31] fill-current" viewBox="0 0 24 24">
-                          <path d="M12 7c-1.5-2.5-4.5-3-6-1.5S4.5 10 7 11.5c2.5 1.5 4.5.5 5-.5.5 1 2.5 2 5 .5 2.5-1.5 2.5-4.5 1-6s-4.5-1-6 1.5zm0 1c-.8-1.3-2.5-1.7-3.3-1s-.7 2.3.5 3c1.2.7 2.3.2 2.8-.5-.2-.5-.1-1-.8-1.5zm.8.5c.5.7 1.6 1.2 2.8.5 1.2-.7 1.3-2.3.5-3-.8-.7-2.5-.3-3.3 1-.7.5-.6 1 .8 1.5zM12 11c-.3 0-.6.1-.8.3L7.5 16c-.5.5-.5 1.3 0 1.8s1.3.5 1.8 0l3-3.2c.4.3.9.3 1.3 0l3 3.2c.5.5 1.3.5 1.8 0s.5-1.3 0-1.8l-3.7-4.7c-.2-.2-.5-.3-.8-.3z"/>
+                          <path d="M12 7c-1.5-2.5-4.5-3-6-1.5S4.5 10 7 11.5c2.5 1.5 4.5.5 5-.5.5 1 2.5 2 5 .5 2.5-1.5 2.5-4.5 1-6s-4.5-1-6 1.5zm0 1c-.8-1.3-2.5-1.7-3.3-1s-.7 2.3.5 3c1.2.7 2.3.2 2.8-.5-.2-.5-.1-1-.8-1.5zm.8.5c.5.7 1.6 1.2 2.8.5 1.2-.7 1.3-2.3.5-3-.8-.7-2.5-.3-3.3 1-.7.5-.6 1 .8 1.5zM12 11c-.3 0-.6.1-.8.3L7.5 16c-.5.5-.5 1.3 0 1.8s1.3.5 1.8 0l3-3.2c.4.3.9.3 1.3 0l3 3.2c.5.5 1.3.5 1.8 0s.5-1.3 0-1.8l-3.7-4.7c-.2-.2-.5-.3-.8-.3z" />
                         </svg>
                       </div>
                     </>
                   )}
 
-                  {/* Left Column: Premium Text Description - Centered Layout */}
-                  <div className="w-full md:w-[50%] flex flex-col items-center justify-center text-center z-10 px-4 md:px-8 mb-8 md:mb-0">
+                  {/* Left Column: Text */}
+                  <div className="w-[50%] flex flex-col items-center justify-center text-center z-10 px-4 lg:px-8">
                     <h3
                       className={cn(
-                        "text-4xl sm:text-5xl lg:text-[54px] font-sans font-bold leading-[1.1] tracking-tight mb-5 sm:mb-6 whitespace-pre-line drop-shadow-sm",
-                        slide.titleColor
+                        "text-2xl lg:text-3xl xl:text-4xl font-sans font-bold leading-[1.1] tracking-tight mb-3 lg:mb-4 whitespace-pre-line drop-shadow-sm",
+                        slide.titleColor,
                       )}
                     >
                       {slide.title}
                     </h3>
-
-                    <p className="text-base sm:text-lg lg:text-xl text-neutral-800 font-medium leading-[1.5] mb-8 sm:mb-10 max-w-[420px]">
+                    <p className="text-xs lg:text-sm xl:text-base text-neutral-800 font-medium leading-[1.5] mb-4 lg:mb-6 max-w-[300px] lg:max-w-[360px] xl:max-w-[400px]">
                       {slide.subtitle}
                     </p>
-                    
                     <Link
                       href={slide.visitLink}
                       className={cn(
-                        "group inline-flex items-center justify-center text-white px-8 sm:px-12 py-3.5 sm:py-4 rounded-xl font-semibold text-sm sm:text-base tracking-wide transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5",
-                        slide.buttonBg
+                        "group inline-flex items-center justify-center text-white px-6 py-2.5 lg:px-8 lg:py-3 rounded-xl font-semibold text-xs lg:text-sm tracking-wide transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5",
+                        slide.buttonBg,
                       )}
                     >
                       <span>{slide.buttonText}</span>
                     </Link>
                   </div>
 
-                  {/* Right Column: Premium Illustration Mockup */}
-                  <div className="w-full md:w-[50%] flex items-center justify-center md:justify-end relative z-10 px-2 md:px-0 mt-4 md:mt-0">
-                    {slide.isWallet ? (
-                      <div className="bg-white/90 backdrop-blur-md p-3 md:p-4 rounded-2xl shadow-[0_20px_60px_-15px_rgba(142,84,176,0.25)] border border-white/80 hover:rotate-2 hover:scale-[1.04] transition-all duration-700 w-full max-w-[280px] sm:max-w-[340px] md:max-w-[420px] lg:max-w-[480px] aspect-[1.46] relative overflow-hidden flex items-center justify-center group/card ring-1 ring-white/50">
-                        <div className="relative w-full h-full rounded-xl overflow-hidden border border-neutral-100/30 shadow-inner">
-                          <Image
-                            src={slide.image}
-                            alt={slide.altText}
-                            fill
-                            priority={index === 0}
-                            unoptimized
-                            className="object-cover transition-transform duration-1000 group-hover/card:scale-110"
-                          />
-                        </div>
+                  {/* Right Column: Image */}
+                  <div className="w-[50%] flex items-center justify-end relative z-10">
+                    <div className={cn(
+                      "backdrop-blur-md p-3 rounded-2xl border border-white/80 hover:scale-[1.04] transition-all duration-700 w-full max-w-[260px] lg:max-w-[320px] xl:max-w-[380px] aspect-[1.46] relative overflow-hidden flex items-center justify-center group/card ring-1 ring-white/50 bg-white/90",
+                      slide.isWallet ? "shadow-[0_20px_60px_-15px_rgba(142,84,176,0.25)] hover:rotate-2" : "shadow-[0_20px_60px_-15px_rgba(217,72,82,0.25)] hover:-rotate-2 rounded-3xl"
+                    )}>
+                      <div className={cn("relative w-full h-full overflow-hidden shadow-inner", slide.isWallet ? "rounded-xl border border-neutral-100/30" : "rounded-2xl")}>
+                        <Image
+                          src={slide.image}
+                          alt={slide.altText}
+                          fill
+                          unoptimized
+                          className="object-cover transition-transform duration-1000 group-hover/card:scale-110"
+                        />
                       </div>
-                    ) : (
-                      /* Elegant portrait photo border style for happy family illustration */
-                      <div className="bg-white/90 backdrop-blur-md p-2 md:p-3 rounded-3xl shadow-[0_20px_60px_-15px_rgba(217,72,82,0.25)] border border-white/80 hover:-rotate-2 hover:scale-[1.04] transition-all duration-700 w-full max-w-[280px] sm:max-w-[340px] md:max-w-[420px] lg:max-w-[480px] aspect-[1.46] relative overflow-hidden flex items-center justify-center group/card ring-1 ring-white/50">
-                        <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-inner">
-                          <Image
-                            src={slide.image}
-                            alt={slide.altText}
-                            fill
-                            unoptimized
-                            className="object-cover transition-transform duration-1000 group-hover/card:scale-110"
-                          />
-                        </div>
-                      </div>
-                    )}
+                    </div>
                   </div>
                 </div>
               </CarouselItem>
@@ -250,9 +276,10 @@ export const EditorialSlider = () => {
           })}
         </CarouselContent>
 
-        {/* Custom Navigation Buttons - Positioned in the bottom right corner exactly like your screenshot */}
-        <div className="absolute bottom-4 right-4 md:bottom-6 md:right-8 z-20 flex items-center gap-3 p-1 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300">
+        {/* Custom Navigation Buttons — desktop only */}
+        <div className="absolute bottom-6 right-8 z-20 hidden md:flex items-center gap-3 p-1 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300">
           <button
+            suppressHydrationWarning
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -261,9 +288,13 @@ export const EditorialSlider = () => {
             className="shadow-md bg-white hover:bg-neutral-50 border border-neutral-200/80 h-9 w-9 md:h-11 md:w-11 transition-all duration-300 flex items-center justify-center rounded-full text-neutral-800 cursor-pointer active:scale-90 hover:scale-105 hover:border-primary/30"
             aria-label="Previous slide"
           >
-            <ChevronLeft className="h-4.5 w-4.5 md:h-5 md:w-5 text-neutral-700" strokeWidth={2} />
+            <ChevronLeft
+              className="h-4.5 w-4.5 md:h-5 md:w-5 text-neutral-700"
+              strokeWidth={2}
+            />
           </button>
           <button
+            suppressHydrationWarning
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -272,7 +303,10 @@ export const EditorialSlider = () => {
             className="shadow-md bg-white hover:bg-neutral-50 border border-neutral-200/80 h-9 w-9 md:h-11 md:w-11 transition-all duration-300 flex items-center justify-center rounded-full text-neutral-800 cursor-pointer active:scale-90 hover:scale-105 hover:border-primary/30"
             aria-label="Next slide"
           >
-            <ChevronRight className="h-4.5 w-4.5 md:h-5 md:w-5 text-neutral-700" strokeWidth={2} />
+            <ChevronRight
+              className="h-4.5 w-4.5 md:h-5 md:w-5 text-neutral-700"
+              strokeWidth={2}
+            />
           </button>
         </div>
       </Carousel>

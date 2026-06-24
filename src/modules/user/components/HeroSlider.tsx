@@ -1,18 +1,18 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
 import { useQuery } from "convex/react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { motion } from "motion/react";
+import Image from "next/image";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 import {
   Carousel,
+  type CarouselApi,
   CarouselContent,
   CarouselItem,
-  type CarouselApi,
 } from "@/components/ui/carousel";
 import { cn } from "@/lib/utils";
-import Link from "next/link";
-import Image from "next/image";
-import { motion } from "motion/react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { api } from "../../../../convex/_generated/api";
 
 export const HeroSlider = () => {
@@ -22,17 +22,15 @@ export const HeroSlider = () => {
 
   const isLoading = banners === undefined;
 
-  console.log("BANNERS DATA FROM CONVEX:", banners);
-
   const displayBanners = (
     banners && banners.length > 0
       ? banners.slice(0, 5)
       : Array.from({ length: 5 }).map((_, index) => ({
-        _id: `placeholder-${index}`,
-        imageLink: "",
-        altText: `Placeholder Banner ${index + 1}`,
-        visitLink: "#",
-      }))
+          _id: `placeholder-${index}`,
+          imageLink: "",
+          altText: `Placeholder Banner ${index + 1}`,
+          visitLink: "#",
+        }))
   ) as Array<{
     _id: string;
     imageLink: string;
@@ -93,7 +91,7 @@ export const HeroSlider = () => {
   }, [carouselApi]);
 
   return (
-    <div className="w-full mb-10 max-w-[1440px] mx-auto px-8 group relative">
+    <div className="w-full max-w-[1400px] mx-auto px-3 sm:px-4 md:px-5 lg:px-6 md:pb-2 group relative">
       <Carousel
         setApi={setCarouselApi}
         className="w-full relative overflow-visible"
@@ -103,13 +101,13 @@ export const HeroSlider = () => {
           duration: 18, // Faster, snappy transition duration
         }}
       >
-        <CarouselContent className="-ml-6">
+        <CarouselContent className="-ml-5">
           {displayBanners.map((banner, index) => {
             const content = (
               <div
                 className={cn(
-                  "relative w-full h-[280px] sm:h-[340px] md:h-[400px] overflow-hidden rounded-xl bg-muted border border-neutral-100/50 shadow-md transition-all duration-500",
-                  isLoading && "animate-pulse"
+                  "relative w-full aspect-[2/1] sm:h-[340px] sm:aspect-auto md:h-[320px] lg:h-[360px] xl:h-[400px] overflow-hidden rounded-xl bg-muted border border-neutral-100/50 shadow-md transition-all duration-500",
+                  isLoading && "animate-pulse",
                 )}
               >
                 {banner.imageLink ? (
@@ -117,14 +115,15 @@ export const HeroSlider = () => {
                     src={banner.imageLink}
                     alt={banner.altText || `Banner ${index + 1}`}
                     fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 768px) 450px, (max-width: 1024px) 600px, (max-width: 1280px) 700px, 800px"
                     priority={index === 0}
-                    unoptimized
+                    unoptimized={false}
                     className="object-cover"
                   />
                 ) : (
                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted/60 select-none p-6 text-center">
                     <span className="text-base text-muted-foreground font-semibold">
-                      UpharVilla Banner {index + 1}
+                      upharVilla Banner {index + 1}
                     </span>
                     <span className="text-xs text-muted-foreground/60 mt-1">
                       No banner image uploaded yet
@@ -137,10 +136,10 @@ export const HeroSlider = () => {
             return (
               <CarouselItem
                 key={banner._id}
-                className="pl-6 basis-[88vw] sm:basis-[450px] md:basis-[600px] shrink-0 grow-0"
+                className="pl-5 basis-full sm:basis-[450px] md:basis-[600px] lg:basis-[700px] xl:basis-[800px] shrink-0 grow-0"
               >
                 {banner.imageLink ? (
-                  <Link href={banner.visitLink} target="_blank">
+                  <Link href={banner.visitLink}>
                     {content}
                   </Link>
                 ) : (
@@ -158,7 +157,7 @@ export const HeroSlider = () => {
             e.stopPropagation();
             carouselApi?.scrollPrev();
           }}
-          className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-20 shadow-lg bg-white hover:bg-neutral-50 border border-neutral-200 h-10 w-10 md:h-12 md:w-12 transition-all duration-300 flex items-center justify-center rounded-full text-neutral-800 cursor-pointer active:scale-95 hover:scale-105 opacity-0 group-hover:opacity-100"
+          className="absolute left-2 md:left-8 top-1/2 -translate-y-1/2 z-20 shadow-lg bg-white hover:bg-neutral-50 border border-neutral-200 h-10 w-10 md:h-12 md:w-12 transition-all duration-300 flex items-center justify-center rounded-full text-neutral-800 cursor-pointer active:scale-95 hover:scale-105 opacity-100 md:opacity-0 md:group-hover:opacity-100"
           aria-label="Previous slide"
         >
           <ChevronLeft className="h-5 w-5 md:h-4 md:w-4" strokeWidth={2} />
@@ -169,7 +168,7 @@ export const HeroSlider = () => {
             e.stopPropagation();
             carouselApi?.scrollNext();
           }}
-          className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-20 shadow-lg bg-white hover:bg-neutral-50 border border-neutral-200 h-10 w-10 md:h-12 md:w-12 transition-all duration-300 flex items-center justify-center rounded-full text-neutral-800 cursor-pointer active:scale-95 hover:scale-105 opacity-0 group-hover:opacity-100"
+          className="absolute right-2 md:right-8 top-1/2 -translate-y-1/2 z-20 shadow-lg bg-white hover:bg-neutral-50 border border-neutral-200 h-10 w-10 md:h-12 md:w-12 transition-all duration-300 flex items-center justify-center rounded-full text-neutral-800 cursor-pointer active:scale-95 hover:scale-105 opacity-100 md:opacity-0 md:group-hover:opacity-100"
           aria-label="Next slide"
         >
           <ChevronRight className="h-5 w-5 md:h-4 md:w-4" strokeWidth={2} />

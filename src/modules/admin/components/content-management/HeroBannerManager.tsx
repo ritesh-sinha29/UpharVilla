@@ -1,33 +1,24 @@
 "use client";
 
-import React, { useState, useRef } from "react";
 import { upload } from "@imagekit/next";
 import { useMutation, useQuery } from "convex/react";
-import { api } from "../../../../../convex/_generated/api";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
+import { ImageIcon, Loader2, Plus, Trash2, UploadCloud } from "lucide-react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
-import {
-  Loader2,
-  Plus,
-  Trash2,
-  ImageIcon,
-  UploadCloud,
-} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogDescription,
-  DialogFooter,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { api } from "../../../../../convex/_generated/api";
 
 export function HeroBannerManager() {
   const [altText, setAltText] = useState("");
@@ -92,7 +83,8 @@ export function HeroBannerManager() {
     toast.promise(promise(), {
       loading: "Uploading banner...",
       success: "Banner added successfully!",
-      error: (err) => `Failed to upload: ${err instanceof Error ? err.message : "Unknown error"}`,
+      error: (err) =>
+        `Failed to upload: ${err instanceof Error ? err.message : "Unknown error"}`,
     });
   };
 
@@ -151,7 +143,9 @@ export function HeroBannerManager() {
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="space-y-1">
-                <Label htmlFor="altText" className="text-xs">Alt Text</Label>
+                <Label htmlFor="altText" className="text-xs">
+                  Alt Text
+                </Label>
                 <Input
                   id="altText"
                   placeholder="e.g. Summer Collection"
@@ -160,7 +154,9 @@ export function HeroBannerManager() {
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="visitLink" className="text-xs">Redirect URL</Label>
+                <Label htmlFor="visitLink" className="text-xs">
+                  Redirect URL
+                </Label>
                 <Input
                   id="visitLink"
                   placeholder="https://..."
@@ -168,7 +164,7 @@ export function HeroBannerManager() {
                   onChange={(e) => setVisitLink(e.target.value)}
                 />
               </div>
-              <div 
+              <div
                 onClick={() => fileInputRef.current?.click()}
                 className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center gap-2 cursor-pointer border-muted-foreground/20 hover:border-primary/50 hover:bg-muted/30"
               >
@@ -177,21 +173,33 @@ export function HeroBannerManager() {
                   type="file"
                   accept="image/*"
                   className="hidden"
-                  onChange={(e) => e.target.files && setSelectedFile(e.target.files[0])}
+                  onChange={(e) =>
+                    e.target.files && setSelectedFile(e.target.files[0])
+                  }
                 />
                 {selectedFile ? (
-                  <span className="text-sm font-medium truncate max-w-full px-2">{selectedFile.name}</span>
+                  <span className="text-sm font-medium truncate max-w-full px-2">
+                    {selectedFile.name}
+                  </span>
                 ) : (
                   <div className="flex flex-col items-center gap-1">
                     <UploadCloud className="h-6 w-6 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">Select Image</span>
+                    <span className="text-xs text-muted-foreground">
+                      Select Image
+                    </span>
                   </div>
                 )}
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={handleUpload} disabled={isUploading || !selectedFile} className="w-full">
-                {isUploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button
+                onClick={handleUpload}
+                disabled={isUploading || !selectedFile}
+                className="w-full"
+              >
+                {isUploading && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 Save Banner
               </Button>
             </DialogFooter>
@@ -201,10 +209,17 @@ export function HeroBannerManager() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {banners?.map((banner) => (
-          <Card key={banner._id} className="overflow-hidden group hover:shadow-md transition-all border-primary/5 relative">
+          <Card
+            key={banner._id}
+            className="overflow-hidden group hover:shadow-md transition-all border-primary/5 relative"
+          >
             <div className="relative aspect-[21/9] overflow-hidden bg-muted">
-              <img src={banner.imageLink} className="object-cover w-full h-full" alt={banner.altText} />
-              
+              <img
+                src={banner.imageLink}
+                className="object-cover w-full h-full"
+                alt={banner.altText}
+              />
+
               {/* Always visible delete button at top right */}
               <div className="absolute top-2 right-2 z-10">
                 <Button
@@ -219,7 +234,9 @@ export function HeroBannerManager() {
             </div>
             <CardContent className="p-3">
               <h3 className="font-medium text-sm truncate">{banner.altText}</h3>
-              <p className="text-[10px] text-muted-foreground truncate">{banner.visitLink}</p>
+              <p className="text-[10px] text-muted-foreground truncate">
+                {banner.visitLink}
+              </p>
             </CardContent>
           </Card>
         ))}

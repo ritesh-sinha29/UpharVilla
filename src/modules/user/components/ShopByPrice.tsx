@@ -1,118 +1,268 @@
 "use client";
 
-import React from "react";
+import { motion } from "framer-motion";
+import { ArrowRight, Sparkles } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
 
 const priceCategories = [
   {
-    label: "Under 299",
-    price: "299",
-    image: "/gift1.svg",
-  },
-  {
-    label: "Under 499",
+    label: "Under ₹499",
     price: "499",
-    image: "/gift3.svg",
+    image: "/53.svg",
+    tagline: "Thoughtful gifts",
+    bg: "bg-gradient-to-br from-rose-50 via-pink-50 to-rose-100/50",
+    border: "border-rose-200/60 hover:border-rose-300",
+    accent: "bg-rose-500",
+    accentLight: "bg-rose-100 text-rose-700",
+    text: "text-rose-600",
+    shadow: "hover:shadow-rose-200/50",
   },
   {
-    label: "Under 699",
+    label: "Under ₹699",
     price: "699",
-    image: "/gift2.svg",
+    image: "/54.svg",
+    tagline: "Premium picks",
+    bg: "bg-gradient-to-br from-violet-50 via-purple-50 to-violet-100/50",
+    border: "border-violet-200/60 hover:border-violet-300",
+    accent: "bg-violet-500",
+    accentLight: "bg-violet-100 text-violet-700",
+    text: "text-violet-600",
+    shadow: "hover:shadow-violet-200/50",
   },
   {
-    label: "Under 999",
+    label: "Under ₹999",
     price: "999",
-    image: "/gift4.svg",
+    image: "/55.svg",
+    tagline: "Curated collection",
+    bg: "bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100/50",
+    border: "border-amber-200/60 hover:border-amber-300",
+    accent: "bg-amber-500",
+    accentLight: "bg-amber-100 text-amber-700",
+    text: "text-amber-600",
+    shadow: "hover:shadow-amber-200/50",
   },
   {
-    label: "Under 1599",
+    label: "Under ₹1599",
     price: "1599",
-    image: "/gift5.svg",
+    image: "/56.svg",
+    tagline: "Luxury hampers",
+    bg: "bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100/50",
+    border: "border-emerald-200/60 hover:border-emerald-300",
+    accent: "bg-emerald-500",
+    accentLight: "bg-emerald-100 text-emerald-700",
+    text: "text-emerald-600",
+    shadow: "hover:shadow-emerald-200/50",
   },
 ];
 
 const ShopByPrice = () => {
   return (
-    <section className="py-12 bg-white relative ">
-      {/* <Image
-        src="/35.png"
-        alt="Accent"
-        width={200}
-        height={200}
-        className="absolute top-0 -right-5 rounded-xl"
-      /> */}
-      <div className="max-w-[1440px] mx-auto px-8">
-        <div className="text-left mb-12">
-          <h2 className="text-3xl font-semibold">Shop By Price</h2>
-          <p className="text-muted-foreground font-mono text-lg max-w-2xl font-medium">
-            Shop your favourites gift Hmapers under your budget.
-          </p>
+    <section className="py-2 sm:py-4 md:py-6 lg:py-8 bg-white relative overflow-hidden">
+      {/* Decorative background removed for clean white */}
+
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-5 md:px-6 lg:px-8 xl:px-12 relative z-10">
+        {/* ── Header ── */}
+        <div className="flex items-center justify-between md:block">
+          <div className="flex items-center gap-2 md:block">
+            <div className="w-1 h-5 bg-[#E11D48] rounded-full md:hidden" />
+            <h2 className="text-[15px] sm:text-lg md:text-2xl lg:text-3xl xl:text-4xl font-bold md:font-semibold text-neutral-900">
+              Shop By Price
+            </h2>
+          </div>
+          <a
+            href="/products"
+            className="text-[#E11D48] text-[11px] font-semibold flex items-center gap-0.5 md:hidden"
+          >
+            View All <ArrowRight className="w-3 h-3" />
+          </a>
+        </div>
+        <motion.p
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="text-muted-foreground font-mono text-xs sm:text-sm md:text-sm lg:text-base max-w-2xl font-medium hidden md:block mt-1 md:mt-2"
+        >
+          Shop your favourite gift hampers under your budget.
+        </motion.p>
+
+        {/* ── Mobile & Tablet: 2x2 grid (below md) ── */}
+        <div className="grid grid-cols-2 md:hidden gap-2 mt-2">
+          {priceCategories.map((category, index) => (
+            <Link
+              key={category.price}
+              href={`/products?maxPrice=${category.price}`}
+              className="group block"
+            >
+              <div
+                className={`relative overflow-hidden ${category.bg} border ${category.border} shadow-sm transition-all duration-400 active:scale-[0.97]`}
+                style={{
+                  borderRadius:
+                    index % 2 === 0
+                      ? "10px 22px 10px 22px"
+                      : "22px 10px 22px 10px",
+                }}
+              >
+                {/* Gift image — compact landscape, centered */}
+                <div className="relative w-full aspect-[5/4] overflow-hidden">
+                  <Image
+                    src={category.image}
+                    alt={category.label}
+                    fill
+                    unoptimized
+                    className="object-contain object-center mix-blend-multiply scale-90"
+                  />
+                </div>
+                {/* Price label — compact */}
+                <div className="px-2 pb-2 -mt-2 text-center">
+                  <p
+                    className={`text-[11px] font-black ${category.text} leading-tight`}
+                  >
+                    {category.label}
+                  </p>
+                  <p className="text-[7px] text-gray-400 font-medium mt-0.5">
+                    {category.tagline}
+                  </p>
+                </div>
+              </div>
+            </Link>
+          ))}
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
-          {priceCategories.map((category, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{
-                duration: 0.5,
-                delay: index * 0.1,
-                ease: "easeOut",
-              }}
-              viewport={{ once: true }}
-              className="group cursor-pointer"
-            >
-              <Link href={`/search?maxPrice=${category.price}`} className="block">
-                <div className="relative mb-6">
-                  {/* Randomish shaped container for image */}
+        {/* ── Desktop: Featured card + 2x2 grid ── */}
+        <div className="hidden md:flex flex-row gap-3 md:gap-3 lg:gap-4 items-stretch mt-4 md:mt-5">
+          {/* Left Featured Card */}
+          <div className="w-[42%] flex">
+            <Link href="/products" className="group block w-full">
+              <motion.div
+                className="relative w-full h-full overflow-hidden bg-[#fbf0dd] shadow-sm rounded-[1.5rem] lg:rounded-[2rem] rounded-br-none p-3 md:p-3 lg:p-4 pb-8 md:pb-8 lg:pb-10 flex flex-col transition-all duration-500 group-hover:shadow-2xl group-hover:shadow-primary/15 cursor-pointer"
+                whileHover={{ scale: 1.012 }}
+                transition={{ duration: 0.4 }}
+              >
+                {/* Image — centered */}
+                <div className="relative flex-1 min-h-[140px] md:min-h-[120px] lg:min-h-[150px] xl:min-h-[170px] w-full overflow-hidden">
+                  <Image
+                    src="/price_svg.svg"
+                    alt="Shop By Price"
+                    fill
+                    unoptimized
+                    className="object-contain object-center scale-110 transition-transform duration-700 group-hover:scale-118"
+                  />
+                </div>
+
+                {/* Text */}
+                <div className="pt-2 lg:pt-3 pr-12 mt-auto">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 lg:px-2.5 rounded-full text-[8px] lg:text-[9px] font-bold uppercase tracking-wider bg-[#E11D48]/10 text-[#E11D48] mb-1 lg:mb-1.5">
+                    <Sparkles className="w-2.5 h-2.5 lg:w-3 lg:h-3" /> Budget
+                    Friendly
+                  </span>
+                  <h3 className="text-lg md:text-lg lg:text-xl xl:text-2xl font-extrabold text-[#E11D48] transition-colors duration-300 group-hover:text-primary mb-0.5 lg:mb-1">
+                    Shop By Price
+                  </h3>
+                  <p className="text-[10px] md:text-xs lg:text-sm text-gray-600 font-medium leading-relaxed max-w-[85%]">
+                    Explore our premium, hand-picked gift hampers crafted to fit
+                    your pocket perfectly.
+                  </p>
+                </div>
+
+                {/* Corner cutout */}
+                <div className="absolute bottom-[-1px] right-[-1px] w-[48px] lg:w-[56px] xl:w-[64px] h-[48px] lg:h-[56px] xl:h-[64px] bg-white rounded-tl-[1.2rem] lg:rounded-tl-[1.5rem] pointer-events-none">
+                  <div
+                    className="absolute bottom-0 w-3 h-3 bg-white"
+                    style={{ right: "47px" }}
+                  >
+                    <div className="w-full h-full bg-[#fbf0dd] rounded-br-[12px]" />
+                  </div>
+                  <div
+                    className="absolute right-0 w-3 h-3 bg-white"
+                    style={{ bottom: "47px" }}
+                  >
+                    <div className="w-full h-full bg-[#fbf0dd] rounded-br-[12px]" />
+                  </div>
+                </div>
+
+                {/* Arrow button */}
+                <div className="absolute bottom-1.5 right-1.5 lg:bottom-2 lg:right-2 w-9 h-9 lg:w-10 lg:h-10 xl:w-11 xl:h-11 rounded-full bg-[#E11D48] flex items-center justify-center text-white shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:bg-primary z-10">
+                  <ArrowRight className="w-4 h-4 lg:w-5 lg:h-5 stroke-[2.5]" />
+                </div>
+              </motion.div>
+            </Link>
+          </div>
+
+          {/* Right Price Grid — 2x2, responsive */}
+          <div className="w-[58%] grid grid-cols-2 gap-2.5 md:gap-2.5 lg:gap-3">
+            {priceCategories.map((category, index) => (
+              <motion.div
+                key={category.price}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.5,
+                  delay: index * 0.08,
+                  ease: "easeOut",
+                }}
+                viewport={{ once: true }}
+                className="group cursor-pointer"
+              >
+                <Link
+                  href={`/products?maxPrice=${category.price}`}
+                  className="block"
+                >
                   <motion.div
-                    className="relative aspect-[0.9/1] overflow-hidden bg-primary/10 border border-primary/30 shadow-sm transition-all duration-500 rounded-xl group-hover:shadow-xl group-hover:shadow-primary/20 group-hover:border-primary/30 group-hover:bg-primary/[0.08]"
+                    className={`relative overflow-hidden ${category.bg} border ${category.border} shadow-sm transition-all duration-500 ${category.shadow} group-hover:shadow-xl`}
                     style={{
                       borderRadius:
                         index % 2 === 0
-                          ? "12px 40px 12px 40px"
-                          : "40px 12px 40px 12px",
+                          ? "12px 36px 12px 36px"
+                          : "36px 12px 36px 12px",
                     }}
                     whileHover={{
                       borderRadius:
                         index % 2 === 0
-                          ? "40px 12px 40px 12px"
-                          : "12px 40px 12px 40px",
-                      scale: 1.05,
+                          ? "36px 12px 36px 12px"
+                          : "12px 36px 12px 36px",
+                      scale: 1.03,
                     }}
                   >
-                    <Image
-                      src={category.image}
-                      alt={category.label}
-                      fill
-                      unoptimized
-                      className="object-cover transition-transform duration-700 scale-105"
-                    />
+                    {/* Gift image — centered, no cropping, responsive padding */}
+                    <div className="relative w-full aspect-[3/2] overflow-hidden">
+                      <Image
+                        src={category.image}
+                        alt={category.label}
+                        fill
+                        unoptimized
+                        className="object-contain object-center mix-blend-multiply transition-transform duration-500 group-hover:scale-110"
+                      />
+                    </div>
 
-                    {/* Subtle purple tint on hover */}
-                    <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    {/* Top-left badge */}
+                    <div className="absolute top-2 left-2 md:top-2.5 md:left-2.5 lg:top-3 lg:left-3 z-10">
+                      <span
+                        className={`inline-block px-1.5 py-0.5 md:px-2 md:py-0.5 rounded-full text-[7px] md:text-[8px] lg:text-[9px] font-bold ${category.accentLight} shadow-sm`}
+                      >
+                        {category.tagline}
+                      </span>
+                    </div>
+
+                    {/* Price label — centered, responsive text */}
+                    <div className="px-2 md:px-2.5 pb-1.5 md:pb-2 -mt-1 text-center">
+                      <p
+                        className={`text-xs md:text-sm lg:text-base font-black ${category.text} leading-none tracking-tight`}
+                      >
+                        {category.label}
+                      </p>
+                      <p className="text-[7px] md:text-[8px] lg:text-[9px] text-gray-400 font-medium mt-0.5 truncate">
+                        {category.tagline}
+                      </p>
+                    </div>
+
+                    <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                   </motion.div>
-
-                  {/* Background decorative shape */}
-                  <div className="absolute -inset-2 bg-[#c88ee8]/5 rounded-[2rem] -z-10 scale-90 opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all duration-500" />
-                </div>
-
-                <div className="text-center">
-                  <span className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground block mb-1">
-                    Under
-                  </span>
-                  <h3 className="text-2xl font-bold text-black transition-colors duration-300 group-hover:text-[#c88ee8] flex items-center justify-center">
-                    <span className="text-lg mr-0.5">₹</span>
-                    {category.price}
-                  </h3>
-                  <motion.div className="h-0.5 w-0 bg-[#c88ee8] mx-auto mt-1 transition-all duration-300 group-hover:w-12" />
-                </div>
-              </Link>
-            </motion.div>
-          ))}
+                </Link>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </div>
     </section>

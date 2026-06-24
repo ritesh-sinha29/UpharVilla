@@ -14,7 +14,10 @@ export async function POST(req: Request) {
     const fileName = parts[parts.length - 1];
 
     if (!fileName) {
-      return NextResponse.json({ error: "Invalid URL format" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid URL format" },
+        { status: 400 },
+      );
     }
 
     console.log("Searching for file name on ImageKit:", fileName);
@@ -25,18 +28,27 @@ export async function POST(req: Request) {
     });
 
     if (files && files.length > 0) {
-      // @ts-ignore
+      // @ts-expect-error
       console.log("Found file on ImageKit, deleting ID:", files[0].fileId);
       // Delete the file using fileId
-      // @ts-ignore
+      // @ts-expect-error
       await imagekit.deleteFile(files[0].fileId);
-      return NextResponse.json({ success: true, message: "File deleted from ImageKit" });
+      return NextResponse.json({
+        success: true,
+        message: "File deleted from ImageKit",
+      });
     }
 
     console.log("File not found on ImageKit:", fileName);
-    return NextResponse.json({ success: true, message: "File not found on ImageKit, skipped deletion" });
+    return NextResponse.json({
+      success: true,
+      message: "File not found on ImageKit, skipped deletion",
+    });
   } catch (error: any) {
     console.error("ImageKit delete error:", error);
-    return NextResponse.json({ error: error.message || "Failed to delete file" }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message || "Failed to delete file" },
+      { status: 500 },
+    );
   }
 }

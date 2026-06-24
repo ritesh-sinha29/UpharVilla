@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export const AnnouncementBar = () => {
   const pathname = usePathname();
@@ -26,14 +26,15 @@ export const AnnouncementBar = () => {
   return (
     <div
       style={{
-        maxHeight: visible ? "48px" : "0px",
+        maxHeight: visible ? "40px" : "0px",
         opacity: visible ? 1 : 0,
         overflow: "hidden",
-        transition: "max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease",
+        transition:
+          "max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease",
       }}
       className="w-full bg-primary select-none border-b border-primary/10 relative flex justify-center items-center"
     >
-      <div className="py-2.5 w-full overflow-hidden relative flex justify-center items-center h-10">
+      <div className="py-1.5 md:py-2.5 w-full overflow-hidden relative flex justify-center items-center h-8 md:h-10">
         <style>{`
           @keyframes announcement-slide {
             0% {
@@ -58,12 +59,8 @@ export const AnnouncementBar = () => {
           }
         `}</style>
 
-        <div className="animate-announcement flex items-center justify-center gap-2.5 text-white font-medium text-xs sm:text-sm tracking-wide absolute">
-          <img
-            src="/rider.svg"
-            alt="Rider"
-            className="h-16 w-16 select-none"
-          />
+        <div className="animate-announcement flex items-center justify-center gap-1.5 md:gap-2.5 text-white font-medium text-[11px] sm:text-sm lg:text-base tracking-wide absolute whitespace-nowrap">
+          <img src="/rider.svg" alt="Rider" className="h-8 w-8 md:h-16 md:w-16 select-none" />
           <span>{text}</span>
         </div>
       </div>

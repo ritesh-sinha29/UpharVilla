@@ -1,42 +1,41 @@
 "use client";
 
-import React from "react";
+import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
 
 const DEFAULT_SLOTS = {
   slot1: {
     image: "/hamper1.png",
     altText: "Shop Hampers",
-    visitLink: "/category/hampers",
+    visitLink: "/products?tag=Customized Hampers",
     label: "SHOP HAMPERS",
   },
   slot2: {
     image: "/frame1.png",
     altText: "Shop Frames",
-    visitLink: "/category/frames",
+    visitLink: "/products?tag=Customized Photo Gifts",
     label: "SHOP FRAMES",
   },
   slot3: {
     image:
       "https://images.unsplash.com/photo-1602173574767-37ac01994b2a?q=80&w=600&h=600&fit=crop&auto=format",
     altText: "Shop Necklaces",
-    visitLink: "/category/necklaces",
+    visitLink: "/products?tag=Customized Jewelry",
     label: "SHOP NECKLACES",
   },
   slot4: {
     image:
       "https://images.unsplash.com/photo-1630019852942-f89202989a59?q=80&w=600&h=600&fit=crop&auto=format",
     altText: "Shop Earrings",
-    visitLink: "/category/earrings",
+    visitLink: "/products?tag=Customized Jewelry",
     label: "SHOP EARRINGS",
   },
   slot5: {
     image:
       "https://images.unsplash.com/photo-1589128777073-263566ae5e4d?q=80&w=600&h=900&fit=crop&auto=format",
     altText: "Shop Charms",
-    visitLink: "/category/charms",
+    visitLink: "/products?tag=Customized Jewelry",
     label: "SHOP CHARMS",
   },
 };
@@ -88,7 +87,7 @@ const EditorialGrid = () => {
   );
 
   return (
-    <section className="py-10 max-w-[1440px] mx-auto px-8">
+    <section className="py-10 max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 h-auto md:h-[500px]">
         {/* Slot 1: Left Tall */}
         <GridItem

@@ -1,0 +1,375 @@
+"use client";
+
+import { useMutation, useQuery } from "convex/react";
+import {
+  CircleUser,
+  Plus,
+  Trash2,
+} from "lucide-react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useAdmin } from "@/lib/admin-context";
+import { authClient } from "@/lib/auth-client";
+import { api } from "../../../../../convex/_generated/api";
+import type { Id } from "../../../../../convex/_generated/dataModel";
+
+const ROLE_LABELS: Record<string, string> = {
+  owner: "Owner",
+  admin: "Admin",
+  manager: "Manager",
+};
+
+export default function AccessControlPage() {
+  const { canManageAccess } = useAdmin();
+  const adminUsers = useQuery(api.adminUsers.list);
+  const addUser = useMutation(api.adminUsers.add);
+  const removeUser = useMutation(api.adminUsers.remove);
+  const updateRole = useMutation(api.adminUsers.updateRole);
+  const { data: session } = authClient.useSession();
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [newName, setNewName] = useState("");
+  const [newRole, setNewRole] = useState<"admin" | "manager">("manager");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleAdd = async () => {
+    if (!newEmail || !newName || !session?.user?.id) return;
+    setIsSubmitting(true);
+    try {
+      await addUser({
+        email: newEmail,
+        name: newName,
+        role: newRole,
+        addedBy: session.user.id,
+      });
+      setDialogOpen(false);
+      setNewEmail("");
+      setNewName("");
+      setNewRole("manager");
+    } catch (err: any) {
+      alert(err.message || "Failed to add user");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleRemove = async (id: Id<"adminUsers">) => {
+    if (!confirm("Remove this team member's access?")) return;
+    try {
+      await removeUser({ id });
+    } catch (err: any) {
+      alert(err.message || "Failed to remove user");
+    }
+  };
+
+  const handleRoleChange = async (
+    id: Id<"adminUsers">,
+    role: "admin" | "manager",
+  ) => {
+    try {
+      await updateRole({ id, role });
+    } catch (err: any) {
+      alert(err.message || "Failed to update role");
+    }
+  };
+
+  return (
+    <div className="space-y-6 max-w-4xl mx-auto">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-neutral-800 font-serif">
+            Access Control
+          </h1>
+          <p className="text-neutral-400 text-sm mt-1">
+            Manage who can access the admin panel and their permissions.
+          </p>
+        </div>
+
+        {canManageAccess && (
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="rounded-xl gap-2 cursor-pointer">
+                <Plus className="w-4 h-4" />
+                Add Team Member
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Add Team Member</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 mt-2">
+                <div>
+                  <label className="text-sm font-medium text-neutral-700 mb-1.5 block">
+                    Name
+                  </label>
+                  <Input
+                    placeholder="Employee name"
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-neutral-700 mb-1.5 block">
+                    Email
+                  </label>
+                  <Input
+                    placeholder="employee@email.com"
+                    type="email"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                  />
+                  <p className="text-[11px] text-neutral-400 mt-1">
+                    Employee must have an account on upharVilla first.
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-neutral-700 mb-1.5 block">
+                    Role
+                  </label>
+                  <Select
+                    value={newRole}
+                    onValueChange={(v) =>
+                      setNewRole(v as "admin" | "manager")
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="admin">
+                        Admin — Full access (no access control)
+                      </SelectItem>
+                      <SelectItem value="manager">
+                        Manager — View + manage orders only
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  className="w-full rounded-xl cursor-pointer"
+                  onClick={handleAdd}
+                  disabled={isSubmitting || !newEmail || !newName}
+                >
+                  {isSubmitting ? "Adding…" : "Add Team Member"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+      </div>
+
+      {/* Team Members Table */}
+      <div className="border rounded-2xl overflow-hidden">
+        <table className="w-full">
+          <thead>
+            <tr className="bg-neutral-50 border-b">
+              <th className="text-left px-5 py-3 text-xs font-semibold text-neutral-400 uppercase tracking-wider">
+                Team Member
+              </th>
+              <th className="text-left px-5 py-3 text-xs font-semibold text-neutral-400 uppercase tracking-wider">
+                Role
+              </th>
+              <th className="text-left px-5 py-3 text-xs font-semibold text-neutral-400 uppercase tracking-wider hidden sm:table-cell">
+                Added
+              </th>
+              {canManageAccess && (
+                <th className="text-right px-5 py-3 text-xs font-semibold text-neutral-400 uppercase tracking-wider">
+                  Actions
+                </th>
+              )}
+            </tr>
+          </thead>
+          <tbody>
+            {adminUsers === undefined ? (
+              <tr>
+                <td colSpan={4} className="px-5 py-10 text-center">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto" />
+                </td>
+              </tr>
+            ) : adminUsers.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={4}
+                  className="px-5 py-10 text-center text-neutral-400 text-sm"
+                >
+                  No team members yet.
+                </td>
+              </tr>
+            ) : (
+              adminUsers.map((user) => {
+                const label = ROLE_LABELS[user.role] ?? user.role;
+                const initials = user.name
+                  .split(" ")
+                  .map((w) => w[0])
+                  .join("")
+                  .toUpperCase()
+                  .slice(0, 2);
+                const isCurrentUser =
+                  user.userId === session?.user?.id ||
+                  user.email === session?.user?.email;
+
+                return (
+                  <tr
+                    key={user._id}
+                    className="border-b last:border-b-0 hover:bg-neutral-50/50 transition-colors"
+                  >
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-3">
+                        <CircleUser className="w-9 h-9 text-neutral-300 flex-shrink-0" strokeWidth={1.5} />
+                        <div>
+                          <p className="font-semibold text-sm text-neutral-800">
+                            {user.name}
+                            {isCurrentUser && (
+                              <span className="ml-1.5 text-[10px] font-medium text-neutral-400">
+                                (you)
+                              </span>
+                            )}
+                          </p>
+                          <p className="text-xs text-neutral-400">
+                            {user.email}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4">
+                      {canManageAccess && user.role !== "owner" ? (
+                        <Select
+                          value={user.role}
+                          onValueChange={(v) =>
+                            handleRoleChange(
+                              user._id,
+                              v as "admin" | "manager",
+                            )
+                          }
+                        >
+                          <SelectTrigger className="w-28 h-8 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="admin">Admin</SelectItem>
+                            <SelectItem value="manager">Manager</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <span className="text-xs font-semibold text-primary">
+                          {label}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-5 py-4 hidden sm:table-cell">
+                      <span className="text-xs text-neutral-400">
+                        {new Date(user.createdAt).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </span>
+                    </td>
+                    {canManageAccess && (
+                      <td className="px-5 py-4 text-right">
+                        {user.role !== "owner" && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-neutral-300 hover:text-rose-500 hover:bg-rose-50 cursor-pointer"
+                            onClick={() => handleRemove(user._id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </td>
+                    )}
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Permission Matrix */}
+      <div className="border rounded-2xl overflow-hidden">
+        <div className="px-5 py-4 border-b bg-neutral-50">
+          <h3 className="font-semibold text-neutral-800 text-sm">
+            Permission Matrix
+          </h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b">
+                <th className="text-left px-5 py-3 font-medium text-neutral-400 text-xs uppercase tracking-wider">
+                  Feature
+                </th>
+                <th className="text-center px-4 py-3 font-medium text-neutral-400 text-xs uppercase tracking-wider">
+                  Owner
+                </th>
+                <th className="text-center px-4 py-3 font-medium text-neutral-400 text-xs uppercase tracking-wider">
+                  Admin
+                </th>
+                <th className="text-center px-4 py-3 font-medium text-neutral-400 text-xs uppercase tracking-wider">
+                  Manager
+                </th>
+              </tr>
+            </thead>
+            <tbody className="text-neutral-600">
+              {[
+                ["Dashboard", true, true, "view"],
+                ["Orders (view)", true, true, true],
+                ["Orders (update status)", true, true, true],
+                ["Orders (cancel/delete)", true, true, false],
+                ["Inventory (view)", true, true, "view"],
+                ["Inventory (add/edit/delete)", true, true, false],
+                ["Content Management", true, true, false],
+                ["Access Control", true, "view", false],
+              ].map(([feature, owner, admin, manager]) => (
+                <tr
+                  key={feature as string}
+                  className="border-b last:border-b-0"
+                >
+                  <td className="px-5 py-2.5 text-sm font-medium text-neutral-700">
+                    {feature as string}
+                  </td>
+                  <td className="text-center px-4 py-2.5">
+                    <PermCell value={owner} />
+                  </td>
+                  <td className="text-center px-4 py-2.5">
+                    <PermCell value={admin} />
+                  </td>
+                  <td className="text-center px-4 py-2.5">
+                    <PermCell value={manager} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PermCell({ value }: { value: string | boolean }) {
+  if (value === true)
+    return <span className="text-primary font-bold text-sm">✓</span>;
+  if (value === "view")
+    return <span className="text-neutral-400 text-xs font-medium">View</span>;
+  return <span className="text-neutral-300 text-sm">—</span>;
+}
