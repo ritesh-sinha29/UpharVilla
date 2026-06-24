@@ -42,6 +42,22 @@ function CheckoutPageContent() {
   const releaseReservations = useMutation(api.checkout.releaseReservations);
   const addresses = useQuery(api.addresses.list);
 
+  // ── Coupon validation (server-side computed discount) ─────────────────────
+  // Compute cart total from reservations so we can validate the coupon server-side.
+  // This ensures the discount shown to the user matches what Razorpay charges.
+  const cartTotalForCoupon = (activeReservations || []).reduce(
+    (sum, item) => sum + (item.product?.price || 0) * item.quantity,
+    0,
+  );
+  const couponValidation = useQuery(
+    api.coupons.validateCoupon,
+    couponCode && session?.user?.id && cartTotalForCoupon > 0
+      ? { code: couponCode, userId: session.user.id, cartTotal: cartTotalForCoupon }
+      : "skip",
+  );
+  const couponDiscount = couponValidation?.valid ? couponValidation.discountAmount : 0;
+  const appliedCouponCode = couponValidation?.valid ? couponValidation.code : null;
+
   // Component states
   const [isReserving, setIsReserving] = useState(true);
   const [reserveError, setReserveError] = useState<string | null>(null);
@@ -229,7 +245,8 @@ function CheckoutPageContent() {
   });
 
   const totalDiscount = totalMrp - totalPrice;
-  const finalAmount = totalPrice + platformFee;
+  const finalAmount = Math.max(0, totalPrice - couponDiscount) + platformFee;
+  const totalSavings = totalDiscount + couponDiscount;
 
   // Trigger Razorpay payment gateway
   const handleInitiatePayment = async () => {
@@ -585,6 +602,22 @@ function CheckoutPageContent() {
                   </div>
                 )}
 
+                {couponDiscount > 0 && (
+                  <div className="flex justify-between text-xs text-neutral-600">
+                    <span className="flex items-center gap-1">
+                      Coupon
+                      {appliedCouponCode && (
+                        <span className="bg-primary/10 text-primary text-[9px] font-bold px-1.5 py-0.5 rounded uppercase">
+                          {appliedCouponCode}
+                        </span>
+                      )}
+                    </span>
+                    <span className="text-green-600 font-medium">
+                      − ₹{couponDiscount.toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                )}
+
                 <div className="flex justify-between text-xs text-neutral-600">
                   <span>Platform Fee</span>
                   <span>₹{platformFee}</span>
@@ -596,11 +629,11 @@ function CheckoutPageContent() {
                 </div>
 
                 {/* Savings callout */}
-                {totalDiscount > 0 && (
+                {totalSavings > 0 && (
                   <div className="text-green-700 font-medium text-[11px] bg-green-50 border border-green-100 px-3.5 py-2 rounded-lg flex items-center gap-2 mt-1">
                     <ShieldCheck className="w-3.5 h-3.5 shrink-0 text-green-500" />
                     <span>
-                      You save ₹{totalDiscount.toLocaleString("en-IN")} on this
+                      You save ₹{totalSavings.toLocaleString("en-IN")} on this
                       order!
                     </span>
                   </div>

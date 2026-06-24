@@ -376,11 +376,31 @@ export const ProductDetails = ({ product }: ProductDetailsProps) => {
       router.push("/auth");
       return;
     }
-    // Go directly to checkout with ONLY this product — do NOT add to cart
-    const couponQuery = appliedCoupon ? `&coupon=${appliedCoupon.code}` : "";
-    router.push(
-      `/checkout?productId=${product._id}&quantity=1${couponQuery}`,
-    );
+
+    try {
+      setIsAdding(true);
+
+      // Flipkart-style: ensure item is in cart before checkout.
+      // If already in cart, skip the add — use existing cart quantity.
+      if (!isAlreadyInCart) {
+        await addToCart({ productId: product._id, quantity: 1 });
+        setIsAddedToCart(true);
+      }
+
+      // Build checkout URL with product-specific params
+      const qty = isAlreadyInCart
+        ? cartItems?.find((item) => item.product._id === product._id)?.quantity ?? 1
+        : 1;
+      const couponQuery = appliedCoupon ? `&coupon=${appliedCoupon.code}` : "";
+
+      router.push(
+        `/checkout?productId=${product._id}&quantity=${qty}${couponQuery}`,
+      );
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to proceed. Please try again.");
+    } finally {
+      setIsAdding(false);
+    }
   };
 
   return (

@@ -42,16 +42,16 @@ const categoryLinks: Record<string, string> = {
 
 export const Categories = () => {
   return (
-    <section className="md:py-6 lg:py-8 px-5 sm:px-6 md:px-8 lg:px-12 bg-background">
-      <div className="max-w-[1400px] mx-auto">
-        <div className="flex flex-col items-center mb-3 md:mb-6">
-          <h2 className="text-[15px] sm:text-2xl md:text-3xl lg:text-4xl font-bold md:font-semibold tracking-tight mb-2 md:mb-4 text-center">
+    <section className="py-4 sm:py-5 md:py-6 lg:py-8 px-4 sm:px-6 md:px-8 lg:px-12 bg-background">
+      <div className="max-w-[1100px] mx-auto">
+        <div className="flex flex-col items-center mb-2.5 sm:mb-3 md:mb-5">
+          <h2 className="text-[15px] sm:text-lg md:text-xl lg:text-2xl font-bold md:font-semibold tracking-tight mb-1.5 md:mb-3 text-center">
             Shop by Category
           </h2>
-          <div className="h-1 md:h-1.5 w-16 md:w-24 bg-primary rounded-full" />
+          <div className="h-0.5 sm:h-1 md:h-1.5 w-10 sm:w-14 md:w-20 bg-primary rounded-full" />
         </div>
 
-        <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6 lg:gap-8">
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-2.5 sm:gap-3 md:gap-4 lg:gap-5">
           {categories.map((category, index) => (
             <Link
               key={category.name}
@@ -69,7 +69,7 @@ export const Categories = () => {
                 viewport={{ once: true }}
                 className="group cursor-pointer"
               >
-                <div className="relative mb-3 md:mb-6">
+                <div className="relative mb-1.5 sm:mb-2 md:mb-3">
                   {/* Randomish shaped container for image */}
                   <motion.div
                     className="relative aspect-square overflow-hidden bg-primary/10 border border-primary/30 shadow-sm transition-all duration-500 rounded-xl group-hover:shadow-xl group-hover:shadow-primary/20 group-hover:border-primary/30 group-hover:bg-primary/[0.08]"
@@ -87,12 +87,12 @@ export const Categories = () => {
                       scale: 1.05,
                     }}
                   >
-                    <div className="absolute inset-2 sm:inset-3 md:inset-4">
+                    <div className="absolute inset-1.5 sm:inset-2 md:inset-3">
                       <Image
                         src={category.image}
                         alt={category.name}
                         fill
-                        sizes="(max-width: 640px) 30vw, (max-width: 1024px) 25vw, 15vw"
+                        sizes="(max-width: 640px) 28vw, (max-width: 1024px) 20vw, 140px"
                         className="object-contain transition-transform duration-700 group-hover:scale-110"
                       />
                     </div>
@@ -106,10 +106,10 @@ export const Categories = () => {
                 </div>
 
                 <div className="text-center">
-                  <h3 className="text-xs md:text-base lg:text-lg font-semibold text-black transition-colors duration-300 group-hover:text-[#c88ee8]">
+                  <h3 className="text-[10px] sm:text-xs md:text-sm lg:text-base font-semibold text-black transition-colors duration-300 group-hover:text-[#c88ee8]">
                     {category.name}
                   </h3>
-                  <motion.div className="h-0.5 w-0 bg-[#c88ee8] mx-auto mt-1 transition-all duration-300 group-hover:w-12" />
+                  <motion.div className="h-0.5 w-0 bg-[#c88ee8] mx-auto mt-0.5 sm:mt-1 transition-all duration-300 group-hover:w-8 sm:group-hover:w-10 md:group-hover:w-12" />
                 </div>
               </motion.div>
             </Link>
