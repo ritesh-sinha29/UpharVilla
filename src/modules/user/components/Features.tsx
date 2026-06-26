@@ -13,17 +13,17 @@ const Features = () => {
     {
       icon: <Truck strokeWidth={1.5} className="w-8 h-8" />,
       title: "Free Shipping",
-      description: "Lorem ipsum dolor sit amet consectetu adipisicing elit sed",
+      description: "Pan-India free shipping on most orders",
     },
     {
       icon: <Headset strokeWidth={1.5} className="w-8 h-8" />,
       title: "Support 24/7",
-      description: "Lorem ipsum dolor sit amet consectetu adipisicing elit sed",
+      description: "Dedicated assistance whenever you need it",
     },
     {
       icon: <RotateCcw strokeWidth={1.5} className="w-8 h-8 " />,
-      title: "Money Return",
-      description: "Lorem ipsum dolor sit amet consectetu adipisicing elit sed",
+      title: "Easy Returns",
+      description: "Hassle-free 48-hour replacement policy",
     },
   ];
 
