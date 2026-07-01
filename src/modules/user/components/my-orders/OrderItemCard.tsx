@@ -133,6 +133,8 @@ export const OrderItemCard: React.FC<OrderItemCardProps> = ({
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
+        width: 794,
+        windowWidth: 794,
       });
 
       const imgData = canvas.toDataURL("image/png");

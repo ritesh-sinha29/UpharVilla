@@ -12,6 +12,7 @@ import {
   Zap,
   Eye,
   Loader2,
+  Download,
 } from "lucide-react";
 import type React from "react";
 import { useEffect, useState } from "react";
@@ -65,7 +66,9 @@ export function OrderTable({
   isUpdating,
   getPaymentBadge,
   getStatusBadge,
-}: OrderTableProps) {
+  onDownloadInvoice,
+  isDownloadingId,
+}: OrderTableProps & { onDownloadInvoice?: (order: any) => void; isDownloadingId?: string | null }) {
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
 
@@ -181,6 +184,21 @@ export function OrderTable({
                     >
                       <Eye size={14} />
                     </Button>
+                    {onDownloadInvoice && (
+                      <Button
+                        size="icon-sm"
+                        variant="ghost"
+                        onClick={() => onDownloadInvoice(order)}
+                        disabled={isDownloadingId === order._id}
+                        className="h-6 w-6 rounded-md text-neutral-455 hover:text-neutral-700 hover:bg-neutral-100 transition-colors"
+                      >
+                        {isDownloadingId === order._id ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Download size={14} />
+                        )}
+                      </Button>
+                    )}
                     <Select
                       value={order.orderStatus}
                       onValueChange={(val) => onStatusChange(order._id, val)}

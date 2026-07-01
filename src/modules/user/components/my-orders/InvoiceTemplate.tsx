@@ -23,7 +23,13 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ displayItem })
   return (
     <div
       id={`invoice-capture-${displayItem.itemId}`}
-      className="absolute -left-[9999px] top-0 w-[794px] bg-white text-black p-10 font-sans border border-neutral-200"
+      style={{
+        width: "794px",
+        minWidth: "794px",
+        maxWidth: "794px",
+        boxSizing: "border-box",
+      }}
+      className="absolute -left-[9999px] top-0 bg-white text-black p-10 font-sans border border-neutral-200"
     >
       {/* Header Block */}
       <div className="flex justify-between items-start gap-4 border-b border-neutral-100 pb-4">
@@ -33,6 +39,7 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ displayItem })
             src="/logo.png"
             alt="upharVilla Logo"
             crossOrigin="anonymous"
+            style={{ height: "48px", width: "auto", objectFit: "contain" }}
             className="h-12 w-auto object-contain"
           />
           <div>
@@ -91,28 +98,16 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ displayItem })
             Payment Details
           </h3>
           <div className="space-y-1.5 text-neutral-700 font-medium">
-            <div className="flex justify-between max-w-[220px]">
-              <span className="text-neutral-405">Gateway Status:</span>
+            <div className="flex items-center gap-2">
+              <span className="text-neutral-405 w-28 shrink-0">Gateway Status:</span>
               <span className="font-bold text-emerald-600 capitalize">
                 {displayItem.paymentStatus}
               </span>
             </div>
-            <div className="flex justify-between max-w-[220px]">
-              <span className="text-neutral-405">Method:</span>
+            <div className="flex items-center gap-2">
+              <span className="text-neutral-405 w-28 shrink-0">Method:</span>
               <span className="font-semibold text-neutral-800">
                 Razorpay Online Banking
-              </span>
-            </div>
-            <div className="flex justify-between max-w-[220px]">
-              <span className="text-neutral-405">Delivery Status:</span>
-              <span className={`capitalize font-sans ${
-                displayItem.orderStatus === "delivered"
-                  ? "text-emerald-600 font-bold"
-                  : displayItem.orderStatus === "cancelled"
-                    ? "text-red-600 font-bold"
-                    : "text-amber-600 font-bold"
-              }`}>
-                {displayItem.orderStatus.replace(/_/g, " ")}
               </span>
             </div>
           </div>

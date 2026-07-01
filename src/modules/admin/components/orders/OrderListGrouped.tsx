@@ -13,6 +13,7 @@ import {
   ShoppingBag,
   User,
   Zap,
+  Download,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,8 @@ interface OrderListGroupedProps {
   isUpdating: string | null;
   getPaymentBadge: (status: string) => React.ReactNode;
   getStatusBadge: (status: string) => React.ReactNode;
+  onDownloadInvoice?: (order: any) => void;
+  isDownloadingId?: string | null;
 }
 
 type OrderStatus = "placed" | "shipped" | "out_for_delivery" | "delivered" | "cancelled";
@@ -84,6 +87,8 @@ export function OrderListGrouped({
   isUpdating,
   getPaymentBadge,
   getStatusBadge,
+  onDownloadInvoice,
+  isDownloadingId,
 }: OrderListGroupedProps) {
   const statuses: OrderStatus[] = [
     "placed",
@@ -104,7 +109,7 @@ export function OrderListGrouped({
           <p className="text-sm font-medium text-neutral-500">
             No orders found
           </p>
-          <p className="text-xs text-neutral-450 mt-0.5">
+          <p className="text-xs text-neutral-455 mt-0.5">
             Try adjusting your filters
           </p>
         </div>
@@ -122,6 +127,8 @@ export function OrderListGrouped({
               isUpdating={isUpdating}
               getPaymentBadge={getPaymentBadge}
               getStatusBadge={getStatusBadge}
+              onDownloadInvoice={onDownloadInvoice}
+              isDownloadingId={isDownloadingId}
             />
           );
         })
@@ -138,6 +145,8 @@ interface StatusGroupProps {
   isUpdating: string | null;
   getPaymentBadge: (status: string) => React.ReactNode;
   getStatusBadge: (status: string) => React.ReactNode;
+  onDownloadInvoice?: (order: any) => void;
+  isDownloadingId?: string | null;
 }
 
 function StatusGroup({
@@ -148,6 +157,8 @@ function StatusGroup({
   isUpdating,
   getPaymentBadge,
   getStatusBadge,
+  onDownloadInvoice,
+  isDownloadingId,
 }: StatusGroupProps) {
   // Collapse by default at first
   const [isExpanded, setIsExpanded] = useState(false);
@@ -315,6 +326,21 @@ function StatusGroup({
                         >
                           <Eye size={14} />
                         </Button>
+                        {onDownloadInvoice && (
+                          <Button
+                            size="icon-sm"
+                            variant="ghost"
+                            onClick={() => onDownloadInvoice(order)}
+                            disabled={isDownloadingId === order._id}
+                            className="h-6 w-6 rounded-md text-neutral-455 hover:text-neutral-700 hover:bg-neutral-100 transition-colors"
+                          >
+                            {isDownloadingId === order._id ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <Download size={14} />
+                            )}
+                          </Button>
+                        )}
                         <Select
                           value={order.orderStatus}
                           onValueChange={(val) =>

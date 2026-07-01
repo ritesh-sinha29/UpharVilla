@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery } from "convex/react";
-import { ShoppingBag } from "lucide-react";
+import { ShoppingBag, Download, Loader2 } from "lucide-react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   RupeeIcon,
@@ -44,6 +44,15 @@ import { TableHead } from "@/components/ui/table";
 import { OrderListGrouped } from "@/modules/admin/components/orders/OrderListGrouped";
 import { OrderTable } from "@/modules/admin/components/orders/OrderTable";
 import { api } from "../../../../../convex/_generated/api";
+import { createPortal } from "react-dom";
+import dynamic from "next/dynamic";
+
+import InvoiceTemplate from "@/modules/user/components/my-orders/InvoiceTemplate";
+
+function InvoiceTemplatePortal({ displayItem }: { displayItem: any }) {
+  if (typeof document === "undefined") return null;
+  return createPortal(<InvoiceTemplate displayItem={displayItem} />, document.body);
+}
 
 function ItemThumbnail({ storageId }: { storageId: string }) {
   const isDirectUrl = storageId.startsWith("http");
@@ -89,6 +98,87 @@ export default function AdminOrdersPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
+  const [downloadingOrder, setDownloadingOrder] = useState<any>(null);
+  const [isDownloadingId, setIsDownloadingId] = useState<string | null>(null);
+
+  const handleDownloadInvoice = async (order: any) => {
+    try {
+      setIsDownloadingId(order._id);
+      setDownloadingOrder(order);
+
+      // Give a tiny timeout for portal content to mount
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      const element = document.getElementById(`invoice-capture-${order._id}`);
+      if (!element) {
+        throw new Error("Invoice template not found in DOM");
+      }
+
+      const [html2canvasModule, jsPDFModule] = await Promise.all([
+        import("html2canvas-pro"),
+        import("jspdf"),
+      ]);
+      const html2canvas = html2canvasModule.default;
+      const jsPDF = jsPDFModule.jsPDF;
+
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+        width: 794,
+        windowWidth: 794,
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      const imgWidth = 210;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
+      pdf.save(`Invoice_Order_${order._id.slice(-8).toUpperCase()}.pdf`);
+      toast.success("Invoice PDF downloaded successfully!");
+    } catch (err) {
+      console.error("PDF generation failed:", err);
+      toast.error("Failed to generate PDF invoice. Please try again.");
+    } finally {
+      setIsDownloadingId(null);
+      setDownloadingOrder(null);
+    }
+  };
+
+  const displayItemForInvoice = useMemo(() => {
+    if (!downloadingOrder) return null;
+    return {
+      orderId: downloadingOrder._id,
+      itemId: downloadingOrder._id,
+      item: {
+        productId: downloadingOrder.items[0]?.productId || "",
+        name: downloadingOrder.items[0]?.name || "",
+        price: downloadingOrder.items[0]?.price || 0,
+        quantity: downloadingOrder.items[0]?.quantity || 0,
+        thumbnail: downloadingOrder.items[0]?.productThumbnail,
+      },
+      orderItems: downloadingOrder.items.map((item: any) => ({
+        productId: item.productId,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        thumbnail: item.productThumbnail,
+      })),
+      totalAmount: downloadingOrder.totalAmount,
+      createdAt: downloadingOrder.createdAt,
+      orderStatus: downloadingOrder.orderStatus,
+      paymentStatus: downloadingOrder.paymentStatus,
+      razorpayOrderId: downloadingOrder.razorpayOrderId,
+      address: downloadingOrder.address,
+    };
+  }, [downloadingOrder]);
 
   const activeOrders = useMemo(() => {
     return liveOrders || [];
@@ -430,6 +520,8 @@ export default function AdminOrdersPage() {
               isUpdating={isUpdating}
               getPaymentBadge={getPaymentBadge}
               getStatusBadge={getStatusBadge}
+              onDownloadInvoice={handleDownloadInvoice}
+              isDownloadingId={isDownloadingId}
             />
           )}
 
@@ -442,6 +534,8 @@ export default function AdminOrdersPage() {
                 isUpdating={isUpdating}
                 getPaymentBadge={getPaymentBadge}
                 getStatusBadge={getStatusBadge}
+                onDownloadInvoice={handleDownloadInvoice}
+                isDownloadingId={isDownloadingId}
               />
             </div>
           )}
@@ -765,12 +859,40 @@ export default function AdminOrdersPage() {
                       </span>
                     </div>
                   </div>
+
+                  {/* Invoice Actions */}
+                  <div className="flex justify-end gap-3 pt-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDownloadInvoice(selectedOrder)}
+                      disabled={isDownloadingId === selectedOrder._id}
+                      className="rounded-full text-xs font-bold bg-white text-neutral-600 border-neutral-200 hover:bg-neutral-50 cursor-pointer font-sans"
+                    >
+                      {isDownloadingId === selectedOrder._id ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
+                          Downloading...
+                        </>
+                      ) : (
+                        <>
+                          <Download size={14} className="mr-1.5" />
+                          Download Invoice
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </div>
             </>
           )}
         </SheetContent>
       </Sheet>
+
+      {/* Off-screen Printable Invoice Container */}
+      {typeof window !== "undefined" && displayItemForInvoice && (
+        <InvoiceTemplatePortal displayItem={displayItemForInvoice} />
+      )}
     </div>
   );
 }
