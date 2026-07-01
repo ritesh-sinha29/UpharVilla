@@ -1,7 +1,7 @@
 "use client";
 
-import { useQuery } from "convex/react";
-import { createContext, useContext, type ReactNode } from "react";
+import { useMutation, useQuery } from "convex/react";
+import { createContext, useContext, type ReactNode, useEffect } from "react";
 import { authClient } from "@/lib/auth-client";
 import { api } from "../../convex/_generated/api";
 
@@ -35,11 +35,22 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const { data: session } = authClient.useSession();
   const userId = session?.user?.id;
   const email = session?.user?.email;
+  const name = session?.user?.name;
 
   const role = useQuery(
     api.adminUsers.getMyRole,
     userId ? { userId, email: email || undefined } : "skip",
   ) as AdminRole | undefined;
+
+  const ensureFirstOwner = useMutation(api.adminUsers.ensureFirstOwner);
+
+  useEffect(() => {
+    if (role === null && userId && email && name) {
+      ensureFirstOwner({ userId, email, name }).catch((err) => {
+        console.error("Failed to automatically claim ownership:", err);
+      });
+    }
+  }, [role, userId, email, name, ensureFirstOwner]);
 
   const isLoading = role === undefined;
   const resolvedRole = role ?? null;

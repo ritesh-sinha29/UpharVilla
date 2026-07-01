@@ -111,9 +111,11 @@ export default function EnquiryManagementPage() {
   };
 
   const handleReply = (email: string, name: string) => {
+    const subject = encodeURIComponent("Re: Your enquiry to upharVilla");
+    const body = encodeURIComponent(`Hi ${name},\n\nThank you for reaching out to upharVilla.\n\n`);
     window.open(
-      `mailto:${email}?subject=Re: Your enquiry to upharVilla&body=Hi ${name},%0D%0A%0D%0AThank you for reaching out to upharVilla.%0D%0A%0D%0A`,
-      "_self",
+      `https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=${subject}&body=${body}`,
+      "_blank",
     );
   };
 

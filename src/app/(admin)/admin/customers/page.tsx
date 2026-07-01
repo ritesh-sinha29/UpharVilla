@@ -406,7 +406,9 @@ export default function CustomersManagementPage() {
               <div className="flex items-center gap-2">
                 <Mail className="w-3 h-3 text-neutral-400 shrink-0" />
                 <a
-                  href={`mailto:${selectedCustomer.email}`}
+                  href={`https://mail.google.com/mail/?view=cm&fs=1&to=${selectedCustomer.email}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-xs text-neutral-600 hover:text-primary truncate"
                 >
                   {selectedCustomer.email}
@@ -460,7 +462,9 @@ export default function CustomersManagementPage() {
               </div>
 
               <a
-                href={`mailto:${selectedCustomer.email}?subject=Hello from upharVilla&body=Hi ${selectedCustomer.name},%0D%0A%0D%0A`}
+                href={`https://mail.google.com/mail/?view=cm&fs=1&to=${selectedCustomer.email}&su=${encodeURIComponent("Hello from upharVilla")}&body=${encodeURIComponent("Hi " + selectedCustomer.name + ",\n\n")}`}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 w-full px-4 py-2 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition-colors"
               >
                 <Mail className="w-3.5 h-3.5" />

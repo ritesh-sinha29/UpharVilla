@@ -70,7 +70,7 @@ export const add = mutation({
     }
 
     // 1 write
-    return await ctx.db.insert("adminUsers", {
+    const res = await ctx.db.insert("adminUsers", {
       userId: user._id,
       email,
       name,
@@ -78,6 +78,18 @@ export const add = mutation({
       addedBy,
       createdAt: Date.now(),
     });
+
+    // Queue welcome team member email
+    await ctx.db.insert("emailsQueue", {
+      to: [{ email, name }],
+      subject: "Welcome to the UpharVilla Team!",
+      htmlContent: `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e5e5; border-radius: 12px;"><h2 style="color: #6d28d9; margin-top: 0;">Welcome to UpharVilla!</h2><p>Hi <strong>${name}</strong>,</p><p>You have been added as a <strong>${role.toUpperCase()}</strong> to the UpharVilla Admin Panel.</p><p>You can now log in using your account to view and manage orders or catalog items based on your permissions.</p><br/><p>Best regards,<br/>The UpharVilla Team</p></div>`,
+      status: "pending",
+      retries: 0,
+      createdAt: Date.now(),
+    });
+
+    return res;
   },
 });
 
@@ -103,5 +115,92 @@ export const updateRole = mutation({
     if (!doc) throw new Error("Admin user not found.");
     if (doc.role === "owner") throw new Error("Cannot change the Owner's role.");
     await ctx.db.patch(id, { role });
+  },
+});
+
+/** Automatically claim Owner role if this is the first ever user registered in the database */
+export const ensureFirstOwner = mutation({
+  args: {
+    userId: v.string(),
+    email: v.string(),
+    name: v.string(),
+  },
+  handler: async (ctx, { userId, email, name }) => {
+    // 1. Find the first ever registered user in the main user table (ascending order gets oldest first)
+    const firstUser = await ctx.db.query("user").first();
+    if (!firstUser) return null;
+
+    // 2. Check if an Owner is already registered in the adminUsers table
+    const existingOwner = await ctx.db
+      .query("adminUsers")
+      .withIndex("by_role", (q) => q.eq("role", "owner"))
+      .first();
+
+    // 3. If no Owner is registered, and this caller is the first user in the user database, register them as the Owner
+    if (!existingOwner && firstUser._id === userId) {
+      await ctx.db.insert("adminUsers", {
+        userId,
+        email,
+        name,
+        role: "owner",
+        addedBy: "system",
+        createdAt: Date.now(),
+      });
+      return "owner";
+    }
+    return null;
+  },
+});
+
+/** Transfer ownership to another team member. The caller must be the current Owner. */
+export const transferOwnership = mutation({
+  args: {
+    targetId: v.id("adminUsers"),
+    ownerUserId: v.string(),
+  },
+  handler: async (ctx, { targetId, ownerUserId }) => {
+    // Find current owner
+    const currentOwner = await ctx.db
+      .query("adminUsers")
+      .withIndex("by_userId", (q) => q.eq("userId", ownerUserId))
+      .first();
+
+    if (!currentOwner || currentOwner.role !== "owner") {
+      throw new Error("Only the current Owner can transfer ownership.");
+    }
+
+    const targetUser = await ctx.db.get(targetId);
+    if (!targetUser) {
+      throw new Error("Target team member not found.");
+    }
+    if (targetUser.role === "owner") {
+      throw new Error("Target is already the Owner.");
+    }
+
+    // Demote current owner to admin, promote target to owner
+    await ctx.db.patch(currentOwner._id, { role: "admin" });
+    await ctx.db.patch(targetUser._id, { role: "owner" });
+
+    // Queue email to target (new owner)
+    await ctx.db.insert("emailsQueue", {
+      to: [{ email: targetUser.email, name: targetUser.name }],
+      subject: "Store Ownership Transferred to You - UpharVilla",
+      htmlContent: `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e5e5; border-radius: 12px;"><h2 style="color: #d97706; margin-top: 0;">Congratulations!</h2><p>Hi <strong>${targetUser.name}</strong>,</p><p>You have been promoted to the <strong>Owner</strong> of UpharVilla.</p><p>You now have full owner-level administration privileges, including access control and permission management.</p><br/><p>Best regards,<br/>The UpharVilla Team</p></div>`,
+      status: "pending",
+      retries: 0,
+      createdAt: Date.now(),
+    });
+
+    // Queue email to previous owner (demoted to admin)
+    await ctx.db.insert("emailsQueue", {
+      to: [{ email: currentOwner.email, name: currentOwner.name }],
+      subject: "Ownership Transferred Successfully - UpharVilla",
+      htmlContent: `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e5e5; border-radius: 12px;"><h2 style="color: #6b7280; margin-top: 0;">Ownership Transferred</h2><p>Hi <strong>${currentOwner.name}</strong>,</p><p>You have successfully transferred ownership of UpharVilla to <strong>${targetUser.name}</strong>.</p><p>Your role has been updated to <strong>Admin</strong>.</p><br/><p>Best regards,<br/>The UpharVilla Team</p></div>`,
+      status: "pending",
+      retries: 0,
+      createdAt: Date.now(),
+    });
+
+    return true;
   },
 });

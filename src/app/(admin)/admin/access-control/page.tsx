@@ -6,6 +6,7 @@ import {
   Plus,
   ShieldCheck,
   Trash2,
+  Crown,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 import {
   Select,
   SelectContent,
@@ -36,11 +38,12 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 export default function AccessControlPage() {
-  const { canManageAccess } = useAdmin();
+  const { role: userRole, canManageAccess } = useAdmin();
   const adminUsers = useQuery(api.adminUsers.list);
   const addUser = useMutation(api.adminUsers.add);
   const removeUser = useMutation(api.adminUsers.remove);
   const updateRole = useMutation(api.adminUsers.updateRole);
+  const transferOwnership = useMutation(api.adminUsers.transferOwnership);
   const { data: session } = authClient.useSession();
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -48,6 +51,34 @@ export default function AccessControlPage() {
   const [newName, setNewName] = useState("");
   const [newRole, setNewRole] = useState<"admin" | "manager">("manager");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [transferDialogOpen, setTransferDialogOpen] = useState(false);
+  const [selectedTargetId, setSelectedTargetId] = useState("");
+  const [isTransferring, setIsTransferring] = useState(false);
+
+  const confirmTransfer = async () => {
+    if (!selectedTargetId || !session?.user?.id) return;
+    const targetUser = adminUsers?.find((u) => u._id === selectedTargetId);
+    if (!targetUser) return;
+
+    const msg = `Are you absolutely sure you want to transfer ownership to ${targetUser.name}?\n\nWARNING: You will be demoted to an Admin and lose access control configuration rights. This action cannot be undone.`;
+    if (!confirm(msg)) return;
+
+    setIsTransferring(true);
+    try {
+      await transferOwnership({
+        targetId: selectedTargetId as Id<"adminUsers">,
+        ownerUserId: session.user.id,
+      });
+      alert(`Ownership successfully transferred to ${targetUser.name}!`);
+      setTransferDialogOpen(false);
+      setSelectedTargetId("");
+    } catch (err: any) {
+      alert(err.message || "Failed to transfer ownership");
+    } finally {
+      setIsTransferring(false);
+    }
+  };
 
   const handleAdd = async () => {
     if (!newEmail || !newName || !session?.user?.id) return;
@@ -107,17 +138,81 @@ export default function AccessControlPage() {
         </div>
 
         {canManageAccess && (
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="rounded-xl gap-2 cursor-pointer">
-                <Plus className="w-4 h-4" />
-                Add Team Member
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Add Team Member</DialogTitle>
-              </DialogHeader>
+          <div className="flex items-center gap-2.5">
+            {/* Transfer Ownership Dialog */}
+            <Dialog open={transferDialogOpen} onOpenChange={setTransferDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="rounded-xl gap-2 border-amber-250 bg-amber-50/50 hover:bg-amber-100 hover:text-amber-700 text-amber-700 cursor-pointer font-medium shadow-sm transition-all duration-200">
+                  <Crown className="w-4 h-4 text-amber-600" />
+                  Transfer Ownership
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md bg-sidebar border border-neutral-300 dark:border-neutral-700 shadow-2xl rounded-2xl">
+                <DialogHeader className="space-y-1">
+                  <DialogTitle className="text-base sm:text-lg font-bold tracking-tight text-neutral-800 font-serif flex items-center gap-2">
+                    <Crown className="w-5 h-5 text-amber-500 animate-pulse" />
+                    Transfer Store Ownership
+                  </DialogTitle>
+                </DialogHeader>
+                <Separator className="bg-neutral-200 dark:bg-neutral-800" />
+                <div className="space-y-4 pt-1">
+                  {/* Warning Alert Box */}
+                  <div className="p-3.5 rounded-xl bg-amber-500/8 border border-amber-500/15 text-amber-800 dark:text-amber-300 text-xs leading-relaxed font-medium">
+                    <p>
+                      <strong>WARNING:</strong> This action is immediate and cannot be undone. You will be demoted to an **Admin** and lose all owner-only control privileges.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2 block">
+                      Select New Owner
+                    </label>
+                    {adminUsers && adminUsers.filter((u) => u.role !== "owner").length === 0 ? (
+                      <div className="text-xs text-neutral-400 py-3 text-center border border-dashed rounded-lg">
+                        No team members available to receive ownership.
+                      </div>
+                    ) : (
+                      <Select
+                        value={selectedTargetId}
+                        onValueChange={setSelectedTargetId}
+                      >
+                        <SelectTrigger className="w-full bg-card h-10 rounded-xl">
+                          <SelectValue placeholder="Choose a team member..." />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl">
+                          {adminUsers?.filter((u) => u.role !== "owner").map((u) => (
+                            <SelectItem key={u._id} value={u._id} className="rounded-lg">
+                              {u.name} ({ROLE_LABELS[u.role] ?? u.role})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  </div>
+
+                  <Button
+                    className="w-full rounded-xl cursor-pointer bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs h-10 mt-2 shadow-md transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={confirmTransfer}
+                    disabled={isTransferring || !selectedTargetId || (adminUsers && adminUsers.filter((u) => u.role !== "owner").length === 0)}
+                  >
+                    {isTransferring ? "Transferring…" : "Confirm & Transfer Ownership"}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            {/* Add Team Member Dialog */}
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="rounded-xl gap-2 cursor-pointer">
+                  <Plus className="w-4 h-4" />
+                  Add Team Member
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Add Team Member</DialogTitle>
+                </DialogHeader>
               <div className="space-y-4 mt-2">
                 <div>
                   <label className="text-sm font-medium text-neutral-700 mb-1.5 block">
@@ -176,6 +271,7 @@ export default function AccessControlPage() {
               </div>
             </DialogContent>
           </Dialog>
+          </div>
         )}
       </div>
 
