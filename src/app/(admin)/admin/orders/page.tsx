@@ -106,8 +106,8 @@ export default function AdminOrdersPage() {
       setIsDownloadingId(order._id);
       setDownloadingOrder(order);
 
-      // Give a tiny timeout for portal content to mount
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      // Give a slightly longer timeout for portal content and images to fully load
+      await new Promise((resolve) => setTimeout(resolve, 600));
 
       const element = document.getElementById(`invoice-capture-${order._id}`);
       if (!element) {
@@ -130,7 +130,11 @@ export default function AdminOrdersPage() {
         windowWidth: 794,
       });
 
-      const imgData = canvas.toDataURL("image/png");
+      if (!canvas || canvas.width === 0 || canvas.height === 0) {
+        throw new Error("Canvas rendering returned empty dimensions");
+      }
+
+      const imgData = canvas.toDataURL("image/jpeg", 0.95);
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "mm",
@@ -138,10 +142,30 @@ export default function AdminOrdersPage() {
       });
 
       const imgWidth = 210;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const canvasWidth = canvas.width || 794;
+      const canvasHeight = canvas.height || 1123;
+      const imgHeight = (canvasHeight * imgWidth) / canvasWidth;
 
-      pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
-      pdf.save(`Invoice_Order_${order._id.slice(-8).toUpperCase()}.pdf`);
+      if (isNaN(imgHeight) || imgHeight <= 0) {
+        throw new Error("Invalid canvas heights calculated");
+      }
+
+      pdf.addImage(imgData, "JPEG", 0, 0, imgWidth, imgHeight);
+      
+      // Generate Blob instead of base64 dataURL to bypass Chrome's size limit blocks
+      const pdfBlob = pdf.output("blob");
+      const blobUrl = URL.createObjectURL(pdfBlob);
+
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `Invoice_Order_${order._id.slice(-8).toUpperCase()}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Revoke the Object URL to free memory
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 200);
+
       toast.success("Invoice PDF downloaded successfully!");
     } catch (err) {
       console.error("PDF generation failed:", err);

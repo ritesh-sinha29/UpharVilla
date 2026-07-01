@@ -9,6 +9,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react";
 import { upload } from "@imagekit/next";
 import { compressThumbnail } from "@/lib/image-compress";
+import { prewarmImageKitCache } from "@/lib/imagekit-url";
 import { useMutation, useQuery } from "convex/react";
 import type React from "react";
 import { useCallback, useRef, useState } from "react";
@@ -292,6 +293,9 @@ export function AddProductDialog() {
               });
               const thumbnailImageUrl = uploadResponse.url;
 
+              // Pre-warm optimized variations in the background
+              prewarmImageKitCache(thumbnailImageUrl);
+
               // Update product with actual thumbnail
               await updateProduct({
                 id: productId,
@@ -425,7 +429,10 @@ export function AddProductDialog() {
 
           {/* Thumbnail Upload */}
           <div className="grid gap-1.5">
-            <Label>Thumbnail</Label>
+            <Label className="flex items-center justify-between w-full">
+              <span>Thumbnail</span>
+              <span className="text-[10px] text-muted-foreground font-normal lowercase normal-case">Recommended: 600 × 800 px (3:4 ratio)</span>
+            </Label>
             <input
               ref={fileInputRef}
               type="file"

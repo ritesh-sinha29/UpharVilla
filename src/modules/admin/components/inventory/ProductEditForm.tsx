@@ -2,6 +2,7 @@
 
 import { upload } from "@imagekit/next";
 import { compressThumbnail, compressGalleryImage } from "@/lib/image-compress";
+import { prewarmImageKitCache } from "@/lib/imagekit-url";
 import { useMutation, useQuery } from "convex/react";
 import {
   ImagePlus,
@@ -199,6 +200,7 @@ export const ProductEditForm = forwardRef<
         });
 
         if (uploadResponse.url) {
+          prewarmImageKitCache(uploadResponse.url);
           await updateProduct({
             id: product._id,
             thumbnail: uploadResponse.url,
@@ -236,6 +238,7 @@ export const ProductEditForm = forwardRef<
         });
 
         if (uploadResponse.url) {
+          prewarmImageKitCache(uploadResponse.url);
           const currentImages = product.images || [];
           await updateProduct({
             id: product._id,
@@ -324,8 +327,9 @@ export const ProductEditForm = forwardRef<
     <div className="grid gap-4 py-2 px-1 animate-in fade-in duration-200">
       {/* 1. Thumbnail Section */}
       <div className="grid gap-1.5">
-        <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-          Thumbnail
+        <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center justify-between">
+          <span>Thumbnail</span>
+          <span className="text-[10px] text-muted-foreground font-normal lowercase normal-case">Recommended: 600 × 800 px (3:4 ratio)</span>
         </Label>
         <div className="relative aspect-[16/10] sm:aspect-video rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-955 overflow-hidden flex items-center justify-center group shadow-xs transition-all duration-300">
           {imageUrl ? (
@@ -375,8 +379,9 @@ export const ProductEditForm = forwardRef<
       {/* 2. Gallery / Extra Images Section */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-            Product Gallery
+          <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center justify-between w-full pr-4">
+            <span>Product Gallery</span>
+            <span className="text-[10px] text-muted-foreground font-normal lowercase normal-case">Recommended: 900 × 1200 px (3:4 ratio)</span>
           </Label>
           <input
             type="file"
@@ -389,7 +394,7 @@ export const ProductEditForm = forwardRef<
             type="button"
             size="sm"
             variant="outline"
-            className="h-7 text-xs gap-1 border bg-[#ad8de9] hover:bg-[#ad8de9]/90 text-white font-medium px-2.5 rounded-lg shadow-sm"
+            className="h-7 text-xs gap-1 border bg-[#ad8de9] hover:bg-[#ad8de9]/90 text-white font-medium px-2.5 rounded-lg shadow-sm shrink-0"
             onClick={() => fileInputRef.current?.click()}
             disabled={isGalleryUploading}
           >

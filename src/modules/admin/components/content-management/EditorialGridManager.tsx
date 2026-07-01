@@ -2,6 +2,7 @@
 
 import { upload } from "@imagekit/next";
 import { compressGalleryImage } from "@/lib/image-compress";
+import { prewarmImageKitCache } from "@/lib/imagekit-url";
 import { useMutation, useQuery } from "convex/react";
 import { Edit2, Image as ImageIcon, Loader2, UploadCloud } from "lucide-react";
 import { useRef, useState } from "react";
@@ -60,8 +61,9 @@ export function EditorialGridManager() {
             folder: "/editorial",
             ...authParams,
           });
-          if (!uploadResponse.url) throw new Error("Upload failed");
+           if (!uploadResponse.url) throw new Error("Upload failed");
           imageUrl = uploadResponse.url;
+          prewarmImageKitCache(imageUrl);
         }
 
         if (!imageUrl) throw new Error("Image is required");
@@ -177,10 +179,10 @@ export function EditorialGridManager() {
             <DialogTitle>Edit Slot {isEditingSlot}</DialogTitle>
             <DialogDescription className="text-xs">
               {isEditingSlot === 1 || isEditingSlot === 5
-                ? "Best for Portrait images."
+                ? "Recommended layout size: 600 × 900 px (2:3 Portrait ratio)."
                 : isEditingSlot === 2
-                  ? "Best for Wide images."
-                  : "Best for Square images."}
+                  ? "Recommended layout size: 800 × 400 px (2:1 Wide ratio)."
+                  : "Recommended layout size: 600 × 600 px (1:1 Square ratio)."}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-2">
@@ -193,7 +195,7 @@ export function EditorialGridManager() {
                   onChange={(e) =>
                     setSlotData({ ...slotData, label: e.target.value })
                   }
-                  placeholder="e.g. SHOP RINGS"
+                  placeholder="e.g. SHOP NECKLACES"
                 />
               </div>
               <div className="space-y-1">
@@ -239,10 +241,13 @@ export function EditorialGridManager() {
                     {slotFile.name}
                   </span>
                 ) : (
-                  <div className="flex flex-col items-center gap-1">
+                  <div className="flex flex-col items-center gap-1 text-center">
                     <UploadCloud className="h-4 w-4 text-muted-foreground" />
                     <span className="text-[10px] text-muted-foreground">
                       Click to replace
+                    </span>
+                    <span className="text-[9px] text-muted-foreground/60">
+                      Recommended: {isEditingSlot === 1 || isEditingSlot === 5 ? "600×900 px (2:3)" : isEditingSlot === 2 ? "800×400 px (2:1)" : "600×600 px (1:1)"}
                     </span>
                   </div>
                 )}

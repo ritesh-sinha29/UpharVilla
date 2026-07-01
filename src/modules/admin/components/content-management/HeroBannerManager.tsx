@@ -2,6 +2,7 @@
 
 import { upload } from "@imagekit/next";
 import { compressBannerImage } from "@/lib/image-compress";
+import { prewarmImageKitCache } from "@/lib/imagekit-url";
 import { useMutation, useQuery } from "convex/react";
 import { ImageIcon, Loader2, Plus, Trash2, UploadCloud } from "lucide-react";
 import { useRef, useState } from "react";
@@ -63,6 +64,9 @@ export function HeroBannerManager() {
         if (!uploadResponse.url) {
           throw new Error("No URL returned from ImageKit");
         }
+
+        // Pre-warm optimized banner in the background
+        prewarmImageKitCache(uploadResponse.url);
 
         await createBanner({
           imageLink: uploadResponse.url,
@@ -223,7 +227,7 @@ export function HeroBannerManager() {
                       Click to upload banner image
                     </span>
                     <span className="text-[10px] text-muted-foreground/60">
-                      Recommended: 1920×820px (21:9 ratio)
+                      Recommended: 1600 × 800 px (2:1 ratio) to fit layout perfectly
                     </span>
                   </div>
                 )}

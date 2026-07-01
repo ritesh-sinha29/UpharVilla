@@ -52,3 +52,24 @@ export function galleryFullUrl(url: string | undefined | null): string {
 export function bannerUrl(url: string | undefined | null): string {
   return optimizedUrl(url, 1400, 80);
 }
+
+/**
+ * Warm up the ImageKit cache for all optimized size presets in the background.
+ * Triggers on-the-fly ImageKit generation immediately so subsequent client loads hit the CDN cache.
+ */
+export function prewarmImageKitCache(url: string | undefined | null): void {
+  if (!url || !url.includes("ik.imagekit.io")) return;
+
+  const presets = [
+    thumbnailUrl(url),
+    productDetailUrl(url),
+    galleryFullUrl(url),
+    bannerUrl(url),
+  ];
+
+  for (const presetUrl of presets) {
+    if (typeof window !== "undefined" && window.fetch) {
+      window.fetch(presetUrl, { mode: "no-cors" }).catch(() => {});
+    }
+  }
+}
