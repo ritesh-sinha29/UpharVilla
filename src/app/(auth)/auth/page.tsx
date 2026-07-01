@@ -77,7 +77,7 @@ const AuthPage = () => {
     setShowOTP(false);
   };
 
-  const handleSocialAuth = async (provider: "google" | "facebook") => {
+  const handleSocialAuth = async (provider: "google") => {
     setIsLoading(true);
     try {
       await authClient.signIn.social({
@@ -572,34 +572,21 @@ const AuthPage = () => {
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 md:gap-2.5">
+                    <div className="grid grid-cols-1">
                       <Button
                         type="button"
                         variant="outline"
                         disabled={isLoading}
                         onClick={() => handleSocialAuth("google")}
-                        className="h-10 md:h-12 border-neutral-200/80 bg-white hover:bg-neutral-50 rounded-xl flex items-center justify-center transition-all cursor-pointer hover:shadow-xs hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] duration-200"
+                        className="h-10 md:h-12 border-neutral-200/80 bg-white hover:bg-neutral-50 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer hover:shadow-xs hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] duration-200 w-full text-xs font-semibold text-neutral-600"
                       >
                         <Image
                           src="/google.png"
                           alt="Google"
-                          width={20}
-                          height={20}
+                          width={18}
+                          height={18}
                         />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        disabled={isLoading}
-                        onClick={() => handleSocialAuth("facebook")}
-                        className="h-10 md:h-12 border-neutral-200/80 bg-white hover:bg-neutral-50 rounded-xl flex items-center justify-center transition-all cursor-pointer hover:shadow-xs hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] duration-200"
-                      >
-                        <Image
-                          src="/facebook.svg"
-                          alt="Facebook"
-                          width={20}
-                          height={20}
-                        />
+                        <span>Google</span>
                       </Button>
                     </div>
 

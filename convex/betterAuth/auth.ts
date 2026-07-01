@@ -31,13 +31,6 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
     };
   }
 
-  if (process.env.FACEBOOK_CLIENT_ID && process.env.FACEBOOK_CLIENT_SECRET) {
-    providers.facebook = {
-      clientId: process.env.FACEBOOK_CLIENT_ID,
-      clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
-    };
-  }
-
   const baseURL =
     process.env.SITE_URL ||
     process.env.BETTER_AUTH_URL ||
