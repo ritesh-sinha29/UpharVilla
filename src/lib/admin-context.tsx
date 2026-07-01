@@ -52,8 +52,8 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     }
   }, [role, userId, email, name, ensureFirstOwner]);
 
-  const isLoading = role === undefined;
-  const resolvedRole = role ?? null;
+  const isLoading = userId ? role === undefined : false;
+  const resolvedRole = userId ? (role ?? null) : null;
 
   const value: AdminContextType = {
     role: resolvedRole,

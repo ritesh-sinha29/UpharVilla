@@ -1,8 +1,9 @@
 "use client";
 import { useQuery } from "convex/react";
-import { Package, ShieldAlert, ShoppingBag } from "lucide-react";
+import { useEffect } from "react";
+import { Package, ShieldAlert, ShoppingBag, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import type React from "react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import {
@@ -16,6 +17,8 @@ import { AdminProvider, useAdmin } from "@/lib/admin-context";
 import { AppSidebar } from "@/modules/admin/components/AppSidebar";
 import { Dashboardcrumbs } from "@/modules/admin/components/Dashboardcrumbs";
 import { api } from "../../../../convex/_generated/api";
+
+import NotFound from "@/app/not-found";
 
 function TotalProductsBadge() {
   const pathname = usePathname();
@@ -57,9 +60,18 @@ function TotalOrdersBadge() {
   );
 }
 
-/** Access guard — TEMPORARILY BYPASSED for development */
+/** Access guard — Protects the /admin dashboard route */
 function AdminGuard({ children }: { children: React.ReactNode }) {
-  // TODO: Re-enable admin access control before production
+  const { role, isLoading } = useAdmin();
+
+  if (isLoading) {
+    return null; // Return blank screen to hide the route's existence entirely while loading
+  }
+
+  if (role === null) {
+    return <NotFound />;
+  }
+
   return <>{children}</>;
 }
 

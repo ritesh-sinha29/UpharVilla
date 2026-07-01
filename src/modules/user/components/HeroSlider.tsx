@@ -120,13 +120,12 @@ export const HeroSlider = () => {
                     className="object-cover"
                   />
                 ) : (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted/60 select-none p-6 text-center">
-                    <span className="text-base text-muted-foreground font-semibold">
-                      upharVilla Banner {index + 1}
-                    </span>
-                    <span className="text-xs text-muted-foreground/60 mt-1">
-                      No banner image uploaded yet
-                    </span>
+                  <div className="absolute inset-0 bg-neutral-100/80 animate-pulse flex items-center justify-center">
+                    {isLoading && (
+                      <span className="text-sm font-medium text-neutral-400 font-sans">
+                        Loading...
+                      </span>
+                    )}
                   </div>
                 )}
               </div>
